@@ -1,0 +1,21 @@
+name: Bug report
+description: Report a bug
+labels: [bug]
+body:
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: What happened?
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Reproduction
+      description: Steps to reproduce
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: Template/project version
