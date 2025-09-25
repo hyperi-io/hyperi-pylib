@@ -1,0 +1,16 @@
+version https://git-lfs.github.com/spec/v1
+oid sha256:c1f3c3ddc828eb494eee56d25e32c99b369af6835a9dd19b44d98d68c31c0da9
+size 2373
+.nox/
+.tmp/
+__pycache__/
+.pytest_cache/
+.mypy_cache/
+*.egg-info/
+dist/
+build/
+*.log
+*.tmp
+*.temp
+.DS_Store
+Thumbs.db
