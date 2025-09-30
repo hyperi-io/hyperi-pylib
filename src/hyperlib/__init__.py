@@ -5,6 +5,8 @@ Provides configuration, logging, timeout, and container management
 Requires Python 3.11+ for modern type hints and enterprise features
 """
 
+__version__ = "0.1.0"
+
 # Enforce Python 3.11+ requirement
 import sys
 if sys.version_info < (3, 11):
@@ -18,4 +20,4 @@ from . import logger
 from . import timeout
 from . import container
 
-__all__ = ['config', 'logger', 'timeout', 'container']
+__all__ = ['config', 'logger', 'timeout', 'container', '__version__']
