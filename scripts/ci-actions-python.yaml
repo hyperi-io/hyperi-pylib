@@ -2,7 +2,7 @@
 # Extends the core ci-actions.yaml with Python project variations
 
 version: "1.0"
-extends: "../hypersec-forge-core/scripts/ci-actions.yaml"
+# This file is standalone in deployed projects
 
 # Python-specific settings
 settings:
