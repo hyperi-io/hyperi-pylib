@@ -33,7 +33,7 @@ __all__ = ['config', 'logger', ..., '__version__']
 ```
 
 **Template Files to Update**:
-- `subtrees/hypersec-forge-python/{{ package_name }}/__init__.py.jinja`
+- `hypersec-forge-python: {{ package_name }}/__init__.py.jinja`
 
 **Priority**: HIGH - Required for package distribution and version verification
 
@@ -65,7 +65,7 @@ filterwarnings = [
 ```
 
 **Template Files to Update**:
-- `subtrees/hypersec-forge-python/pyproject.toml.jinja`
+- `hypersec-forge-python: pyproject.toml.jinja`
 
 **Priority**: MEDIUM - Breaks CI when using test markers
 
@@ -140,7 +140,7 @@ license = "LicenseRef-HyperSec-EULA"  # SPDX expression for proprietary
 **Note**: May need to wait for setuptools 77.0.0 or add conditional logic.
 
 **Template Files to Update**:
-- `subtrees/hypersec-forge-python/pyproject.toml.jinja`
+- `hypersec-forge-python: pyproject.toml.jinja`
 
 **Priority**: LOW - Just a warning, doesn't break functionality
 
@@ -218,9 +218,80 @@ nox --no-venv -s tests  # Pass flag instead of setting option
 ```
 
 **Template Files to Update**:
-- `subtrees/hypersec-forge-python/noxfile.py.jinja`
+- `hypersec-forge-python: noxfile.py.jinja`
 
 **Priority**: HIGH - Breaks nox in CI environments
+
+---
+
+### 9. Bootstrap doesn't create developer .venv
+
+**Issue**: Bootstrap only creates `.venv-ci` for CI tools, not `.venv` for development work.
+
+**Current State**:
+- `.venv-ci` is created and populated with CI tools (nox, ruff, black, mypy, pytest, etc.) ✅
+- `.venv` must be created manually by developers ❌
+- Poor first-time developer experience
+
+**Impact**:
+Developers must manually run:
+```bash
+python -m venv .venv
+.venv/bin/pip install -e .[dev]
+```
+
+**Required Fix**:
+Add function to `bootstrap.d/20-python-dev-tools.py`:
+```python
+def ensure_dev_venv(root: Path, install: bool) -> None:
+    """Create and populate developer .venv with project dependencies."""
+    venv = root / ".venv"
+
+    if not venv.exists():
+        if not install:
+            logger.warning(".venv does not exist (run with --install to create)")
+            return
+
+        logger.info("Creating developer .venv")
+        subprocess.run([sys.executable, "-m", "venv", str(venv)], check=True)
+
+    if install and (root / "pyproject.toml").exists():
+        logger.info("Installing project in editable mode with dev dependencies")
+        pip_path = venv / "bin" / "pip"
+
+        # Install project with dev extras if available
+        try:
+            subprocess.run([
+                str(pip_path), "install", "-e", ".[dev]", "-q"
+            ], check=True)
+            logger.success("Developer .venv ready")
+        except subprocess.CalledProcessError:
+            # Fallback: try without dev extras
+            logger.warning("No [dev] extras found, installing base package")
+            subprocess.run([
+                str(pip_path), "install", "-e", ".", "-q"
+            ], check=True)
+
+# Call in main():
+def main():
+    # ... existing code ...
+    ensure_dev_venv(root, install)  # Add this call
+```
+
+**Benefits**:
+- First-time setup is complete after `./scripts/bootstrap --install`
+- Developers can immediately start working
+- Consistent setup across team
+- `.venv` for development, `.venv-ci` for CI (proper isolation)
+
+**Template Files to Update**:
+- `hypersec-forge-python: scripts/bootstrap.d/20-python-dev-tools.py`
+
+**Priority**: MEDIUM - Improves developer experience significantly
+
+**Note**: Should also update README to document:
+- `.venv` - Development environment (project dependencies)
+- `.venv-ci` - CI environment (testing/linting tools)
 
 ---
 
@@ -246,13 +317,12 @@ When applying changes back to template, verify:
    git checkout -b feat/no-ref/apply-hyperlib-learnings
    ```
 
-2. **Apply each change** to template files in `subtrees/hypersec-forge-python/`
+2. **Apply each change** to template files in the forge repository
 
 3. **Test changes**:
    ```bash
-   # Generate test project
-   cd tests/work/templates
-   copier copy ../../../subtrees/hypersec-forge-python test-apply
+   # Generate test project using forge
+   hypersec-forge init --type python --name test-apply --dest /path/to/test-apply
 
    # Test build and CI
    cd test-apply
@@ -337,5 +407,4 @@ For library projects, include:
 ## Related Documentation
 
 - [Hyperlib Deployment Guide](../DEPLOYMENT.md)
-- [Template Use Cases](../../hypersec-forge-python/docs/TEMPLATE-USE-CASES.md)
-- [Forge Python State](../../hypersec-forge-python/STATE-PYTHON.md)
+- [Hyperlib Artifactory Configuration](ARTIFACTORY.md)

@@ -19,7 +19,7 @@ Hyperlib is published to the HyperSec private PyPI repository on JFrog Artifacto
 
 ### GitHub Actions Secrets
 
-The following organization secrets are available (see [GitHub Secrets Documentation](../../../docs/GITHUB-SECRETS.md)):
+The following organization secrets are available:
 
 **Primary credentials:**
 - `ARTIFACTORY_USERNAME` - Standard Artifactory username
@@ -63,8 +63,6 @@ See [DEPLOYMENT.md](../DEPLOYMENT.md) for detailed deployment instructions.
 For local testing or manual deployment:
 
 ```bash
-cd subtrees/hyperlib
-
 # Build package
 rm -rf dist/ build/
 .venv-ci/bin/python -m build
@@ -243,5 +241,5 @@ pip install hyperlib \
 ## Related Documentation
 
 - [Hyperlib Deployment Guide](../DEPLOYMENT.md)
-- [GitHub Secrets Documentation](../../../docs/GITHUB-SECRETS.md)
 - [JFrog Artifactory Documentation](https://www.jfrog.com/confluence/display/JFROG/PyPI+Repositories)
+- [GitHub Organization Secrets](https://github.com/organizations/hypersec-io/settings/secrets/actions)
