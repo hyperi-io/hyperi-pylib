@@ -22,11 +22,50 @@ from typing import Optional
 from hyperlib import get_logger  # type: ignore
 
 
-def get_current_version() -> Optional[str]:
-    """Get current version from git tags."""
+def get_current_version(root: Optional[Path] = None) -> Optional[str]:
+    """Get current version from git tags, respecting project tag format."""
     import re
+    import json
+
+    if root is None:
+        root = Path.cwd()
+
+    # Check for .releaserc.json to get tagFormat
+    tag_pattern = None
+    releaserc_path = root / ".releaserc.json"
+    if releaserc_path.exists():
+        try:
+            with open(releaserc_path) as f:
+                config = json.load(f)
+                tag_format = config.get("tagFormat", "v${version}")
+                # Convert semantic-release format to regex pattern
+                # e.g., "hyperlib-v${version}" -> "hyperlib-v"
+                tag_pattern = tag_format.replace("${version}", "")
+        except Exception:
+            pass
 
     try:
+        # If we have a tag pattern, search for tags matching that pattern
+        if tag_pattern:
+            result = subprocess.run(
+                ["git", "tag", "-l", f"{tag_pattern}*"],
+                capture_output=True,
+                text=True,
+                check=False
+            )
+            if result.returncode == 0 and result.stdout.strip():
+                # Get the most recent tag matching the pattern
+                tags = result.stdout.strip().split('\n')
+                # Sort by version (simple sort, works for most cases)
+                tags.sort(reverse=True)
+                if tags:
+                    version = tags[0]
+                    # Extract semantic version
+                    match = re.search(r'(\d+\.\d+\.\d+)', version)
+                    if match:
+                        return match.group(1)
+
+        # Fallback: use git describe
         result = subprocess.run(
             ["git", "describe", "--tags", "--abbrev=0"],
             capture_output=True,
@@ -35,7 +74,6 @@ def get_current_version() -> Optional[str]:
         )
         if result.returncode == 0:
             version = result.stdout.strip()
-            # Remove common tag prefixes (v, forge-v, hyperlib-v, etc.)
             # Extract semantic version using regex
             match = re.search(r'(\d+\.\d+\.\d+)', version)
             if match:
@@ -176,7 +214,7 @@ def run_semantic_release(logger, root: Path, dry_run: bool = False) -> bool:
         return False
 
     # Get current version
-    old_version = get_current_version()
+    old_version = get_current_version(root)
     logger.info(f"Current version: {old_version or 'none'}")
 
     # Get next version BEFORE running semantic-release
@@ -248,7 +286,7 @@ def sync_version_file(logger, root: Path) -> bool:
 
     Returns True if VERSION was updated.
     """
-    tag_version = get_current_version()
+    tag_version = get_current_version(root)
     if not tag_version:
         logger.info("No git tags found, skipping VERSION sync")
         return False
