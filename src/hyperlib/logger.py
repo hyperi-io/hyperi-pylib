@@ -41,8 +41,17 @@ def setup(settings=None):
     
     return logger
 
-def get_logger():
-    """Get standard logger instance"""
+def get_logger(name=None):
+    """Get standard logger instance
+
+    Args:
+        name: Optional logger name (for compatibility, currently ignored)
+
+    Returns:
+        Logger instance
+    """
+    # Note: name parameter is accepted for API compatibility but ignored
+    # Loguru's logger is a singleton and uses module context for naming
     return logger
 
 # Initialize with default setup
