@@ -349,9 +349,61 @@ When applying changes back to template, verify:
 
 ## Completed Changes
 
-<!-- Move items here as they are applied and verified -->
+<!-- Items successfully applied to forge-python template -->
 
-None yet - all pending application to template.
+### ✅ Issue #1: Missing `__version__` in `__init__.py`
+**Status**: COMPLETED (Commit: 4aa1b83)
+**Applied**: `template/src/{{package_name}}/core.py`
+**Fix**: Changed from `__version__ = "{{version}}"` to use `importlib.metadata.version()` with fallback
+**Verified**: Manual verification in template file
+
+### ✅ Issue #2: Missing pytest markers configuration
+**Status**: COMPLETED (Commit: 4aa1b83)
+**Applied**: `pyproject.toml.jinja`
+**Fix**: Verified markers already present in template
+**Verified**: Grep confirmed markers section exists
+
+### ✅ Issue #3: GitHub Workflow secrets configuration
+**Status**: COMPLETED (Commit: 4aa1b83)
+**Applied**: `.github/workflows-disabled/pypi-publish.yml`
+**Fix**: Changed from JFROG_USERNAME/PASSWORD to ARTIFACTORY_USERNAME/PASSWORD, hardcoded URL
+**Verified**: Manual verification in workflow file
+
+### ✅ Issue #4: Documentation structure
+**Status**: COMPLETED (Commit: d661b39)
+**Applied**: `template/docs/ARTIFACTORY.md.jinja`, `DEVELOPMENT.md.jinja`, `DEPLOYMENT.md.jinja`
+**Fix**: Created comprehensive documentation templates for generated projects
+**Verified**: Files created and placed in template/docs/
+
+### ✅ Issue #5: LICENSE file format (Setuptools deprecation)
+**Status**: COMPLETED (Commit: d661b39)
+**Applied**: `pyproject.toml.jinja`
+**Fix**: Updated to SPDX format - `license = "LicenseRef-HyperSec-EULA"` for EULA, `"Apache-2.0"` for Apache
+**Verified**: Template now uses modern license format
+
+### ✅ Issue #6: Bootstrap and CI configuration
+**Status**: COMPLETED (Commit: d661b39)
+**Applied**: `README.md.jinja`
+**Fix**: Added comprehensive CI/bootstrap instructions with .venv vs .venv-ci explanation
+**Verified**: README now includes complete development setup guide
+
+### ✅ Issue #7: Missing DEPLOYMENT.md for library projects
+**Status**: COMPLETED (Commit: d661b39)
+**Applied**: `template/docs/DEPLOYMENT.md.jinja`
+**Fix**: Created conditional documentation (only rendered when project_type == "library")
+**Verified**: Template includes version management, publishing, and release process docs
+
+### ✅ Issue #8: Noxfile configuration error
+**Status**: COMPLETED (Commit: 4aa1b83)
+**Applied**: `noxfile.py`
+**Fix**: Removed `nox.options.no_venv` assignment, changed all sessions to check `HSF_IN_CI_VENV` env var
+**Verified**: Manual verification in noxfile.py
+
+### ✅ Issue #9: Bootstrap doesn't create developer .venv
+**Status**: VERIFIED - Already Implemented
+**Location**: `scripts/bootstrap.d/20-python-dev-tools.py`
+**Result**: No changes needed - install_action() already creates .venv correctly
+**Verified**: Code review confirmed .venv creation logic exists (lines 126-190)
 
 ---
 
