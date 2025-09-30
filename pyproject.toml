@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "hyperlib"
-version = "1.0.0"
+version = "1.0.2"
 description = "HyperSec shared library for Python projects"
 readme = "README.md"
 authors = [
@@ -31,6 +31,7 @@ dependencies = [
     # Core dependencies for all project types
     "dynaconf>=3.2.0",  # Configuration management
     "loguru>=0.7.0",    # Professional logging
+    "pyyaml>=6.0.0",    # YAML configuration parsing
     # Package has minimal dependencies by default
     # Add your package-specific dependencies here
     "pydantic>=2.0.0",  # Data validation

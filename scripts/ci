@@ -21,7 +21,7 @@ from enum import Enum
 
 # Add parent dir for hyperlib
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from hyperlib import get_logger  # type: ignore
+from hyperlib import get_logger, load_dotenv  # type: ignore
 
 
 class ExecutionMode(Enum):
@@ -199,7 +199,7 @@ class CIFramework:
         # Start with base actions
         if group_name:
             actions = self._expand_group(group_name)
-        else:
+    else:
             actions = self._expand_group("base")
         
         # Apply environment overrides
@@ -216,7 +216,7 @@ class CIFramework:
         for action_name in actions:
             action = self.config.get("actions", {}).get(action_name)
             if not action:
-                continue
+            continue
             
             contexts = action.get("context", ["local"])
             if self.mode.value in contexts:
@@ -412,9 +412,12 @@ def main():
                        help="Configuration file")
     parser.add_argument("--enable-workflows", action="store_true",
                        help="Enable GitHub workflows")
-    
+
     args = parser.parse_args()
-    
+
+    # Load .env file before any other configuration
+    load_dotenv()
+
     # Set environment based on arguments
     if args.mode:
         os.environ["HSF_CI_MODE"] = args.mode
