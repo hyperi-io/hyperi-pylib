@@ -107,6 +107,9 @@ minversion = "8.0"
 testpaths = ["tests"]
 addopts = "-ra -q --strict-markers --cov=hyperlib --cov-report=term-missing"
 pythonpath = ["src"]
+markers = [
+    "e2e: end-to-end integration tests",
+]
 filterwarnings = [
     "ignore::DeprecationWarning",
     "ignore::PendingDeprecationWarning",

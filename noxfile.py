@@ -14,19 +14,20 @@ import nox
 if os.environ.get("HSF_IN_CI_VENV") == "1":
     # When running in .venv-ci, reuse it instead of creating new venvs
     nox.options.reuse_existing_virtualenvs = True
-    nox.options.no_venv = True
+    # Use --no-venv flag instead of setting option here
 
 @nox.session
 def tests(session: nox.Session) -> None:
     """Run tests with pytest and coverage."""
-    if not nox.options.no_venv:
+    # In CI (HSF_IN_CI_VENV=1), dependencies are already in .venv-ci
+    if os.environ.get("HSF_IN_CI_VENV") != "1":
         session.install("pytest", "pytest-cov", "-e", ".")
     session.run("pytest", "--cov", "--cov-report=term-missing")
 
 @nox.session
 def lint(session: nox.Session) -> None:
     """Run linters (ruff and black in check mode)."""
-    if not nox.options.no_venv:
+    if os.environ.get("HSF_IN_CI_VENV") != "1":
         session.install("ruff", "black")
     session.run("ruff", "check", ".")
     session.run("black", "--check", ".")
@@ -34,7 +35,7 @@ def lint(session: nox.Session) -> None:
 @nox.session
 def format(session: nox.Session) -> None:
     """Format code with ruff and black."""
-    if not nox.options.no_venv:
+    if os.environ.get("HSF_IN_CI_VENV") != "1":
         session.install("ruff", "black")
     session.run("ruff", "check", "--fix", ".")
     session.run("black", ".")
@@ -42,14 +43,14 @@ def format(session: nox.Session) -> None:
 @nox.session
 def type(session: nox.Session) -> None:
     """Type check with mypy."""
-    if not nox.options.no_venv:
+    if os.environ.get("HSF_IN_CI_VENV") != "1":
         session.install("mypy", "-e", ".")
     session.run("mypy", ".")
 
 @nox.session
 def security(session: nox.Session) -> None:
     """Run security checks with bandit, safety, and pip-audit."""
-    if not nox.options.no_venv:
+    if os.environ.get("HSF_IN_CI_VENV") != "1":
         session.install("bandit[toml]", "safety", "pip-audit")
     session.run("bandit", "-r", "src/")
     session.run("safety", "check")

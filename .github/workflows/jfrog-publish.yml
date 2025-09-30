@@ -35,20 +35,16 @@ jobs:
           # Credentials from repository secrets
           TWINE_USERNAME: ${{ secrets.ARTIFACTORY_USERNAME }}
           TWINE_PASSWORD: ${{ secrets.ARTIFACTORY_PASSWORD }}
-          # Repository URL like: https://your.jfrog.io/artifactory/api/pypi/your-pypi-local/
-          ARTIFACTORY_REPO_URL: ${{ secrets.ARTIFACTORY_REPO_URL }}
+          # HyperSec JFrog Artifactory PyPI repository
+          ARTIFACTORY_REPO_URL: https://hypersec.jfrog.io/artifactory/api/pypi/hypersec-pypi-local
         run: |
-          if [ -z "$ARTIFACTORY_REPO_URL" ]; then
-            echo "ARTIFACTORY_REPO_URL secret is required" >&2
-            exit 1
-          fi
           python -m twine upload --repository-url "$ARTIFACTORY_REPO_URL" dist/*
 
       - name: Verify package in JFrog Artifactory
         env:
           ARTIFACTORY_USERNAME: ${{ secrets.ARTIFACTORY_USERNAME }}
           ARTIFACTORY_PASSWORD: ${{ secrets.ARTIFACTORY_PASSWORD }}
-          ARTIFACTORY_REPO_URL: ${{ secrets.ARTIFACTORY_REPO_URL }}
+          ARTIFACTORY_REPO_URL: https://hypersec.jfrog.io/artifactory/api/pypi/hypersec-pypi-local
         run: |
           # Extract package name and version from built artifacts
           PACKAGE_NAME=$(ls dist/*.whl | head -1 | sed 's/.*\///' | cut -d'-' -f1)
