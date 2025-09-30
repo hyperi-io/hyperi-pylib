@@ -24,6 +24,8 @@ from hyperlib import get_logger  # type: ignore
 
 def get_current_version() -> Optional[str]:
     """Get current version from git tags."""
+    import re
+
     try:
         result = subprocess.run(
             ["git", "describe", "--tags", "--abbrev=0"],
@@ -33,9 +35,14 @@ def get_current_version() -> Optional[str]:
         )
         if result.returncode == 0:
             version = result.stdout.strip()
-            # Remove 'v' prefix if present
+            # Remove common tag prefixes (v, forge-v, hyperlib-v, etc.)
+            # Extract semantic version using regex
+            match = re.search(r'(\d+\.\d+\.\d+)', version)
+            if match:
+                return match.group(1)
+            # Fallback: just strip 'v' prefix
             if version.startswith('v'):
-                version = version[1:]
+                return version[1:]
             return version
     except Exception:
         pass
