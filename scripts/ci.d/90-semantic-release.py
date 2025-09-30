@@ -43,23 +43,48 @@ def get_current_version() -> Optional[str]:
 
 
 def get_next_version() -> Optional[str]:
-    """Get next version from semantic-release version --print."""
+    """Get next version from semantic-release --dry-run."""
+    import re
+
     try:
         result = subprocess.run(
-            ["semantic-release", "version", "--print"],
+            ["semantic-release", "--dry-run"],
             capture_output=True,
             text=True,
             check=False,
             env={**os.environ, "CI": "true"}
         )
+
+        # Parse output for version information
+        # Look for patterns like:
+        # - "The next release version is 1.2.3"
+        # - "Published release 1.2.3"
+        # - "Release version 1.2.3"
+        output = result.stdout + result.stderr
+
+        # Pattern to match semantic version
+        version_patterns = [
+            r'next release version is (\d+\.\d+\.\d+)',
+            r'Published release (\d+\.\d+\.\d+)',
+            r'Release version (\d+\.\d+\.\d+)',
+            r'Published release: (\d+\.\d+\.\d+)',
+        ]
+
+        for pattern in version_patterns:
+            match = re.search(pattern, output, re.IGNORECASE)
+            if match:
+                return match.group(1)
+
+        # If returncode is 0, check if there's a version in the output
         if result.returncode == 0:
-            output = result.stdout.strip()
-            # Parse the version from output
-            for line in output.split('\n'):
-                if line and not line.startswith('#'):
-                    return line.strip()
+            # Look for any semantic version number
+            version_match = re.search(r'\b(\d+\.\d+\.\d+)\b', output)
+            if version_match:
+                return version_match.group(1)
+
     except Exception:
         pass
+
     return None
 
 
