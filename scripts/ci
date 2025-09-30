@@ -199,7 +199,7 @@ class CIFramework:
         # Start with base actions
         if group_name:
             actions = self._expand_group(group_name)
-    else:
+        else:
             actions = self._expand_group("base")
         
         # Apply environment overrides
@@ -216,7 +216,7 @@ class CIFramework:
         for action_name in actions:
             action = self.config.get("actions", {}).get(action_name)
             if not action:
-            continue
+                continue
             
             contexts = action.get("context", ["local"])
             if self.mode.value in contexts:
