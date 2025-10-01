@@ -1,19 +1,21 @@
 [build-system]
-requires = ["setuptools>=64", "wheel"]
+requires = [
+    "setuptools>=64",
+    "wheel",
+]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "hyperlib"
-version = "1.2.0"
+version = "1.2.1"
 description = "HyperSec shared library for Python projects"
 readme = "README.md"
 authors = [
-    {name = "HyperSec Team", email = "dev@hypersec.io"},
+    { name = "HyperSec Team", email = "dev@hypersec.io" },
 ]
 maintainers = [
-    {name = "HyperSec Team", email = "dev@hypersec.io"},
+    { name = "HyperSec Team", email = "dev@hypersec.io" },
 ]
-license = {text = "HyperSec EULA"}
 requires-python = ">=3.8"
 classifiers = [
     "Development Status :: 3 - Alpha",
@@ -25,50 +27,51 @@ classifiers = [
     "Programming Language :: Python :: 3 :: Only",
     "Operating System :: OS Independent",
 ]
-keywords = ["hypersec", "library", "utilities", "logging", "configuration"]
+keywords = [
+    "hypersec",
+    "library",
+    "utilities",
+    "logging",
+    "configuration",
+]
 dependencies = [
-    # Core dependencies for all project types
-    "dynaconf>=3.2.11",  # Configuration management
-    "loguru>=0.7.3",    # Professional logging
-    "pyyaml>=6.0.3",    # YAML configuration parsing
-    # Package has minimal dependencies by default
-    # Add your package-specific dependencies here
-    "pydantic>=2.0.0",  # Data validation
-    "aiofiles>=23.0.0", # Async file operations
-    "httpx>=0.24.0",    # HTTP client
-    "tenacity>=8.0.0",  # Retry logic
-    "psutil>=7.1.0",    # System and process utilities
+    "dynaconf>=3.2.11",
+    "loguru>=0.7.3",
+    "pyyaml>=6.0.3",
+    "pydantic>=2.0.0",
+    "aiofiles>=23.0.0",
+    "httpx>=0.24.0",
+    "tenacity>=8.0.0",
+    "psutil>=7.1.0",
 ]
 
+[project.license]
+text = "HyperSec EULA"
+
 [project.optional-dependencies]
-enhanced = [
-    # Add optional enhanced dependencies here
-    # "pandas>=2.0.0",    # Data analysis
-    # "requests>=2.31.0",  # HTTP client
-    # "numpy>=1.24.0",     # Scientific computing
-]
+enhanced = []
 dev = [
-    "nox>=2024.0.0",         # Task automation and testing
-    "pytest>=8.0.0",         # Modern test framework
-    "pytest-cov>=5.0.0",     # Test coverage reporting
-    "ruff>=0.1.0",           # Fast Python linter (replaces flake8)
-    "black>=24.0.0",         # Code formatting
-    "mypy>=1.8.0",           # Static type checking
-    "vermin>=1.6.0",         # Python version detection and automation
-    "python-dotenv>=1.0.0",  # Environment configuration
-    "pyyaml>=6.0.1",         # YAML configuration support
-    "pre-commit>=3.0.0",     # Git pre-commit hooks
-    "isort>=5.12.0",         # Import sorting
-    "requests>=2.31.0",      # For download_datasets script
-    "build>=1.0.0",          # Build backend for packages
-    "twine>=5.0.0",          # PyPI upload tool
-    "tomli-w>=1.0.0",        # TOML writing for Python 3.11+ (tomllib only reads)
+    "nox>=2024.0.0",
+    "pytest>=8.0.0",
+    "pytest-cov>=5.0.0",
+    "ruff>=0.1.0",
+    "black>=24.0.0",
+    "mypy>=1.8.0",
+    "vermin>=1.6.0",
+    "python-dotenv>=1.0.0",
+    "pyyaml>=6.0.1",
+    "pre-commit>=3.0.0",
+    "isort>=5.12.0",
+    "requests>=2.31.0",
+    "build>=1.0.0",
+    "twine>=5.0.0",
+    "tomli-w>=1.0.0",
 ]
 docs = [
-    "sphinx>=8.0.0",          # Documentation generator
-    "sphinx-rtd-theme>=3.0.0", # Read the Docs theme
-    "myst-parser>=3.0.0",     # Markdown parser for Sphinx
-    "sphinx-autobuild>=2024.0.0", # Live reload during development
+    "sphinx>=8.0.0",
+    "sphinx-rtd-theme>=3.0.0",
+    "myst-parser>=3.0.0",
+    "sphinx-autobuild>=2024.0.0",
 ]
 
 [project.urls]
@@ -78,16 +81,22 @@ Repository = "https://github.com/hypersec-io/hyperlib"
 "Bug Reports" = "https://github.com/hypersec-io/hyperlib/issues"
 Changelog = "https://github.com/hypersec-io/hyperlib/blob/main/CHANGELOG.md"
 
-[tool.setuptools]
-package-dir = {"" = "src"}
+[tool.setuptools.package-dir]
+"" = "src"
 
 [tool.setuptools.packages.find]
-where = ["src"]
-include = ["hyperlib*"]
+where = [
+    "src",
+]
+include = [
+    "hyperlib*",
+]
 namespaces = false
 
 [tool.setuptools.package-data]
-hyperlib = ["py.typed"]
+hyperlib = [
+    "py.typed",
+]
 
 [tool.semantic_release]
 version_variables = [
@@ -105,9 +114,13 @@ commit_message = "chore: release {version} [skip ci]"
 
 [tool.pytest.ini_options]
 minversion = "8.0"
-testpaths = ["tests"]
+testpaths = [
+    "tests",
+]
 addopts = "-ra -q --strict-markers"
-pythonpath = ["src"]
+pythonpath = [
+    "src",
+]
 markers = [
     "e2e: end-to-end integration tests",
 ]
@@ -117,8 +130,13 @@ filterwarnings = [
 ]
 
 [tool.coverage.run]
-source = ["src/hyperlib"]
-omit = ["*/tests/*", "*/__pycache__/*"]
+source = [
+    "src/hyperlib",
+]
+omit = [
+    "*/tests/*",
+    "*/__pycache__/*",
+]
 
 [tool.coverage.report]
 exclude_lines = [
@@ -142,33 +160,34 @@ indent-width = 4
 
 [tool.ruff.lint]
 select = [
-    "E",    # pycodestyle errors
-    "W",    # pycodestyle warnings
-    "F",    # pyflakes
-    "I",    # isort
-    "B",    # flake8-bugbear
-    "C4",   # flake8-comprehensions
-    "UP",   # pyupgrade
-    "ARG",  # flake8-unused-arguments
-    "SIM",  # flake8-simplify
+    "E",
+    "W",
+    "F",
+    "I",
+    "B",
+    "C4",
+    "UP",
+    "ARG",
+    "SIM",
 ]
 ignore = [
-    "ARG001",  # Unused function arguments
-    "ARG002",  # Unused method arguments (often needed for interfaces)
-    "B904",   # raise exceptions with raise from
-    "E402",   # Module level import not at top of file
-    "E722",    # Do not use bare except
-    "SIM105",  # Use contextlib.suppress
-    "F401",    # Imported but unused
-    "TRY300",  # Consider moving this statement to an else block
-    "F821",    # Undefined name (false positives in some cases)
-
-    "E501",  # Line too long (handled by formatter)
-    "B008",  # Do not perform function calls in argument defaults
-    "C901",  # Too complex
-    "W191",  # Indentation contains tabs
+    "ARG001",
+    "ARG002",
+    "B904",
+    "E402",
+    "E722",
+    "SIM105",
+    "F401",
+    "TRY300",
+    "F821",
+    "E501",
+    "B008",
+    "C901",
+    "W191",
 ]
-fixable = ["ALL"]
+fixable = [
+    "ALL",
+]
 unfixable = []
 dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
 
@@ -180,21 +199,11 @@ line-ending = "auto"
 
 [tool.black]
 line-length = 120
-target-version = ["py311"]
-include = '\.pyi?$'
-extend-exclude = '''
-/(
-  # directories
-  \.eggs
-  | \.git
-  | \.hg
-  | \.mypy_cache
-  | \.tox
-  | \.venv
-  | build
-  | dist
-)/
-'''
+target-version = [
+    "py311",
+]
+include = "\\.pyi?$"
+extend-exclude = "/(\n  # directories\n  \\.eggs\n  | \\.git\n  | \\.hg\n  | \\.mypy_cache\n  | \\.tox\n  | \\.venv\n  | build\n  | dist\n)/\n"
 
 [tool.isort]
 profile = "black"
@@ -218,19 +227,23 @@ warn_no_return = false
 check_untyped_defs = false
 strict_optional = false
 ignore_missing_imports = true
-
-[[tool.mypy.overrides]]
-module = "tests.*"
-ignore_errors = true
-
-[[tool.mypy.overrides]]
-module = "scripts.*"
-ignore_errors = true
+overrides = [
+    { module = "tests.*", ignore_errors = true },
+    { module = "scripts.*", ignore_errors = true },
+]
 
 [tool.bandit]
-exclude_dirs = ["tests", "scripts"]
-skips = ["B101", "B601"]
+exclude_dirs = [
+    "tests",
+    "scripts",
+]
+skips = [
+    "B101",
+    "B601",
+]
 
 [tool.vermin]
-targets = ["3.11"]
+targets = [
+    "3.11",
+]
 no_tips = true
