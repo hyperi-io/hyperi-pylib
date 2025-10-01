@@ -7,7 +7,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "hyperlib"
-version = "1.5.0"
+version = "24.2.8"
 description = "HyperSec shared library for Python projects"
 readme = "README.md"
 authors = [
