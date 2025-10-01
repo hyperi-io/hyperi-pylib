@@ -25,13 +25,33 @@ import sys
 from pathlib import Path
 
 # Get project root
-THIS_DIR = Path(__file__).resolve().parent
-if "hypersec-forge-core" in str(THIS_DIR):
-    # Running from core subtree
-    PROJECT_ROOT = THIS_DIR.parent.parent.parent
+# CRITICAL: When this script is symlinked, we need the REAL project root (where it was called from),
+# not the symlink source. Use the script's parent directory (scripts/), then go up one level.
+# __file__ gives us the symlink path if called via symlink, which is what we want.
+SCRIPT_PATH = Path(__file__).resolve(strict=False)  # Resolves symlink to actual file
+SCRIPT_DIR = SCRIPT_PATH.parent  # This will be hypersec-forge-core/scripts
+
+# The project root is where the symlink exists, which we can find from argv[0]
+# or by checking if we're in hypersec-forge-core
+if "hypersec-forge-core" in str(SCRIPT_DIR):
+    # We're being called via symlink or from forge-core directly
+    # The PROJECT_ROOT should be determined from the current working directory
+    # Walk up from cwd to find scripts/ directory
+    cwd = Path.cwd()
+    if (cwd / "scripts" / "ci").exists() or (cwd / "scripts" / "ci").is_symlink():
+        PROJECT_ROOT = cwd
+    else:
+        # Walk up to find project root
+        PROJECT_ROOT = cwd
+        while PROJECT_ROOT != PROJECT_ROOT.parent:
+            if (PROJECT_ROOT / "scripts" / "ci").exists() or (PROJECT_ROOT / "scripts" / "ci").is_symlink():
+                break
+            PROJECT_ROOT = PROJECT_ROOT.parent
 else:
-    # Running from project root
-    PROJECT_ROOT = THIS_DIR.parent
+    # Running from project root directly (not symlinked)
+    PROJECT_ROOT = SCRIPT_DIR.parent
+
+THIS_DIR = SCRIPT_DIR
 
 
 def find_ci_directories() -> list:
@@ -169,6 +189,7 @@ Examples:
   ./scripts/ci deploy      # Build and publish to JFrog
   ./scripts/ci release     # Full release (version, build, deploy)
   ./scripts/ci clean       # Remove build artifacts
+  ./scripts/ci --script 80-build.py check  # Run single script
         """
     )
     parser.add_argument(
@@ -177,6 +198,11 @@ Examples:
         default="check",
         choices=["check", "install", "lint", "test", "build", "deploy", "release", "clean", "all"],
         help="Action to perform (default: check)"
+    )
+    parser.add_argument(
+        "--script",
+        metavar="BASENAME",
+        help="Run only this script from ci.d/ (e.g., 80-build.py)"
     )
     parser.add_argument(
         "--continue-on-error",
@@ -234,6 +260,45 @@ Examples:
     print(f"\nCI directories:")
     for label, ci_dir in ci_dirs:
         print(f"  - {label}: {ci_dir}")
+
+    # Handle --script option: run single script only
+    if args.script:
+        script_basename = args.script
+        print(f"\n{'='*60}")
+        print(f"Running single script: {script_basename}")
+        print(f"{'='*60}")
+
+        # Search for script in all ci.d directories
+        script_found = False
+        for label, ci_dir in ci_dirs:
+            script_path = ci_dir / script_basename
+            if script_path.exists() and script_path.is_file():
+                # Validate it's a .py or .sh file
+                if script_path.suffix not in [".py", ".sh"]:
+                    print(f"\nERROR: {script_basename} must be a .py or .sh file")
+                    return 1
+
+                print(f"\nFound in [{label}]: {script_path}")
+                returncode = run_script(script_path, args.action)
+                script_found = True
+
+                if returncode != 0:
+                    print(f"\nERROR: {script_basename} failed with code {returncode}")
+                    return returncode
+                else:
+                    print(f"\n✓ {script_basename} completed successfully")
+                    return 0
+
+        if not script_found:
+            print(f"\nERROR: Script '{script_basename}' not found in any ci.d directory")
+            print("\nAvailable scripts:")
+            for label, ci_dir in ci_dirs:
+                scripts = find_scripts(ci_dir)
+                if scripts:
+                    print(f"\n[{label}]:")
+                    for s in scripts:
+                        print(f"  - {s.name}")
+            return 1
 
     # Run all scripts in order
     failed_scripts = []
