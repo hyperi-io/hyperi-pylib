@@ -5,7 +5,7 @@ Provides configuration, logging, timeout, and container management
 Requires Python 3.11+ for modern type hints and enterprise features
 """
 
-__version__ = "1.2.1"
+__version__ = "1.3.0"
 
 # Enforce Python 3.11+ requirement
 import sys
