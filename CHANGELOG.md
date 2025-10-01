@@ -1,3 +1,21 @@
+# [1.4.0](https://github.com/hypersec-io/hyperlib/compare/v1.3.0...v1.4.0) (2025-10-01)
+
+
+### Bug Fixes
+
+* make build/deploy scripts handle all action types gracefully ([cb7078b](https://github.com/hypersec-io/hyperlib/commit/cb7078b4e0d6dd8c7ffce1d23b48ccc2aa629174))
+
+
+### Features
+
+* **ci:** add comprehensive CI commands for build/deploy workflow ([7f17a42](https://github.com/hypersec-io/hyperlib/commit/7f17a421838c2c78f17366230c522929ba925620))
+* sync CI scripts with --push flag support from forge-core ([09225c7](https://github.com/hypersec-io/hyperlib/commit/09225c7360234a220bff9bfd8794214da8ee1405))
+
+
+### Reverts
+
+* Revert "chore: convert universal CI scripts to symlinks (branch-name, chars-policy, semantic-release from forge-core; version-sync from forge-python)" ([ac0f505](https://github.com/hypersec-io/hyperlib/commit/ac0f505fb01630db20d1911f93c7b839da813da5))
+
 # [1.3.0](https://github.com/hypersec-io/hyperlib/compare/v1.2.1...v1.3.0) (2025-10-01)
 
 
