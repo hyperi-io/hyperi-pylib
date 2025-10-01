@@ -88,7 +88,7 @@ env:
 ```
 
 **Template Files to Update**:
-- `subtrees/hypersec-forge-python/.github/workflows-disabled/pypi-publish.yml`
+- `modules/hypersec-forge-python/.github/workflows-disabled/pypi-publish.yml`
 - Any other workflows referencing this secret
 
 **Alternative**: Document that users should create this secret, but hardcoding is simpler.
@@ -335,7 +335,7 @@ When applying changes back to template, verify:
 
 5. **Commit with conventional commits**:
    ```bash
-   git add subtrees/hypersec-forge-python
+   git add modules/hypersec-forge-python
    git commit -m "fix(template): add __version__ export to __init__.py
 
    - Ensures generated packages export __version__ attribute
