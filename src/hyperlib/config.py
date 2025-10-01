@@ -48,23 +48,72 @@ def get_api_config():
     }
 
 def get_logging_config():
-    """Get container-aware logging configuration with LOG_LEVEL support.
+    """Get container-aware logging configuration with K8s standard env vars.
+
+    Supports standard K8s/cloud-native logging environment variables:
+    - LOG_LEVEL: Log level (DEBUG, INFO, WARNING, ERROR, CRITICAL)
+    - LOG_FORMAT: Output format (json, text, console, logfmt)
+    - LOG_OUTPUT: Destination (stdout, stderr, file)
+    - LOG_COLOR / NO_COLOR: Color control for output
+    - LOG_TIMESTAMP_FORMAT: Timestamp format (iso8601, rfc3339, unix, epoch)
+    - LOG_CALLER: Include source location (true/false)
+    - LOG_STACKTRACE_LEVEL: Minimum level for stack traces (ERROR, CRITICAL)
 
     Priority order (CLI → ENV → .env → config → default → hardcoded):
-    1. LOG_LEVEL environment variable (standard)
-    2. APP_LOGGING__LEVEL (Dynaconf prefixed)
-    3. Config file logging.level
-    4. Hardcoded default (INFO)
+    1. Standard environment variables (LOG_*)
+    2. Dynaconf prefixed variables (APP_LOGGING__*)
+    3. Config file (logging.*)
+    4. Hardcoded defaults
     """
     import os
+    import sys
 
     logging_config = settings.get("logging", {})
 
-    # Check for LOG_LEVEL environment variable first (standard convention)
+    # LOG_LEVEL: Standard log level
     log_level = os.getenv("LOG_LEVEL")
     if not log_level:
-        # Fall back to dynaconf settings
         log_level = logging_config.get("level", "INFO")
+
+    # LOG_FORMAT: Output format (json, text, console, logfmt)
+    log_format = os.getenv("LOG_FORMAT")
+    if not log_format:
+        log_format = logging_config.get("format", "console")
+
+    # LOG_OUTPUT: Destination (stdout, stderr, file)
+    log_output = os.getenv("LOG_OUTPUT")
+    if not log_output:
+        log_output = logging_config.get("output", "stderr")
+
+    # LOG_COLOR / NO_COLOR: Color control
+    # NO_COLOR is a standard env var: https://no-color.org/
+    log_color = os.getenv("LOG_COLOR")
+    no_color = os.getenv("NO_COLOR")
+    if log_color is not None:
+        use_color = log_color.lower() in ("true", "1", "yes")
+    elif no_color is not None:
+        use_color = False  # NO_COLOR disables colors
+    elif not sys.stderr.isatty():
+        use_color = False  # Disable colors when not a TTY (K8s containers)
+    else:
+        use_color = logging_config.get("color", True)
+
+    # LOG_TIMESTAMP_FORMAT: Timestamp format
+    timestamp_format = os.getenv("LOG_TIMESTAMP_FORMAT")
+    if not timestamp_format:
+        timestamp_format = logging_config.get("timestamp_format", "rfc3339")
+
+    # LOG_CALLER: Include source location
+    log_caller = os.getenv("LOG_CALLER")
+    if log_caller is not None:
+        include_caller = log_caller.lower() in ("true", "1", "yes")
+    else:
+        include_caller = logging_config.get("caller", True)
+
+    # LOG_STACKTRACE_LEVEL: Minimum level for stack traces
+    stacktrace_level = os.getenv("LOG_STACKTRACE_LEVEL")
+    if not stacktrace_level:
+        stacktrace_level = logging_config.get("stacktrace_level", "ERROR")
 
     # Get container-aware log file path
     log_file = logging_config.get("file")
@@ -74,6 +123,12 @@ def get_logging_config():
 
     return {
         "level": log_level,
+        "format": log_format,
+        "output": log_output,
+        "color": use_color,
+        "timestamp_format": timestamp_format,
+        "caller": include_caller,
+        "stacktrace_level": stacktrace_level,
         "console": logging_config.get("console", True),
         "file": log_file
     }
