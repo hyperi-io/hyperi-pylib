@@ -1,6 +1,8 @@
-# Hyperlib
+# Hyperlib v1.5.0
 
 HyperSec shared library for Python projects - Enterprise infrastructure for configuration, logging, timeouts, and container management.
+
+**Status**: Production (v1.5.0 published to JFrog Artifactory 2025-10-01)
 
 ## Features
 
@@ -86,7 +88,40 @@ CI is local-first. GitHub Actions are disabled by default and should be enabled 
 - Python 3.11+
 - Dependencies: `loguru`, `dynaconf`, `pyyaml`
 
-## Building and Publishing
+## CI and Publishing
+
+### CI Commands
+
+```bash
+./scripts/ci [action] [flags]
+
+Actions:
+  check     - Run all CI checks (lint, test, type-check)
+  build     - Build wheel and sdist
+  deploy    - Build and publish to JFrog Artifactory
+  release   - Full semantic-release (version, build, deploy, tag)
+  publish   - Release + automatic push (shorthand for release --push)
+  clean     - Remove build artifacts
+```
+
+### Automated Release
+
+```bash
+# Full release with automatic versioning and push
+FORCE_RELEASE=1 ./scripts/ci publish
+```
+
+This will:
+1. Analyze conventional commits since last release
+2. Calculate next version (patch/minor/major)
+3. Update VERSION, pyproject.toml, __init__.py
+4. Generate/update CHANGELOG.md
+5. Create git tag
+6. Build wheel and sdist
+7. Publish to JFrog Artifactory
+8. Push commits and tags to GitHub
+
+### Manual Publishing
 
 ```bash
 # Build wheel and source distribution
@@ -108,4 +143,4 @@ pytest tests/
 
 ## License
 
-Licensed under HyperSec EULA. See [LICENSE](LICENSE) for details.# Test for release --push
+Licensed under HyperSec EULA. See [LICENSE](LICENSE) for details.
