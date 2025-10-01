@@ -1,3 +1,27 @@
+## [1.2.1](https://github.com/hypersec-io/hyperlib/compare/v1.2.0...v1.2.1) (2025-10-01)
+
+
+### Bug Fixes
+
+* **ci:** semantic-release now updates __init__.py and uses tomllib ([ca5ba93](https://github.com/hypersec-io/hyperlib/commit/ca5ba93a50d126cf417472d5ea8d13c5c67786ef))
+* **ci:** use .venv-ci python for semantic-release build command ([9a8487d](https://github.com/hypersec-io/hyperlib/commit/9a8487d4ad8809110427c753518b65aa4c7a527f))
+
+## [1.2.1](https://github.com/hypersec-io/hyperlib/compare/v1.2.0...v1.2.1) (2025-10-01)
+
+
+### Bug Fixes
+
+* **ci:** semantic-release now updates __init__.py and uses tomllib ([ca5ba93](https://github.com/hypersec-io/hyperlib/commit/ca5ba93a50d126cf417472d5ea8d13c5c67786ef))
+* **ci:** use .venv-ci python for semantic-release build command ([9a8487d](https://github.com/hypersec-io/hyperlib/commit/9a8487d4ad8809110427c753518b65aa4c7a527f))
+
+## [1.2.1](https://github.com/hypersec-io/hyperlib/compare/v1.2.0...v1.2.1) (2025-10-01)
+
+
+### Bug Fixes
+
+* **ci:** semantic-release now updates __init__.py and uses tomllib ([ca5ba93](https://github.com/hypersec-io/hyperlib/commit/ca5ba93a50d126cf417472d5ea8d13c5c67786ef))
+* **ci:** use .venv-ci python for semantic-release build command ([9a8487d](https://github.com/hypersec-io/hyperlib/commit/9a8487d4ad8809110427c753518b65aa4c7a527f))
+
 # [1.2.0](https://github.com/hypersec-io/hyperlib/compare/v1.1.2...v1.2.0) (2025-10-01)
 
 
