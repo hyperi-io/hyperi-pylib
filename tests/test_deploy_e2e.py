@@ -2,7 +2,6 @@ import os
 import shutil
 import subprocess
 import sys
-import uuid
 from pathlib import Path
 
 import pytest
@@ -42,7 +41,7 @@ def test_template_deploy_flow(license_id: str, enable_gha: bool) -> None:
     project_name = "test_hypersec_forge_tpl_python_pkg"
     package_name = "test_hypersec_forge_tpl_python_pkg"
     dest = base_dir / project_name
-    
+
     # Clean up existing test project
     if dest.exists():
         shutil.rmtree(dest)
@@ -103,35 +102,35 @@ def test_template_deploy_flow(license_id: str, enable_gha: bool) -> None:
         # Verify that JFrog workflow is properly configured
         workflow_path = dest / ".github" / "workflows" / "jfrog-publish.yml"
         workflows_disabled_path = dest / ".github" / "workflows-disabled" / "jfrog-publish.yml"
-        
+
         if workflow_path.exists():
-            print(f"[OK] JFrog deployment workflow enabled at .github/workflows/")
+            print("[OK] JFrog deployment workflow enabled at .github/workflows/")
             # Verify the workflow uses GitHub secrets
             workflow_content = workflow_path.read_text()
             required_secrets = [
                 "secrets.ARTIFACTORY_USERNAME",
-                "secrets.ARTIFACTORY_PASSWORD", 
-                "secrets.ARTIFACTORY_REPO_URL"
+                "secrets.ARTIFACTORY_PASSWORD",
+                "secrets.ARTIFACTORY_REPO_URL",
             ]
             for secret in required_secrets:
                 assert secret in workflow_content, f"Missing required secret: {secret}"
-            print(f"[OK] JFrog workflow correctly configured to use GitHub Secrets")
-            
+            print("[OK] JFrog workflow correctly configured to use GitHub Secrets")
+
             # Verify the workflow has verification step
             assert "Verify package in JFrog Artifactory" in workflow_content, "Missing verification step"
             assert "pip install --no-cache-dir" in workflow_content, "Missing package installation verification"
-            print(f"[OK] JFrog workflow includes post-publish verification step")
+            print("[OK] JFrog workflow includes post-publish verification step")
         else:
             assert workflows_disabled_path.exists(), "JFrog workflow not found in either location"
-            print(f"[OK] JFrog deployment workflow disabled (in .github/workflows-disabled/)")
-        
+            print("[OK] JFrog deployment workflow disabled (in .github/workflows-disabled/)")
+
         # Verify local CI stays local
         local_ci_disabled = dest / ".github" / "workflows-disabled" / "local-ci.yml"
         local_ci_enabled = dest / ".github" / "workflows" / "local-ci.yml"
         assert local_ci_disabled.exists(), "Local CI workflow should remain in workflows-disabled"
         assert not local_ci_enabled.exists(), "Local CI should not be in workflows (runs locally via scripts/ci)"
-        print(f"[OK] Local CI correctly configured to run locally (not via GitHub Actions)")
-    
+        print("[OK] Local CI correctly configured to run locally (not via GitHub Actions)")
+
     # Optionally exercise local CI inside the rendered project
     if os.environ.get("RUN_E2E_CI") == "1":
         ci_script = dest / "scripts" / "ci"
@@ -146,6 +145,6 @@ def test_template_deploy_flow(license_id: str, enable_gha: bool) -> None:
         if enable_gha:
             assert gh_enabled.exists() or (not gh_disabled.exists()), "Expected workflows enabled or disabled removed"
         else:
-            assert not gh_enabled.exists() or gh_disabled.exists(), "Expected workflows to remain disabled when not enabled"
-
-
+            assert (
+                not gh_enabled.exists() or gh_disabled.exists()
+            ), "Expected workflows to remain disabled when not enabled"

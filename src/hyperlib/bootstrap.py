@@ -5,9 +5,10 @@ These utilities support the bootstrap process and are not part of the main API.
 
 import os
 import subprocess
-import yaml
 from pathlib import Path
-from typing import List, Tuple, Any, Dict
+from typing import Any
+
+import yaml
 
 
 def load_dotenv() -> None:
@@ -39,12 +40,13 @@ def _load_env_file(env_file: Path) -> None:
                 # Simple variable expansion for ${VAR}
                 if "${" in value:
                     import re
-                    for match in re.findall(r'\$\{([^}]+)\}', value):
+
+                    for match in re.findall(r"\$\{([^}]+)\}", value):
                         value = value.replace(f"${{{match}}}", os.environ.get(match, ""))
                 os.environ.setdefault(key, value)
 
 
-def list_sorted_scripts(directory: Path, patterns: Tuple[str, ...] = (".sh", ".py")) -> List[Path]:
+def list_sorted_scripts(directory: Path, patterns: tuple[str, ...] = (".sh", ".py")) -> list[Path]:
     """List scripts in directory matching patterns, sorted by name.
 
     Args:
@@ -64,7 +66,7 @@ def list_sorted_scripts(directory: Path, patterns: Tuple[str, ...] = (".sh", ".p
     return sorted(scripts, key=lambda p: p.name)
 
 
-def load_defaults_yaml() -> Dict[str, Any]:
+def load_defaults_yaml() -> dict[str, Any]:
     """Load defaults from scripts/ci.yaml or scripts/ci.yml.
 
     Returns:
@@ -79,7 +81,7 @@ def load_defaults_yaml() -> Dict[str, Any]:
     return {}
 
 
-def ensure_dependency(command: str, install: bool, logger, defaults: Dict[str, Any]) -> None:
+def ensure_dependency(command: str, install: bool, logger, defaults: dict[str, Any]) -> None:
     """Ensure a command is available, optionally installing it.
 
     Args:
@@ -118,8 +120,8 @@ def ensure_dependency(command: str, install: bool, logger, defaults: Dict[str, A
 
 
 __all__ = [
-    'load_dotenv',
-    'list_sorted_scripts',
-    'load_defaults_yaml',
-    'ensure_dependency',
+    "load_dotenv",
+    "list_sorted_scripts",
+    "load_defaults_yaml",
+    "ensure_dependency",
 ]

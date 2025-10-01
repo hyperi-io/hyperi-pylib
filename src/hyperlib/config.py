@@ -4,6 +4,7 @@ Enforces consistent configuration usage across ALL /src code
 """
 
 from pathlib import Path
+
 from dynaconf import Dynaconf
 
 # Initialize container-aware dynaconf configuration
@@ -21,21 +22,24 @@ config_dir = container_root / "app" / "config"
 settings = Dynaconf(
     envvar_prefix="APP",  # Environment variables use APP_ prefix
     settings_files=[
-        str(config_dir / "config.yaml"),           # Override config (4th priority)
-        str(config_dir / "dfe_ai" / "default.yaml")  # Default config (5th priority)
+        str(config_dir / "config.yaml"),  # Override config (4th priority)
+        str(config_dir / "dfe_ai" / "default.yaml"),  # Default config (5th priority)
     ],
     load_dotenv=True,  # Load .env file (3rd priority)
     environments=False,  # Single config approach
     # PRECEDENCE: CLI → ENV → .env → config override → default → hardcoded
 )
 
+
 def get_settings():
     """Get standard dynaconf settings object"""
     return settings
 
+
 def setup():
     """Setup configuration (for compatibility)"""
     return settings
+
 
 # Standard configuration access functions
 def get_api_config():
@@ -44,8 +48,9 @@ def get_api_config():
     return {
         "max_retries": api_config.get("max_retries", 3),
         "retry_delay": api_config.get("retry_delay", 5),
-        "timeout": api_config.get("timeout", 120)
+        "timeout": api_config.get("timeout", 120),
     }
+
 
 def get_logging_config():
     """Get container-aware logging configuration with K8s standard env vars.
@@ -130,8 +135,9 @@ def get_logging_config():
         "caller": include_caller,
         "stacktrace_level": stacktrace_level,
         "console": logging_config.get("console", True),
-        "file": log_file
+        "file": log_file,
     }
 
+
 # Export for direct access
-__all__ = ['settings', 'get_settings', 'setup', 'get_api_config', 'get_logging_config']
+__all__ = ["settings", "get_settings", "setup", "get_api_config", "get_logging_config"]

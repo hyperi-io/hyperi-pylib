@@ -2,6 +2,7 @@
 Custom exceptions for the template package.
 """
 
+
 class TemplateError(Exception):
     """Base exception for template-related errors."""
 
