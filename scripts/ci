@@ -80,6 +80,61 @@ def find_scripts(ci_dir: Path) -> list:
     return scripts
 
 
+def handle_clean_action(args) -> int:
+    """Handle the clean action - remove build artifacts."""
+    print("\nCleaning build artifacts...")
+
+    patterns = [
+        "dist/",
+        "build/",
+        "*.egg-info",
+        "__pycache__/",
+        ".pytest_cache/",
+        ".mypy_cache/",
+        ".ruff_cache/",
+        "*.pyc",
+        "*.pyo",
+        ".coverage",
+        "htmlcov/",
+    ]
+
+    import shutil
+    import glob
+
+    removed = []
+    for pattern in patterns:
+        if "/" in pattern:
+            # Directory pattern
+            dir_path = PROJECT_ROOT / pattern.rstrip("/")
+            if dir_path.exists():
+                if args.dry_run:
+                    print(f"Would remove: {dir_path}")
+                else:
+                    shutil.rmtree(dir_path)
+                    removed.append(str(dir_path))
+                    print(f"Removed: {dir_path}")
+        else:
+            # File pattern
+            for item in PROJECT_ROOT.rglob(pattern):
+                if args.dry_run:
+                    print(f"Would remove: {item}")
+                else:
+                    if item.is_dir():
+                        shutil.rmtree(item)
+                    else:
+                        item.unlink()
+                    removed.append(str(item))
+
+    if removed and not args.dry_run:
+        print(f"\n✓ Cleaned {len(removed)} items")
+    elif args.dry_run:
+        print("\n✓ Dry run complete")
+    else:
+        print("\n✓ No artifacts to clean")
+
+    return 0
+
+
 def run_script(script: Path, action: str = "check") -> int:
     """Run a single CI script."""
     print(f"\n{'='*60}")
@@ -105,12 +160,22 @@ def run_script(script: Path, action: str = "check") -> int:
 
 def main():
     """Main entry point."""
-    parser = argparse.ArgumentParser(description="CI runner for HyperSec Forge")
+    parser = argparse.ArgumentParser(
+        description="CI runner for HyperSec projects",
+        epilog="""
+Examples:
+  ./scripts/ci check       # Run all checks (lint, test, type-check)
+  ./scripts/ci build       # Build package
+  ./scripts/ci deploy      # Build and publish to JFrog
+  ./scripts/ci release     # Full release (version, build, deploy)
+  ./scripts/ci clean       # Remove build artifacts
+        """
+    )
     parser.add_argument(
         "action",
         nargs="?",
         default="check",
-        choices=["check", "install"],
+        choices=["check", "install", "lint", "test", "build", "deploy", "release", "clean", "all"],
         help="Action to perform (default: check)"
     )
     parser.add_argument(
@@ -118,13 +183,27 @@ def main():
         action="store_true",
         help="Continue running even if a script fails"
     )
+    parser.add_argument(
+        "--force",
+        action="store_true",
+        help="Force action (e.g., force release without CI check)"
+    )
+    parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Show what would happen without doing it"
+    )
     args = parser.parse_args()
 
     print("="*60)
-    print("HyperSec Forge CI")
+    print("HyperSec CI")
     print("="*60)
 
-    # Ensure bootstrap has run
+    # Handle special actions first
+    if args.action == "clean":
+        return handle_clean_action(args)
+
+    # Ensure bootstrap has run (except for clean which doesn't need it)
     bootstrap_script = PROJECT_ROOT / "scripts" / "bootstrap"
     if bootstrap_script.exists():
         print("\n[Ensuring bootstrap has run...]")
@@ -137,6 +216,14 @@ def main():
             return 1
     else:
         print("\nWARNING: No bootstrap script found, skipping bootstrap check")
+
+    # Set environment variables for flags
+    if args.force:
+        os.environ["FORCE_RELEASE"] = "1"
+        os.environ["CI_FORCE"] = "1"
+    if args.dry_run:
+        os.environ["DRY_RUN"] = "1"
+        os.environ["CI_DRY_RUN"] = "1"
 
     # Find all ci.d directories
     ci_dirs = find_ci_directories()
