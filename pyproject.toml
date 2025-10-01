@@ -153,6 +153,9 @@ select = [
     "SIM",  # flake8-simplify
 ]
 ignore = [
+    "ARG002",  # Unused method arguments (often needed for interfaces)
+    "F821",    # Undefined name (false positives in some cases)
+
     "E501",  # Line too long (handled by formatter)
     "B008",  # Do not perform function calls in argument defaults
     "C901",  # Too complex
