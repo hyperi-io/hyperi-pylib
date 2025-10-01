@@ -1,3 +1,19 @@
+# [1.2.0](https://github.com/hypersec-io/hyperlib/compare/v1.1.2...v1.2.0) (2025-10-01)
+
+
+### Bug Fixes
+
+* **ci:** make pytest work without pytest-cov ([17004da](https://github.com/hypersec-io/hyperlib/commit/17004dabfe6e6c3e848bafbad53a97f92c34eb3a))
+* **ci:** replace template rendering script with package testing script ([9eb0eba](https://github.com/hypersec-io/hyperlib/commit/9eb0eba608482722c6e8144979367f6914047464))
+* **tests:** add missing temp_dir fixture for bootstrap tests ([b9ebab0](https://github.com/hypersec-io/hyperlib/commit/b9ebab0091198467bbf21aeaf6d0bbfc780b88ab))
+* **tests:** fix test_ensure_dependency_check_mode test ([719cfa3](https://github.com/hypersec-io/hyperlib/commit/719cfa3bbf459af34e62b6fd342ea0ad5e996937))
+
+
+### Features
+
+* add comprehensive bootstrap tests ([94b9d62](https://github.com/hypersec-io/hyperlib/commit/94b9d6278b3490318ae07902602854993eb4c60f))
+* add JFrog token authentication support ([8bddc5d](https://github.com/hypersec-io/hyperlib/commit/8bddc5d973b9bf327f2168f29caedc898ab60b57))
+
 # [4.1.0](https://github.com/hypersec-io/hypersec-forge/compare/v4.0.0...v4.1.0) (2025-10-01)
 
 
