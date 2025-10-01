@@ -14,31 +14,30 @@ maintainers = [
     {name = "HyperSec Team", email = "dev@hypersec.io"},
 ]
 license = {text = "HyperSec EULA"}
-requires-python = ">=3.11"
+requires-python = ">=3.8"
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Developers",
     "License :: Other/Proprietary License",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.11",
-    "Programming Language :: Python :: 3.12",
-    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3 :: Only",
     "Operating System :: OS Independent",
 ]
 keywords = ["hypersec", "library", "utilities", "logging", "configuration"]
 dependencies = [
     # Core dependencies for all project types
-    "dynaconf>=3.2.0",  # Configuration management
-    "loguru>=0.7.0",    # Professional logging
-    "pyyaml>=6.0.0",    # YAML configuration parsing
+    "dynaconf>=3.2.11",  # Configuration management
+    "loguru>=0.7.3",    # Professional logging
+    "pyyaml>=6.0.3",    # YAML configuration parsing
     # Package has minimal dependencies by default
     # Add your package-specific dependencies here
     "pydantic>=2.0.0",  # Data validation
     "aiofiles>=23.0.0", # Async file operations
     "httpx>=0.24.0",    # HTTP client
     "tenacity>=8.0.0",  # Retry logic
-    "psutil>=5.9.0",    # System and process utilities
+    "psutil>=7.1.0",    # System and process utilities
 ]
 
 [project.optional-dependencies]
