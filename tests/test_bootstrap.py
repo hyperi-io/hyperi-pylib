@@ -1,9 +1,9 @@
 """Unit tests for bootstrap functionality."""
 
-import pytest
-from pathlib import Path
 import os
-import tempfile
+from pathlib import Path
+
+import pytest
 
 
 class TestBootstrapUtilities:
@@ -12,11 +12,12 @@ class TestBootstrapUtilities:
     def test_import_bootstrap_module(self):
         """Test that bootstrap module can be imported from hyperlib."""
         from hyperlib import bootstrap
+
         assert bootstrap is not None
-        assert hasattr(bootstrap, 'load_dotenv')
-        assert hasattr(bootstrap, 'list_sorted_scripts')
-        assert hasattr(bootstrap, 'load_defaults_yaml')
-        assert hasattr(bootstrap, 'ensure_dependency')
+        assert hasattr(bootstrap, "load_dotenv")
+        assert hasattr(bootstrap, "list_sorted_scripts")
+        assert hasattr(bootstrap, "load_defaults_yaml")
+        assert hasattr(bootstrap, "ensure_dependency")
 
     def test_list_sorted_scripts_empty_directory(self, temp_dir):
         """Test list_sorted_scripts with empty directory."""
@@ -75,8 +76,9 @@ class TestBootstrapUtilities:
 
     def test_load_dotenv_with_sample_file(self, temp_dir):
         """Test load_dotenv with a sample .env file."""
-        from hyperlib.bootstrap import load_dotenv
         import os
+
+        from hyperlib.bootstrap import load_dotenv
 
         # Create a temporary .env file
         env_file = temp_dir / ".env"
@@ -106,14 +108,17 @@ class TestBootstrapUtilities:
         defaults = load_defaults_yaml()
         assert isinstance(defaults, dict)
 
-    @pytest.mark.parametrize("command,expected_present", [
-        ("python3", True),  # Should always be present
-        ("nonexistent_command_xyz", False),  # Should not exist
-    ])
+    @pytest.mark.parametrize(
+        "command,expected_present",
+        [
+            ("python3", True),  # Should always be present
+            ("nonexistent_command_xyz", False),  # Should not exist
+        ],
+    )
     def test_ensure_dependency_check_mode(self, command, expected_present):
         """Test ensure_dependency in check mode (no install)."""
-        from hyperlib.bootstrap import ensure_dependency
         from hyperlib import get_logger
+        from hyperlib.bootstrap import ensure_dependency
 
         logger = get_logger("test")
         defaults = {"dependencies": {}}
@@ -159,7 +164,7 @@ class TestBootstrapIntegration:
         version_content = version_file.read_text().strip()
         assert version_content, "VERSION file should not be empty"
         # Basic version format check (e.g., "1.0.0")
-        assert len(version_content.split('.')) == 3, "VERSION should be semantic version (X.Y.Z)"
+        assert len(version_content.split(".")) == 3, "VERSION should be semantic version (X.Y.Z)"
 
 
 class TestBootstrapVenvIsolation:
