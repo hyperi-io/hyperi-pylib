@@ -1,444 +1,186 @@
 #!/usr/bin/env python3
 """
-CI Actions Framework
+Core CI entrypoint - Simple .d directory runner.
 
-A flexible, YAML-driven CI framework that supports:
-- Local and cloud execution modes
-- Selective GitHub Actions enablement
-- Project type-specific action groups
-- Environment and command-line overrides
+This script runs all scripts in ci.d/ directories in sorted order.
+It ensures bootstrap has run first (to install hyperlib and tools).
+
+Usage:
+- ./scripts/ci              # Run all CI checks
+- ./scripts/ci check        # Same as above
+- ./scripts/ci --help       # Show help
+
+CI Directory Discovery:
+1. Core ci.d/: subtrees/hypersec-forge-core/scripts/ci.d/
+2. Project ci.d/: scripts/ci.d/ (or HSF_CI_D env var)
+3. Language ci.d/: Can be added via subtrees
+
+All scripts are run in sorted order with "check" action.
 """
 
-import os
-import sys
-import yaml
-import subprocess
 import argparse
+import os
+import subprocess
+import sys
 from pathlib import Path
-from typing import Dict, List, Any, Optional, Set
-from dataclasses import dataclass
-from enum import Enum
 
-# Add parent dir for hyperlib
-sys.path.insert(0, str(Path(__file__).resolve().parent))
-from hyperlib import get_logger, load_dotenv  # type: ignore
-
-
-class ExecutionMode(Enum):
-    """Execution modes for CI actions."""
-    LOCAL = "local"
-    CLOUD = "cloud"
-    HYBRID = "hybrid"
+# Get project root
+THIS_DIR = Path(__file__).resolve().parent
+if "hypersec-forge-core" in str(THIS_DIR):
+    # Running from core subtree
+    PROJECT_ROOT = THIS_DIR.parent.parent.parent
+else:
+    # Running from project root
+    PROJECT_ROOT = THIS_DIR.parent
 
 
-@dataclass
-class Action:
-    """Represents a CI action."""
-    name: str
-    description: str
-    context: List[str]
-    default_mode: str
-    steps: List[Dict[str, Any]]
-    workflow: Optional[str] = None
-    secrets_required: Optional[List[str]] = None
-    when: Optional[str] = None
+def find_ci_directories() -> list:
+    """Find all ci.d directories to process."""
+    ci_dirs = []
+
+    # Core ci.d (always present)
+    core_ci_d = THIS_DIR / "ci.d"
+    if core_ci_d.exists():
+        ci_dirs.append(("core", core_ci_d))
+
+    # Project ci.d (from env or default location)
+    if os.environ.get("HSF_CI_D"):
+        project_ci_d = Path(os.environ["HSF_CI_D"])
+        if project_ci_d.exists():
+            ci_dirs.append(("project", project_ci_d))
+    else:
+        project_ci_d = PROJECT_ROOT / "scripts" / "ci.d"
+        if project_ci_d.exists() and project_ci_d != core_ci_d:
+            ci_dirs.append(("project", project_ci_d))
+
+    return ci_dirs
 
 
-@dataclass
-class ActionGroup:
-    """Represents a group of actions for a project type."""
-    name: str
-    description: str
-    actions: List[str]
-    extends: Optional[str] = None
-    optional: Optional[List[str]] = None
+def find_scripts(ci_dir: Path) -> list:
+    """Find all executable scripts in a ci.d directory."""
+    if not ci_dir.exists():
+        return []
+
+    scripts = []
+    for item in sorted(ci_dir.iterdir()):
+        # Skip non-files
+        if not item.is_file():
+            continue
+
+        # Skip editor backups and config files
+        if item.suffix in [".swp", ".bak", "~", ".yaml", ".yml", ".json", ".toml", ".md"]:
+            continue
+
+        # Only include .py, .sh, or executable files
+        if not (item.suffix in [".py", ".sh"] or os.access(item, os.X_OK)):
+            continue
+
+        scripts.append(item)
+
+    return scripts
 
 
-class CIFramework:
-    """Main CI framework executor."""
-    
-    def __init__(self, config_path: Path, logger):
-        """Initialize the framework with configuration."""
-        self.logger = logger
-        self.config_path = config_path
-        self.root = config_path.parent.parent
-        self.config = self._load_config()
-        self.mode = self._determine_mode()
-        self.enabled_actions: Set[str] = set()
-        self.disabled_actions: Set[str] = set()
-    
-    def _load_config(self) -> Dict[str, Any]:
-        """Load CI actions configuration from YAML."""
-        if not self.config_path.exists():
-            self.logger.error(f"Config file not found: {self.config_path}")
-            sys.exit(1)
-        
-        with open(self.config_path) as f:
-            return yaml.safe_load(f)
-    
-    def _determine_mode(self) -> ExecutionMode:
-        """Determine execution mode from environment and config."""
-        # Check for override environment variables
-        if os.environ.get("HSF_FORCE_LOCAL") == "true":
-            return ExecutionMode.LOCAL
-        elif os.environ.get("HSF_FORCE_CLOUD") == "true":
-            return ExecutionMode.CLOUD
-        elif os.environ.get("HSF_CI_MODE"):
-            mode_str = os.environ["HSF_CI_MODE"].lower()
-            try:
-                return ExecutionMode(mode_str)
-            except ValueError:
-                self.logger.warning(f"Invalid HSF_CI_MODE: {mode_str}, using default")
-        
-        # Check if we're in GitHub Actions
-        if os.environ.get("GITHUB_ACTIONS") == "true":
-            return ExecutionMode.CLOUD
-        
-        # Use default from config
-        default = self.config.get("settings", {}).get("default_mode", "local")
-        return ExecutionMode(default)
-    
-    def _evaluate_condition(self, condition: str) -> bool:
-        """Evaluate a when condition."""
-        if not condition:
-            return True
-        
-        # Parse condition (simple implementation)
-        if ":" in condition:
-            check_type, check_value = condition.split(":", 1)
-            
-            if check_type == "branch":
-                current_branch = self._get_current_branch()
-                return current_branch == check_value or check_value == "*"
-            
-            elif check_type == "env":
-                if "=" in check_value:
-                    var, val = check_value.split("=", 1)
-                    return os.environ.get(var) == val
-                else:
-                    return bool(os.environ.get(check_value))
-            
-            elif check_type == "file":
-                return (self.root / check_value).exists()
-            
-            elif check_type == "tag":
-                current_tag = self._get_current_tag()
-                if check_value == "v*":
-                    return current_tag and current_tag.startswith("v")
-                return current_tag == check_value
-            
-            elif check_type.startswith("success"):
-                # Check if previous step succeeded (simplified)
-                return True  # Would need step tracking
-        
-        # Handle OR conditions
-        if " OR " in condition:
-            conditions = condition.split(" OR ")
-            return any(self._evaluate_condition(c.strip()) for c in conditions)
-        
-        # Handle AND conditions
-        if " AND " in condition:
-            conditions = condition.split(" AND ")
-            return all(self._evaluate_condition(c.strip()) for c in conditions)
-        
-        return True
-    
-    def _get_current_branch(self) -> Optional[str]:
-        """Get current git branch."""
-        try:
-            result = subprocess.run(
-                ["git", "rev-parse", "--abbrev-ref", "HEAD"],
-                capture_output=True,
-                text=True,
-                check=True
-            )
-            return result.stdout.strip()
-        except:
-            return None
-    
-    def _get_current_tag(self) -> Optional[str]:
-        """Get current git tag."""
-        try:
-            result = subprocess.run(
-                ["git", "describe", "--exact-match", "--tags"],
-                capture_output=True,
-                text=True,
-                check=True
-            )
-            return result.stdout.strip()
-        except:
-            return None
-    
-    def _expand_group(self, group_name: str, seen: Optional[Set[str]] = None) -> List[str]:
-        """Recursively expand an action group to get all actions."""
-        if seen is None:
-            seen = set()
-        
-        if group_name in seen:
-            return []
-        seen.add(group_name)
-        
-        groups = self.config.get("groups", {})
-        if group_name not in groups:
-            return []
-        
-        group = groups[group_name]
-        actions = []
-        
-        # Handle inheritance
-        if group.get("extends"):
-            actions.extend(self._expand_group(group["extends"], seen))
-        
-        # Add this group's actions
-        actions.extend(group.get("actions", []))
-        
-        return actions
-    
-    def _get_enabled_actions(self, group_name: Optional[str] = None) -> List[str]:
-        """Get list of enabled actions based on mode and overrides."""
-        # Start with base actions
-        if group_name:
-            actions = self._expand_group(group_name)
-        else:
-            actions = self._expand_group("base")
-        
-        # Apply environment overrides
-        if os.environ.get("HSF_ENABLE_ACTIONS"):
-            enabled = os.environ["HSF_ENABLE_ACTIONS"].split(",")
-            actions.extend(enabled)
-        
-        if os.environ.get("HSF_DISABLE_ACTIONS"):
-            disabled = os.environ["HSF_DISABLE_ACTIONS"].split(",")
-            actions = [a for a in actions if a not in disabled]
-        
-        # Filter by execution mode
-        filtered = []
-        for action_name in actions:
-            action = self.config.get("actions", {}).get(action_name)
-            if not action:
-                continue
-            
-            contexts = action.get("context", ["local"])
-            if self.mode.value in contexts:
-                filtered.append(action_name)
-        
-        return filtered
-    
-    def _execute_action(self, action_name: str) -> bool:
-        """Execute a single action."""
-        action_config = self.config.get("actions", {}).get(action_name)
-        if not action_config:
-            self.logger.error(f"Action not found: {action_name}")
-            return False
-        
-        self.logger.info(f"Executing action: {action_name}")
-        
-        # Check when condition
-        if action_config.get("when"):
-            if not self._evaluate_condition(action_config["when"]):
-                self.logger.info(f"Skipping {action_name}: condition not met")
-                return True
-        
-        # Handle workflow-based actions
-        if action_config.get("workflow"):
-            return self._handle_workflow(action_name, action_config)
-        
-        # Execute steps
-        steps = action_config.get("steps", [])
-        for step in steps:
-            if not self._execute_step(step):
-                return False
-        
-        return True
-    
-    def _execute_step(self, step: Dict[str, Any]) -> bool:
-        """Execute a single step within an action."""
-        name = step.get("name", "unnamed")
-        self.logger.info(f"  Step: {name}")
-        
-        # Check step condition
-        if step.get("when"):
-            if not self._evaluate_condition(step["when"]):
-                self.logger.info(f"  Skipping step: condition not met")
-                return True
-        
-        # Set up environment
-        env = os.environ.copy()
-        if step.get("env"):
-            for key, value in step["env"].items():
-                # Expand environment variables
-                value = os.path.expandvars(str(value))
-                env[key] = value
-        
-        # Apply mode-specific env mappings
-        env_mappings = self.config.get("env_mappings", {})
-        for var, mappings in env_mappings.items():
-            if self.mode.value in mappings:
-                env[var] = str(mappings[self.mode.value])
-        
-        # Execute script or command
-        if step.get("script"):
-            script_path = self.root / "scripts" / step["script"]
-            if not script_path.exists():
-                self.logger.error(f"Script not found: {script_path}")
-                return False
-            
-            cmd = [sys.executable, str(script_path), "check"]
-            if os.environ.get("BOOTSTRAP_INSTALL") == "1":
-                cmd.append("install")
-        
-        elif step.get("cmdline"):
-            cmd = step["cmdline"]
-            if isinstance(cmd, str):
-                cmd = ["bash", "-c", cmd]
-        
-        else:
-            self.logger.warning(f"Step {name} has no script or cmdline")
-            return True
-        
-        # Execute
-        try:
-            result = subprocess.run(cmd, env=env, cwd=self.root, check=False)
-            if result.returncode != 0:
-                self.logger.error(f"Step {name} failed with code {result.returncode}")
-                return False
-        except Exception as e:
-            self.logger.error(f"Failed to execute step {name}: {e}")
-            return False
-        
-        return True
-    
-    def _handle_workflow(self, action_name: str, action_config: Dict[str, Any]) -> bool:
-        """Handle GitHub workflow-based actions."""
-        workflow_file = action_config["workflow"]
-        
-        if self.mode == ExecutionMode.LOCAL:
-            self.logger.info(f"Workflow {workflow_file} would run in cloud mode")
-            self.logger.info(f"Required secrets: {action_config.get('secrets_required', [])}")
-            
-            # Check if we should enable it
-            if os.environ.get("HSF_ENABLE_PUBLISH") == "true":
-                self._enable_workflow(workflow_file)
-            
-            return True
-        
-        else:  # Cloud mode
-            # Workflow will be triggered by GitHub Actions
-            self.logger.info(f"Workflow {workflow_file} enabled for cloud execution")
-            return True
-    
-    def _enable_workflow(self, workflow_file: str):
-        """Enable a GitHub workflow by moving it from disabled directory."""
-        settings = self.config.get("settings", {})
-        workflows_dir = self.root / settings.get("github_actions_dir", ".github/workflows")
-        disabled_suffix = settings.get("disabled_suffix", "-disabled")
-        
-        disabled_dir = workflows_dir.parent / f"workflows{disabled_suffix}"
-        disabled_path = disabled_dir / workflow_file
-        enabled_path = workflows_dir / workflow_file
-        
-        if disabled_path.exists():
-            self.logger.info(f"Enabling workflow: {workflow_file}")
-            workflows_dir.mkdir(parents=True, exist_ok=True)
-            disabled_path.rename(enabled_path)
-        elif enabled_path.exists():
-            self.logger.info(f"Workflow already enabled: {workflow_file}")
-        else:
-            self.logger.warning(f"Workflow not found: {workflow_file}")
-    
-    def run(self, group: Optional[str] = None, actions: Optional[List[str]] = None):
-        """Run the CI framework."""
-        self.logger.info(f"CI Framework starting in {self.mode.value} mode")
-        
-        # Determine actions to run
-        if actions:
-            # Specific actions requested
-            action_list = actions
-        elif group:
-            # Run action group
-            action_list = self._get_enabled_actions(group)
-        else:
-            # Detect project type and run appropriate group
-            project_type = self._detect_project_type()
-            action_list = self._get_enabled_actions(project_type)
-        
-        self.logger.info(f"Actions to run: {action_list}")
-        
-        # Execute actions
-        success = True
-        for action_name in action_list:
-            if not self._execute_action(action_name):
-                success = False
-                if not os.environ.get("HSF_CONTINUE_ON_ERROR"):
-                    break
-        
-        if success:
-            self.logger.info("CI Framework completed successfully")
-        else:
-            self.logger.error("CI Framework failed")
-            sys.exit(1)
-    
-    def _detect_project_type(self) -> str:
-        """Detect project type based on files present."""
-        # Check for Python project
-        if (self.root / "pyproject.toml").exists():
-            # Read pyproject.toml to determine Python project type
-            try:
-                with open(self.root / "pyproject.toml") as f:
-                    content = f.read()
-                    if "fastapi" in content.lower():
-                        return "python-api"
-                    elif "[project.scripts]" in content:
-                        return "python-cli"
-                    elif "twine" in content:
-                        return "python-package"
-                    else:
-                        return "python-cli"  # Default Python type
-            except:
-                return "python-cli"
-        
-        # Default to base
-        return "base"
+def run_script(script: Path, action: str = "check") -> int:
+    """Run a single CI script."""
+    print(f"\n{'='*60}")
+    print(f"Running: {script.name}")
+    print(f"{'='*60}")
+
+    # Use .venv-ci Python if available (required for hyperlib imports)
+    venv_python = PROJECT_ROOT / ".venv-ci" / "bin" / "python"
+    if not venv_python.exists():
+        venv_python = Path(sys.executable)
+
+    # Determine how to run the script
+    if script.suffix == ".py":
+        cmd = [str(venv_python), str(script), action]
+    elif script.suffix == ".sh":
+        cmd = ["bash", str(script), action]
+    else:
+        cmd = [str(script), action]
+
+    result = subprocess.run(cmd, cwd=PROJECT_ROOT)
+    return result.returncode
 
 
 def main():
     """Main entry point."""
-    parser = argparse.ArgumentParser(description="CI Actions Framework")
-    parser.add_argument("--group", help="Action group to run")
-    parser.add_argument("--actions", help="Comma-separated list of actions")
-    parser.add_argument("--mode", choices=["local", "cloud", "hybrid"],
-                       help="Override execution mode")
-    parser.add_argument("--config", default="ci-actions.yaml",
-                       help="Configuration file")
-    parser.add_argument("--enable-workflows", action="store_true",
-                       help="Enable GitHub workflows")
-
+    parser = argparse.ArgumentParser(description="CI runner for HyperSec Forge")
+    parser.add_argument(
+        "action",
+        nargs="?",
+        default="check",
+        choices=["check", "install"],
+        help="Action to perform (default: check)"
+    )
+    parser.add_argument(
+        "--continue-on-error",
+        action="store_true",
+        help="Continue running even if a script fails"
+    )
     args = parser.parse_args()
 
-    # Load .env file before any other configuration
-    load_dotenv()
+    print("="*60)
+    print("HyperSec Forge CI")
+    print("="*60)
 
-    # Set environment based on arguments
-    if args.mode:
-        os.environ["HSF_CI_MODE"] = args.mode
-    
-    if args.enable_workflows:
-        os.environ["HSF_ENABLE_PUBLISH"] = "true"
-    
-    # Initialize framework
-    logger = get_logger("ci-framework")
-    config_path = Path(__file__).parent / args.config
-    
-    framework = CIFramework(config_path, logger)
-    
-    # Parse actions if provided
-    actions = None
-    if args.actions:
-        actions = args.actions.split(",")
-    
-    # Run framework
-    framework.run(group=args.group, actions=actions)
+    # Ensure bootstrap has run
+    bootstrap_script = PROJECT_ROOT / "scripts" / "bootstrap"
+    if bootstrap_script.exists():
+        print("\n[Ensuring bootstrap has run...]")
+        result = subprocess.run(
+            [sys.executable, str(bootstrap_script)],
+            cwd=PROJECT_ROOT
+        )
+        if result.returncode != 0:
+            print("\nERROR: Bootstrap failed. Run: ./scripts/bootstrap --install")
+            return 1
+    else:
+        print("\nWARNING: No bootstrap script found, skipping bootstrap check")
+
+    # Find all ci.d directories
+    ci_dirs = find_ci_directories()
+    if not ci_dirs:
+        print("\nNo ci.d directories found")
+        return 0
+
+    print(f"\nCI directories:")
+    for label, ci_dir in ci_dirs:
+        print(f"  - {label}: {ci_dir}")
+
+    # Run all scripts in order
+    failed_scripts = []
+    for label, ci_dir in ci_dirs:
+        scripts = find_scripts(ci_dir)
+        if not scripts:
+            continue
+
+        print(f"\n{'='*60}")
+        print(f"{label.upper()} CI Scripts")
+        print(f"{'='*60}")
+
+        for script in scripts:
+            returncode = run_script(script, args.action)
+            if returncode != 0:
+                failed_scripts.append((label, script.name, returncode))
+                if not args.continue_on_error:
+                    print(f"\nERROR: {script.name} failed with code {returncode}")
+                    return returncode
+
+    # Summary
+    print(f"\n{'='*60}")
+    print("CI Summary")
+    print(f"{'='*60}")
+
+    if failed_scripts:
+        print(f"\n{len(failed_scripts)} script(s) failed:")
+        for label, name, code in failed_scripts:
+            print(f"  - [{label}] {name} (exit code: {code})")
+        return 1
+    else:
+        print("\n✓ All CI checks passed")
+        return 0
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())
