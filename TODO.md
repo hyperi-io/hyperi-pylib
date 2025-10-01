@@ -4,6 +4,11 @@ Last Updated: 2025-09-30
 
 ## Pending
 
+- Remove src/hyperlib/bootstrap.py and move hyperlib-specific code to scripts/bootstrap.d/
+  - Rationale: bootstrap.py in src/ creates confusion (package code vs CI tooling)
+  - Extract hyperlib-specific bootstrap logic to scripts/bootstrap.d/XX-hyperlib-setup.py
+  - Keep only universal bootstrap utilities in hyperlib package (load_dotenv, list_sorted_scripts)
+  - Separates package library code from project-specific CI/bootstrap tooling
 - Add comprehensive test coverage for bootstrap module
 - Add examples directory with usage patterns
 - Add API documentation (Sphinx)
