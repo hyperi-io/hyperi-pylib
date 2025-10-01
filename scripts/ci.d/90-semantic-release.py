@@ -134,7 +134,7 @@ def get_next_version() -> Optional[str]:
 
 
 def update_version_file(version: str, root: Path) -> None:
-    """Update VERSION file and pyproject.toml (if Python project) to match version."""
+    """Update VERSION file, pyproject.toml, and __init__.py to match version."""
     # Always update VERSION file
     version_file = root / "VERSION"
     version_file.write_text(f"{version}\n")
@@ -143,25 +143,48 @@ def update_version_file(version: str, root: Path) -> None:
     pyproject_path = root / "pyproject.toml"
     if pyproject_path.exists():
         try:
-            import tomli
+            # Python 3.11+ has tomllib built-in for reading
+            try:
+                import tomllib as tomli
+            except ImportError:
+                import tomli
+
             import tomli_w
         except ImportError:
-            # tomli/tomli_w not available, skip pyproject.toml update
-            return
-
-        try:
-            with open(pyproject_path, 'rb') as f:
-                data = tomli.load(f)
-
-            # Update project.version if it exists
-            if 'project' in data and 'version' in data['project']:
-                data['project']['version'] = version
-
-                with open(pyproject_path, 'wb') as f:
-                    tomli_w.dump(data, f)
-        except Exception:
-            # Failed to update pyproject.toml, but VERSION is updated
+            # tomli_w not available, skip pyproject.toml update
             pass
+        else:
+            try:
+                with open(pyproject_path, 'rb') as f:
+                    data = tomli.load(f)
+
+                # Update project.version if it exists
+                if 'project' in data and 'version' in data['project']:
+                    data['project']['version'] = version
+
+                    with open(pyproject_path, 'wb') as f:
+                        tomli_w.dump(data, f)
+            except Exception:
+                # Failed to update pyproject.toml, but VERSION is updated
+                pass
+
+    # For Python packages, also update __init__.py __version__
+    src_dir = root / "src"
+    if src_dir.exists():
+        for init_file in src_dir.rglob("__init__.py"):
+            try:
+                content = init_file.read_text()
+                # Replace __version__ = "X.Y.Z" or __version__ = 'X.Y.Z'
+                new_content = re.sub(
+                    r'(__version__\s*=\s*["\'])[^"\']+(["\'])',
+                    f'\\1{version}\\2',
+                    content
+                )
+                if new_content != content:
+                    init_file.write_text(new_content)
+            except Exception:
+                # Failed to update this __init__.py, continue
+                continue
 
 
 def check_semantic_release() -> bool:
@@ -235,19 +258,22 @@ def run_semantic_release(logger, root: Path, dry_run: bool = False) -> bool:
         logger.info(f"Updating VERSION file: {current_file_version} -> {next_version}")
         update_version_file(next_version, root)
 
-        # Commit VERSION file change (and pyproject.toml if Python project)
+        # Commit VERSION file change (and pyproject.toml, __init__.py if Python project)
         # This chore commit doesn't trigger a version bump
         try:
             files_to_add = ["VERSION"]
             if (root / "pyproject.toml").exists():
                 files_to_add.append("pyproject.toml")
+            # Add any updated __init__.py files
+            if (root / "src").exists():
+                subprocess.run(["git", "add", "-u", "src/"], check=False)
 
             subprocess.run(["git", "add"] + files_to_add, check=True)
             subprocess.run(
                 ["git", "commit", "-m", f"chore: update VERSION to {next_version} [skip ci]"],
                 check=True
             )
-            logger.info(f"Committed version update: {', '.join(files_to_add)}")
+            logger.info(f"Committed version update: {', '.join(files_to_add)} + src/__init__.py files")
         except subprocess.CalledProcessError as e:
             logger.warning(f"Could not commit version files: {e}")
 
