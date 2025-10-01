@@ -245,7 +245,7 @@ Examples:
     if bootstrap_script.exists():
         print("\n[Ensuring bootstrap has run...]")
         result = subprocess.run(
-            [sys.executable, str(bootstrap_script)],
+            [str(bootstrap_script)],
             cwd=PROJECT_ROOT
         )
         if result.returncode != 0:
