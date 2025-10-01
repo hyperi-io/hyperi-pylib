@@ -1,3 +1,15 @@
+# [1.3.0](https://github.com/hypersec-io/hyperlib/compare/v1.2.1...v1.3.0) (2025-10-01)
+
+
+### Bug Fixes
+
+* **ci:** semantic-release should not overwrite version files ([e106474](https://github.com/hypersec-io/hyperlib/commit/e106474ffd00a84cd86b0eca86b8139862ce5333))
+
+
+### Features
+
+* **ci:** add automatic JFrog publishing to semantic-release ([fd4622c](https://github.com/hypersec-io/hyperlib/commit/fd4622c9034444927defbe032bd2bde65760d19e))
+
 ## [1.2.1](https://github.com/hypersec-io/hyperlib/compare/v1.2.0...v1.2.1) (2025-10-01)
 
 
