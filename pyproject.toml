@@ -156,7 +156,9 @@ ignore = [
     "ARG001",  # Unused function arguments
     "ARG002",  # Unused method arguments (often needed for interfaces)
     "B904",   # raise exceptions with raise from
+    "E402",   # Module level import not at top of file
     "E722",    # Do not use bare except
+    "SIM105",  # Use contextlib.suppress
     "F401",    # Imported but unused
     "TRY300",  # Consider moving this statement to an else block
     "F821",    # Undefined name (false positives in some cases)
