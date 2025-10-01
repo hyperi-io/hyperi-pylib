@@ -21,7 +21,7 @@ AI AGENTS: Read these files BEFORE starting work:
 - **Package name**: `hyperlib`
 - **Repository**: `https://github.com/hypersec-io/hyperlib`
 - **Published to**: JFrog Artifactory private PyPI
-- **Version**: 1.0.1 (see VERSION file)
+- **Version**: 1.5.0 (see VERSION file)
 
 ## Bootstrap (ALWAYS Run First)
 
@@ -162,17 +162,38 @@ pytest tests/
 rm -rf .venv-ci && ./scripts/bootstrap --install
 ```
 
-## Publishing to JFrog
+## CI Commands
 
 ```bash
-# Build
-python -m build
+./scripts/ci [action] [flags]
 
-# Upload
+Actions:
+  check     - Run all CI checks (lint, test, type-check)
+  build     - Build wheel and sdist
+  deploy    - Build and publish to JFrog Artifactory
+  release   - Full semantic-release workflow (version, build, deploy, tag)
+  publish   - Full release + push to remote (shorthand for release --push)
+  clean     - Remove build artifacts
+
+Flags:
+  --push    - Push changes to remote after release (opt-in)
+  --force   - Force action without checks
+```
+
+**Common workflows:**
+```bash
+./scripts/ci check                    # Pre-commit checks
+./scripts/ci build                    # Build package locally
+./scripts/ci deploy                   # Build + publish to JFrog
+FORCE_RELEASE=1 ./scripts/ci publish  # Release + build + deploy + push
+```
+
+**Manual publishing (if needed):**
+```bash
+python -m build
 python -m twine upload \
   --repository-url https://hypersec.jfrog.io/artifactory/api/pypi/hypersec-pypi-local \
-  -u "$JF_USER" -p "$JF_PASSWORD" \
-  dist/*
+  -u "$JF_USER" -p "$JF_PASSWORD" dist/*
 ```
 
 ## Role in Forge Ecosystem
