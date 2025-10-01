@@ -48,17 +48,32 @@ def get_api_config():
     }
 
 def get_logging_config():
-    """Get container-aware logging configuration"""
+    """Get container-aware logging configuration with LOG_LEVEL support.
+
+    Priority order (CLI → ENV → .env → config → default → hardcoded):
+    1. LOG_LEVEL environment variable (standard)
+    2. APP_LOGGING__LEVEL (Dynaconf prefixed)
+    3. Config file logging.level
+    4. Hardcoded default (INFO)
+    """
+    import os
+
     logging_config = settings.get("logging", {})
-    
+
+    # Check for LOG_LEVEL environment variable first (standard convention)
+    log_level = os.getenv("LOG_LEVEL")
+    if not log_level:
+        # Fall back to dynaconf settings
+        log_level = logging_config.get("level", "INFO")
+
     # Get container-aware log file path
     log_file = logging_config.get("file")
     if log_file and not log_file.startswith("/"):
         # Relative path - make it container-aware
         log_file = str(container_root / "var" / "log" / "dfe_ai" / log_file)
-    
+
     return {
-        "level": logging_config.get("level", "INFO"),
+        "level": log_level,
         "console": logging_config.get("console", True),
         "file": log_file
     }
