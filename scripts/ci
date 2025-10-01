@@ -219,6 +219,11 @@ Examples:
         action="store_true",
         help="Show what would happen without doing it"
     )
+    parser.add_argument(
+        "--push",
+        action="store_true",
+        help="Push changes to remote after release (use with release action)"
+    )
     args = parser.parse_args()
 
     print("="*60)
@@ -250,6 +255,8 @@ Examples:
     if args.dry_run:
         os.environ["DRY_RUN"] = "1"
         os.environ["CI_DRY_RUN"] = "1"
+    if args.push:
+        os.environ["CI_PUSH"] = "1"
 
     # Find all ci.d directories
     ci_dirs = find_ci_directories()
