@@ -9,7 +9,7 @@
       "@semantic-release/exec",
       {
         "prepareCmd": ".venv-ci/bin/python -m build",
-        "publishCmd": "TWINE_USERNAME=${JF_USER} TWINE_PASSWORD=${JF_PASSWORD} .venv-ci/bin/python -m twine upload --repository-url https://hypersec.jfrog.io/artifactory/api/pypi/hypersec-pypi-local dist/*"
+        "publishCmd": "TWINE_USERNAME=$JF_USER TWINE_PASSWORD=$JF_PASSWORD .venv-ci/bin/python -m twine upload --repository-url https://hypersec.jfrog.io/artifactory/api/pypi/hypersec-pypi-local dist/*"
       }
     ],
     [
