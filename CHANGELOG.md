@@ -1,3 +1,10 @@
+# [1.5.0](https://github.com/hypersec-io/hyperlib/compare/v1.4.0...v1.5.0) (2025-10-01)
+
+
+### Features
+
+* sync CI script with publish command from forge-core ([5904b99](https://github.com/hypersec-io/hyperlib/commit/5904b996800316bba7ed132b352b419932ff3a62))
+
 # [1.4.0](https://github.com/hypersec-io/hyperlib/compare/v1.3.0...v1.4.0) (2025-10-01)
 
 
