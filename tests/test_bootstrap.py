@@ -123,9 +123,14 @@ class TestBootstrapUtilities:
         logger = get_logger("test")
         defaults = {"dependencies": {}}
 
-        # In check mode (install=False), should just verify presence
-        # Should not raise exception
-        ensure_dependency(command, install=False, logger=logger, defaults=defaults)
+        # In check mode (install=False), should verify presence
+        if expected_present:
+            # Should not raise for commands that exist
+            ensure_dependency(command, install=False, logger=logger, defaults=defaults)
+        else:
+            # Should raise SystemExit for commands that don't exist
+            with pytest.raises(SystemExit):
+                ensure_dependency(command, install=False, logger=logger, defaults=defaults)
 
 
 class TestBootstrapIntegration:
