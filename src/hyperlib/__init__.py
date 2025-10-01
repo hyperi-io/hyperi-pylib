@@ -9,26 +9,27 @@ __version__ = "1.1.2"
 
 # Enforce Python 3.11+ requirement
 import sys
-if sys.version_info < (3, 11):
-    raise RuntimeError(
-        f"HyperLib requires Python 3.11 or newer. "
-        f"Current version: {sys.version_info.major}.{sys.version_info.minor}"
-    )
 
-from . import config
-from . import logger
-from . import timeout
-from . import container
-from . import bootstrap
+from . import bootstrap, config, container, logger, timeout
+from .bootstrap import ensure_dependency, list_sorted_scripts, load_defaults_yaml, load_dotenv
+from .config import get_logging_config
 
 # Re-export commonly used functions for convenience
-from .logger import get_logger, setup as setup_logger
-from .config import get_logging_config
-from .bootstrap import load_dotenv, list_sorted_scripts, load_defaults_yaml, ensure_dependency
+from .logger import get_logger
+from .logger import setup as setup_logger
 
 __all__ = [
-    'config', 'logger', 'timeout', 'container', 'bootstrap',
-    'get_logger', 'setup_logger', 'get_logging_config',
-    'load_dotenv', 'list_sorted_scripts', 'load_defaults_yaml', 'ensure_dependency',
-    '__version__'
+    "config",
+    "logger",
+    "timeout",
+    "container",
+    "bootstrap",
+    "get_logger",
+    "setup_logger",
+    "get_logging_config",
+    "load_dotenv",
+    "list_sorted_scripts",
+    "load_defaults_yaml",
+    "ensure_dependency",
+    "__version__",
 ]
