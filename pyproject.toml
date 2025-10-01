@@ -106,7 +106,7 @@ commit_message = "chore: release {version} [skip ci]"
 [tool.pytest.ini_options]
 minversion = "8.0"
 testpaths = ["tests"]
-addopts = "-ra -q --strict-markers --cov=hyperlib --cov-report=term-missing"
+addopts = "-ra -q --strict-markers"
 pythonpath = ["src"]
 markers = [
     "e2e: end-to-end integration tests",
