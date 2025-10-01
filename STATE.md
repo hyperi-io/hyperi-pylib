@@ -74,6 +74,33 @@ Format: `<type>/<issue-ref>/<short-description>`
 
 ## Hyperlib-Specific Context
 
+### Relationship to Forge-Python Template (CRITICAL)
+
+**Hyperlib is a forge-deployed forge-python package project.**
+
+This means:
+- Hyperlib was originally generated using forge-python template
+- It follows the same structure as any forge-generated Python package
+- **AI assistants MUST manually apply general changes from forge-python to hyperlib**
+- When forge-python template CI/bootstrap/structure changes, apply them here too
+- Hyperlib serves as a real-world validation of the forge-python template
+
+**Example workflow:**
+1. Change is made to forge-python template (e.g., new CI script, updated bootstrap)
+2. AI assistant must manually apply equivalent change to hyperlib
+3. Test in hyperlib to validate the change works in a real project
+4. If issues found, fix in both forge-python template and hyperlib
+
+**DO NOT:**
+- Assume changes to forge-python automatically apply to hyperlib
+- Treat hyperlib as independent from forge-python template
+- Skip applying forge-python improvements to hyperlib
+
+**Why this matters:**
+- Hyperlib validates that forge-python template changes work in real projects
+- Keeps hyperlib up-to-date with latest forge standards
+- Ensures consistency across all forge-generated projects
+
 ### Self-Contained Requirement
 
 **CRITICAL**: Hyperlib MUST be completely self-contained with NO external file references.
