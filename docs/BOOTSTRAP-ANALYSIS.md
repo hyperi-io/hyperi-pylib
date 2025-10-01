@@ -8,10 +8,10 @@
 
 **Issues Found & Fixed**:
 - ❌ `docs/ARTIFACTORY.md` had reference to `../../../docs/GITHUB-SECRETS.md`
-- ❌ `docs/TEMPLATE-CHANGES.md` had references to `subtrees/hypersec-forge-python/`
-- ❌ `DEPLOYMENT.md` had absolute path `/projects/hypersec-forge/subtrees/hyperlib`
+- ❌ `docs/TEMPLATE-CHANGES.md` had references to `modules/hypersec-forge-python/`
+- ❌ `DEPLOYMENT.md` had absolute path `/projects/hypersec-forge/modules/hyperlib`
 - ❌ `scripts/ci-actions-python.yaml` had `extends: "../hypersec-forge-core/scripts/ci-actions.yaml"`
-- ❌ `scripts/hyperlib/__init__.py` mentioned `subtrees/hypersec-forge-core/scripts/hyperlib`
+- ❌ `scripts/hyperlib/__init__.py` mentioned `modules/hypersec-forge-core/scripts/hyperlib`
 
 **All Fixed**: Changed to either:
 - Self-referential paths within hyperlib
@@ -111,7 +111,7 @@ Or better: CI should call `./scripts/bootstrap --install` first!
 
 ### 1a. Local Fixes (in hyperlib)
 ✅ Removed all `../../../` references to parent directories
-✅ Removed all `subtrees/` path references
+✅ Removed all `modules/` path references
 ✅ Changed cross-repo links to external URLs
 ✅ Made all paths self-referential
 
