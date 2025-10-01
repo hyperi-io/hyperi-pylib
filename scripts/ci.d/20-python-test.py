@@ -32,12 +32,19 @@ def main():
 
     failed = []
 
-    # Run pytest with coverage
-    logger.info("Running pytest with coverage...")
-    result = subprocess.run(
-        [str(venv_bin / "pytest"), "-v", "--cov=hyperlib", "--cov-report=term-missing"],
-        cwd=project_root
-    )
+    # Run pytest (with coverage if available)
+    logger.info("Running pytest...")
+    pytest_args = [str(venv_bin / "pytest"), "-v"]
+
+    # Add coverage if pytest-cov is available
+    try:
+        subprocess.run([str(venv_bin / "python"), "-c", "import pytest_cov"],
+                      capture_output=True, check=True)
+        pytest_args.extend(["--cov=hyperlib", "--cov-report=term-missing"])
+    except subprocess.CalledProcessError:
+        logger.info("pytest-cov not available, running without coverage")
+
+    result = subprocess.run(pytest_args, cwd=project_root)
     if result.returncode != 0:
         failed.append("pytest")
 
