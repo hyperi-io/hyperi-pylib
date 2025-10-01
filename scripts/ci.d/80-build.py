@@ -104,7 +104,7 @@ def build_action(logger) -> int:
 def main() -> int:
     """Main entry point."""
     if len(sys.argv) < 2:
-        logger.error("Usage: %s [check|install|build]", sys.argv[0])
+        logger.error("Usage: %s [check|install|build|deploy]", sys.argv[0])
         return 1
 
     action = sys.argv[1]
@@ -115,9 +115,12 @@ def main() -> int:
         return install_action(logger)
     elif action == "build":
         return build_action(logger)
+    elif action in ["deploy", "release"]:
+        # For deploy/release, build if dist/ is empty
+        return build_action(logger)
     else:
-        logger.error("Unknown action: %s", action)
-        return 1
+        # Unknown action - skip silently (other scripts may handle it)
+        return 0
 
 
 if __name__ == "__main__":
