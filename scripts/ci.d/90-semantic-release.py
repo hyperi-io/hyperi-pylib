@@ -300,6 +300,29 @@ def run_semantic_release(logger, root: Path, dry_run: bool = False) -> bool:
             return False
 
     logger.info(f"Release {next_version} completed successfully")
+
+    # Push to remote if CI_PUSH is set
+    if os.environ.get("CI_PUSH") == "1":
+        logger.info("Pushing changes and tags to remote...")
+        try:
+            # Get current branch
+            result = subprocess.run(
+                ["git", "rev-parse", "--abbrev-ref", "HEAD"],
+                capture_output=True,
+                text=True,
+                check=True
+            )
+            current_branch = result.stdout.strip()
+
+            # Push commits and tags
+            subprocess.run(["git", "push", "origin", current_branch], check=True)
+            subprocess.run(["git", "push", "origin", "--tags"], check=True)
+            logger.info(f"✓ Pushed to origin/{current_branch} with tags")
+        except subprocess.CalledProcessError as e:
+            logger.error(f"Failed to push: {e}")
+            logger.info("You may need to push manually: git push origin main --tags")
+            return False
+
     return True
 
 
