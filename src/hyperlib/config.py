@@ -3,6 +3,7 @@ HyperLib Config - Standard Dynaconf Interface
 Enforces consistent configuration usage across ALL /src code
 """
 
+import os
 from pathlib import Path
 
 from dynaconf import Dynaconf
@@ -19,8 +20,13 @@ else:
 
 config_dir = container_root / "app" / "config"
 
+# Configurable environment variable prefix
+# Set HYPERLIB_ENV_PREFIX to override (e.g., HYPERLIB_ENV_PREFIX=MYAPP)
+# Default: APP (e.g., APP_LOG_LEVEL, APP_DATABASE_URL)
+ENV_PREFIX = os.getenv("HYPERLIB_ENV_PREFIX", "APP")
+
 settings = Dynaconf(
-    envvar_prefix="APP",  # Environment variables use APP_ prefix
+    envvar_prefix=ENV_PREFIX,  # Environment variables use {ENV_PREFIX}_ prefix
     settings_files=[
         str(config_dir / "config.yaml"),  # Override config (4th priority)
         str(config_dir / "dfe_ai" / "default.yaml"),  # Default config (5th priority)
@@ -64,9 +70,13 @@ def get_logging_config():
     - LOG_CALLER: Include source location (true/false)
     - LOG_STACKTRACE_LEVEL: Minimum level for stack traces (ERROR, CRITICAL)
 
+    Environment Variable Prefix:
+    - Default: APP_ (e.g., APP_LOGGING__LEVEL)
+    - Configurable via: HYPERLIB_ENV_PREFIX (e.g., HYPERLIB_ENV_PREFIX=MYAPP)
+
     Priority order (CLI → ENV → .env → config → default → hardcoded):
     1. Standard environment variables (LOG_*)
-    2. Dynaconf prefixed variables (APP_LOGGING__*)
+    2. Dynaconf prefixed variables ({ENV_PREFIX}_LOGGING__*)
     3. Config file (logging.*)
     4. Hardcoded defaults
     """
@@ -140,4 +150,4 @@ def get_logging_config():
 
 
 # Export for direct access
-__all__ = ["settings", "get_settings", "setup", "get_api_config", "get_logging_config"]
+__all__ = ["settings", "get_settings", "setup", "get_api_config", "get_logging_config", "ENV_PREFIX"]
