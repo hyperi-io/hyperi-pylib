@@ -25,29 +25,29 @@ AI AGENTS: Read these files BEFORE starting work:
 
 ## Bootstrap (ALWAYS Run First)
 
-**Setup**: `./scripts/bootstrap --install` | **Check**: `./scripts/bootstrap`
+**Setup**: `./ci/bootstrap --install` | **Check**: `./ci/bootstrap`
 
 **3 Phases**:
-1. System Python creates `.venv-ci`
+1. System Python creates `ci/.venv`
 2. Installs `hyperlib` from JFrog Artifactory
 3. Imports hyperlib, runs `bootstrap.d/*` scripts
 
 **Requires**: `.env` with `JF_USER`/`JF_PASSWORD`, Python 3.11+, JFrog network access
 
-**Installs**: `.venv-ci`, hyperlib (latest from JFrog), nox, pytest, ruff, black, mypy, twine, semantic-release
+**Installs**: `ci/.venv`, hyperlib (latest from JFrog), nox, pytest, ruff, black, mypy, twine, semantic-release
 
 ### Virtual Environment (CRITICAL - READ CAREFULLY)
 
 **Two COMPLETELY SEPARATE environments exist. NEVER mix them!**
 
-#### .venv-ci (CI/Automation ONLY)
+#### ci/.venv (CI/Automation ONLY)
 - **Purpose**: ALL CI scripts, ALL automation, testing, building, releasing
-- **Created by**: `./scripts/bootstrap --install`
+- **Created by**: `./ci/bootstrap --install`
 - **Contains**: hyperlib (from JFrog), CI tools (nox, pytest, ruff, etc.)
-- **Marker file**: `.venv-ci/.THIS_IS_CI_VENV`
+- **Marker file**: `ci/.venv/.THIS_IS_CI_VENV`
 - **Env vars**: `VENV_PURPOSE=ci`, `VENV_TYPE=automation`
-- **Usage**: NEVER activate manually, ALWAYS run via `./scripts/ci <action>`
-- **Python**: `.venv-ci/bin/python` (explicit path only)
+- **Usage**: NEVER activate manually, ALWAYS run via `./ci/ci <action>`
+- **Python**: `ci/.venv/bin/python` (explicit path only)
 
 #### .venv (Development ONLY)
 - **Purpose**: IDE, manual testing, exploration, local development
@@ -62,10 +62,10 @@ AI AGENTS: Read these files BEFORE starting work:
 1. **Marker files** - Identify venv purpose
 2. **Environment variables** - Set on activation
 3. **Runtime checks** - Every CI script validates venv
-4. **CI runner enforcement** - scripts/ci uses explicit path
-5. **Bootstrap separation** - Only creates .venv-ci
+4. **CI runner enforcement** - ci/ci uses explicit path
+5. **Bootstrap separation** - Only creates ci/.venv
 6. **Documentation** - This section and shebangs
-7. **Shared library** - scripts/ci_lib.py with `enforce_venv_ci()`
+7. **Shared library** - ci/ci_lib.py with `enforce_venv_ci()`
 8. **Gitignore** - Both venvs ignored
 
 #### For AI Assistants / LLMs - CRITICAL RULES
@@ -73,7 +73,7 @@ AI AGENTS: Read these files BEFORE starting work:
 **When writing CI scripts:**
 - ✅ ALWAYS use: `from ci_lib import enforce_venv_ci` at top
 - ✅ ALWAYS call: `enforce_venv_ci(__name__)` immediately
-- ✅ ALWAYS run via: `./scripts/ci <action>`
+- ✅ ALWAYS run via: `./ci/ci <action>`
 - ❌ NEVER use: `#!/usr/bin/env python3` without checks
 - ❌ NEVER use: `python` or `python3` commands
 - ❌ NEVER use: `.venv` for CI
@@ -81,13 +81,13 @@ AI AGENTS: Read these files BEFORE starting work:
 **When writing development code:**
 - ✅ Use `.venv/bin/python` or activate `.venv`
 - ✅ For manual testing and exploration only
-- ❌ NEVER use `.venv-ci` for development
-- ❌ NEVER install dev dependencies in `.venv-ci`
+- ❌ NEVER use `ci/.venv` for development
+- ❌ NEVER install dev dependencies in `ci/.venv`
 
 **How to check which venv:**
 ```bash
 # Before running any command, verify:
-echo $VIRTUAL_ENV           # Should show .venv-ci or .venv
+echo $VIRTUAL_ENV           # Should show ci/.venv or .venv
 echo $VENV_PURPOSE          # Should show 'ci' or 'dev'
 python -c "import sys; print(sys.prefix)"  # Check Python location
 ```
@@ -101,7 +101,7 @@ Use `./.tmp/` only (not `/tmp`, `~/tmp`, `/var/tmp`)
 `TODO.md` is single source of truth (lightweight Markdown, updated directly by LLM)
 
 ### CI Environment
-Always use `.venv-ci` for CI/tooling. Bootstrap creates/populates it. CI scripts run bootstrap first.
+Always use `ci/.venv` for CI/tooling. Bootstrap creates/populates it. CI scripts run bootstrap first.
 
 ### Character Policy
 
@@ -119,7 +119,7 @@ Format: `<type>/<issue-ref>/<short-description>`
 **Types**: feat, fix, chore, docs, test, refactor, hotfix, release
 **Issue**: Ticket ID or `no-ref`
 **Examples**: `feat/PROJ-123/add-oauth`, `fix/no-ref/memory-leak`
-**Enforced**: `scripts/ci.d/10-branch-name.py`
+**Enforced**: `ci/ci.d/10-branch-name.py`
 
 ## Hyperlib-Specific Context
 
@@ -171,7 +171,7 @@ Hyperlib's bootstrap.py installs hyperlib from JFrog, not from local source. Thi
 
 1. Make changes to `src/hyperlib/`
 2. Commit with conventional commit messages (feat:, fix:, etc.)
-3. Run: `FORCE_RELEASE=1 ./scripts/ci publish`
+3. Run: `FORCE_RELEASE=1 ./ci/ci publish`
    - Semantic-release auto-versions based on commits
    - Creates/updates CHANGELOG.md
    - Tags and pushes to GitHub
@@ -208,13 +208,13 @@ hyperlib/
 pytest tests/
 
 # Integration test (bootstrap from published package)
-rm -rf .venv-ci && ./scripts/bootstrap --install
+rm -rf ci/.venv && ./ci/bootstrap --install
 ```
 
 ## CI Commands
 
 ```bash
-./scripts/ci [action] [flags]
+./ci/ci [action] [flags]
 
 Actions:
   check     - Run all CI checks (lint, test, type-check)
@@ -230,9 +230,9 @@ Flags:
 
 **Common workflows:**
 ```bash
-./scripts/ci check                    # Pre-commit checks
-./scripts/ci build                    # Build package locally (for testing)
-FORCE_RELEASE=1 ./scripts/ci publish  # Full release: version → tag → push → GitHub Actions publishes
+./ci/ci check                    # Pre-commit checks
+./ci/ci build                    # Build package locally (for testing)
+FORCE_RELEASE=1 ./ci/ci publish  # Full release: version → tag → push → GitHub Actions publishes
 ```
 
 **Publishing to JFrog:**
