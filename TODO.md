@@ -6,14 +6,14 @@ Last Updated: 2025-10-10
 
 ### Phase 1: Multi-Layer venv Protection (In Progress)
 - [ ] Implement environment variables in activation scripts (.venv/bin/activate)
-- [ ] Add marker files (.venv/.THIS_IS_DEV_VENV, .venv-ci/.THIS_IS_CI_VENV)
+- [ ] Add marker files (.venv/.THIS_IS_DEV_VENV, ci/.venv/.THIS_IS_CI_VENV)
 - [ ] Update STATE.md with clear venv usage guidelines for LLMs
 - [ ] Create venv validation helper function for reuse
 - [ ] Document protection strategy in docs/
 
 ### Phase 2: Replace semantic-release CLI with Python
 - [ ] Research python-semantic-release library
-- [ ] Install python-semantic-release in .venv-ci
+- [ ] Install python-semantic-release in ci/.venv
 - [ ] Rewrite 90-semantic-release.py to use Python library
 - [ ] Test semantic versioning with Python library
 - [ ] Remove npm semantic-release dependency
@@ -33,7 +33,7 @@ Last Updated: 2025-10-10
 
 ### Phase 5: JFrog Publishing Controls
 - [ ] Add JFROG_PUBLISH env var (default: auto-detect from creds)
-- [ ] Add --no-publish flag to ./scripts/ci release
+- [ ] Add --no-publish flag to ./ci/ci release
 - [ ] Validate JFrog u/pwd authentication
 - [ ] Validate JFrog u/token authentication
 - [ ] Document JFrog authentication in STATE.md
@@ -51,7 +51,7 @@ Last Updated: 2025-10-10
 - ✅ Updated CI workflow to GitHub Actions only
 - ✅ Fixed bootstrap to be self-contained
 - ✅ Added runtime venv checks to CI scripts (80-build.py, 90-semantic-release.py, 20-python-test.py, 95-python-version-sync.py)
-- ✅ Enforced .venv-ci in scripts/ci (removed fallback)
+- ✅ Enforced ci/.venv in ci/ci (removed fallback)
 - ✅ Tested semantic-release creates v1.6.0 tag
 - ✅ Designed 8-layer venv protection strategy
 
