@@ -36,12 +36,61 @@ AI AGENTS: Read these files BEFORE starting work:
 
 **Installs**: `.venv-ci`, hyperlib (latest from JFrog), nox, pytest, ruff, black, mypy, twine, semantic-release
 
-### Virtual Environment (CRITICAL)
+### Virtual Environment (CRITICAL - READ CAREFULLY)
 
-- `.venv` - Development (IDE, manual testing)
-- `.venv-ci` - CI/automation (nox, pytest, tools)
+**Two COMPLETELY SEPARATE environments exist. NEVER mix them!**
 
-**NEVER mix them**. Check before commands: `pwd`, `echo $VIRTUAL_ENV`
+#### .venv-ci (CI/Automation ONLY)
+- **Purpose**: ALL CI scripts, ALL automation, testing, building, releasing
+- **Created by**: `./scripts/bootstrap --install`
+- **Contains**: hyperlib (from JFrog), CI tools (nox, pytest, ruff, etc.)
+- **Marker file**: `.venv-ci/.THIS_IS_CI_VENV`
+- **Env vars**: `VENV_PURPOSE=ci`, `VENV_TYPE=automation`
+- **Usage**: NEVER activate manually, ALWAYS run via `./scripts/ci <action>`
+- **Python**: `.venv-ci/bin/python` (explicit path only)
+
+#### .venv (Development ONLY)
+- **Purpose**: IDE, manual testing, exploration, local development
+- **Created by**: `python -m venv .venv` (manual, optional)
+- **Contains**: Development dependencies for IDE/testing
+- **Marker file**: `.venv/.THIS_IS_DEV_VENV`
+- **Env vars**: `VENV_PURPOSE=dev`, `VENV_TYPE=development`
+- **Usage**: Activate for manual work: `source .venv/bin/activate`
+- **Python**: Can use `python` or `python3` when activated
+
+#### Protection Mechanisms (8 Layers)
+1. **Marker files** - Identify venv purpose
+2. **Environment variables** - Set on activation
+3. **Runtime checks** - Every CI script validates venv
+4. **CI runner enforcement** - scripts/ci uses explicit path
+5. **Bootstrap separation** - Only creates .venv-ci
+6. **Documentation** - This section and shebangs
+7. **Shared library** - scripts/ci_lib.py with `enforce_venv_ci()`
+8. **Gitignore** - Both venvs ignored
+
+#### For AI Assistants / LLMs - CRITICAL RULES
+
+**When writing CI scripts:**
+- ✅ ALWAYS use: `from ci_lib import enforce_venv_ci` at top
+- ✅ ALWAYS call: `enforce_venv_ci(__name__)` immediately
+- ✅ ALWAYS run via: `./scripts/ci <action>`
+- ❌ NEVER use: `#!/usr/bin/env python3` without checks
+- ❌ NEVER use: `python` or `python3` commands
+- ❌ NEVER use: `.venv` for CI
+
+**When writing development code:**
+- ✅ Use `.venv/bin/python` or activate `.venv`
+- ✅ For manual testing and exploration only
+- ❌ NEVER use `.venv-ci` for development
+- ❌ NEVER install dev dependencies in `.venv-ci`
+
+**How to check which venv:**
+```bash
+# Before running any command, verify:
+echo $VIRTUAL_ENV           # Should show .venv-ci or .venv
+echo $VENV_PURPOSE          # Should show 'ci' or 'dev'
+python -c "import sys; print(sys.prefix)"  # Check Python location
+```
 
 ## Universal Policies
 
