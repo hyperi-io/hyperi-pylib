@@ -121,34 +121,34 @@ Hyperlib's bootstrap.py installs hyperlib from JFrog, not from local source. Thi
 ### Development Workflow
 
 1. Make changes to `src/hyperlib/`
-2. Bump version in `VERSION`, `pyproject.toml`, `src/hyperlib/__init__.py`
-3. Build: `python -m build`
-4. Publish to JFrog: `python -m twine upload --repository-url ... dist/*`
-5. Test with `rm -rf .venv-ci && ./scripts/bootstrap --install`
+2. Commit with conventional commit messages (feat:, fix:, etc.)
+3. Run: `FORCE_RELEASE=1 ./scripts/ci publish`
+   - Semantic-release auto-versions based on commits
+   - Creates/updates CHANGELOG.md
+   - Tags and pushes to GitHub
+   - GitHub Actions builds and publishes to JFrog Artifactory
 
 ### Version Management
 
+- Semantic versioning via conventional commits
 - Git tags are source of truth
-- VERSION file synced from tags
-- pyproject.toml version must match
-- `__version__` in `__init__.py` must match
+- VERSION file auto-synced by semantic-release
+- pyproject.toml and `__version__` auto-updated
 
-Current version: **1.0.1**
+Current version: **1.5.5**
 
 ## Module Structure
 
 ```
 hyperlib/
-├── __init__.py       # Exports: config, logger, timeout, container, bootstrap
-├── bootstrap.py      # load_dotenv, list_sorted_scripts, load_defaults_yaml, ensure_dependency
-├── config.py         # get_logging_config, cascading config
-├── logger.py         # get_logger, setup, RFC 3339 timestamps
-├── timeout.py        # Async timeout utilities
-├── container.py      # Dependency injection
-├── cache.py          # Caching utilities
-├── core.py           # Core functionality
-├── resources.py      # Resource management
-├── sampling.py       # Data sampling
+├── __init__.py       # Main exports: Application, get_logger, config utilities
+├── application.py    # Primary user-facing API (Application class)
+├── config.py         # Configuration management (get_logging_config, get_mount_config)
+├── logger.py         # Structured logging (get_logger, setup, RFC 3339 timestamps)
+├── harness.py        # Test harness and execution utilities
+├── runtime.py        # Runtime paths and environment management
+├── prometheus.py     # Prometheus metrics (create_metrics)
+├── dbconn.py         # Database connection utilities
 └── exceptions.py     # Custom exceptions
 ```
 
@@ -169,10 +169,9 @@ rm -rf .venv-ci && ./scripts/bootstrap --install
 
 Actions:
   check     - Run all CI checks (lint, test, type-check)
-  build     - Build wheel and sdist
-  deploy    - Build and publish to JFrog Artifactory
-  release   - Full semantic-release workflow (version, build, deploy, tag)
-  publish   - Full release + push to remote (shorthand for release --push)
+  build     - Build wheel and sdist locally (for testing)
+  release   - Full semantic-release workflow (version, tag, build)
+  publish   - Release + push to GitHub (triggers GitHub Actions to publish to JFrog)
   clean     - Remove build artifacts
 
 Flags:
@@ -183,18 +182,18 @@ Flags:
 **Common workflows:**
 ```bash
 ./scripts/ci check                    # Pre-commit checks
-./scripts/ci build                    # Build package locally
-./scripts/ci deploy                   # Build + publish to JFrog
-FORCE_RELEASE=1 ./scripts/ci publish  # Release + build + deploy + push
+./scripts/ci build                    # Build package locally (for testing)
+FORCE_RELEASE=1 ./scripts/ci publish  # Full release: version → tag → push → GitHub Actions publishes
 ```
 
-**Manual publishing (if needed):**
-```bash
-python -m build
-python -m twine upload \
-  --repository-url https://hypersec.jfrog.io/artifactory/api/pypi/hypersec-pypi-local \
-  -u "$JF_USER" -p "$JF_PASSWORD" dist/*
-```
+**Publishing to JFrog:**
+- Publishing happens ONLY via GitHub Actions (triggered by version tags)
+- GitHub Secrets required: `ARTIFACTORY_USERNAME`, `ARTIFACTORY_PASSWORD`
+- Workflow: `.github/workflows/jfrog-publish.yml`
+
+**Note on credentials:**
+- `JF_USER`/`JF_PASSWORD` in `.env` → Bootstrap only (installing hyperlib during development)
+- GitHub Secrets → Production publishing to JFrog Artifactory
 
 ## Role in Forge Ecosystem
 
