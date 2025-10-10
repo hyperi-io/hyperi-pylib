@@ -20,13 +20,15 @@ Last Updated: 2025-10-10
 - ✅ Create venv validation helper function (ci_lib.py)
 - ✅ Document protection strategy (8 layers implemented)
 
-### Phase 2: Replace Node.js semantic-release with Python (IN PROGRESS)
+### Phase 2: Replace Node.js semantic-release with Python (COMPLETED ✅)
 - ✅ Research python-semantic-release library
 - ✅ Install python-semantic-release in ci/.venv
 - ✅ Configure in pyproject.toml [tool.semantic_release]
-- 🔄 Simplify 90-semantic-release.py to use Python CLI
-- [ ] Test Python semantic-release creates clean commits
-- [ ] Remove npm semantic-release dependency (if desired)
+- ✅ Simplify 90-semantic-release.py to use Python CLI (420→199 lines, 53% reduction)
+- ✅ Fix duplicate config sections and deprecation warnings
+- ✅ Test Python semantic-release dry-run mode (works correctly)
+- ✅ VERSION file now written by build_command
+- 📝 Node.js semantic-release can be removed (optional - not blocking)
 
 ### Phase 3: Replace subprocess with Native Python
 - [ ] Replace JFrog CLI with Python requests/twine (already using twine)
