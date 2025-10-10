@@ -43,12 +43,15 @@ Last Updated: 2025-10-10
 - [ ] Make bootstrap 100% Python after Python check
 - [ ] Test bootstrap works without bash dependencies
 
-### Phase 5: JFrog Publishing Controls
-- [ ] Add JFROG_PUBLISH env var (default: auto-detect from creds)
-- [ ] Add --no-publish flag to ./ci/ci release
-- [ ] Validate JFrog u/pwd authentication
-- [ ] Validate JFrog u/token authentication
-- [ ] Document JFrog authentication in STATE.md
+### Phase 5: JFrog Publishing Controls (COMPLETED ✅)
+- ✅ Add publish action to 80-build.py with JFrog upload via twine
+- ✅ Add JFROG_PUBLISH env var (default: auto-detect from creds)
+- ✅ Add --no-publish flag to ./ci/run
+- ✅ Implement should_publish_to_jfrog() with 3-way logic
+- ✅ Support both token auth (JF_TOKEN) and username/password (JF_USER/JF_PASSWORD)
+- ✅ Test JFROG_PUBLISH=false (skips publishing) ✓
+- ✅ Test auto-detect mode (finds credentials) ✓
+- ✅ Document JFrog authentication and publishing in STATE.md
 
 ### Phase 6: Testing & Validation
 - [ ] Test full release workflow (no JFrog publish)
