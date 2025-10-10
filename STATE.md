@@ -236,13 +236,54 @@ FORCE_RELEASE=1 ./ci/ci publish  # Full release: version → tag → push → Gi
 ```
 
 **Publishing to JFrog:**
-- Publishing happens ONLY via GitHub Actions (triggered by version tags)
-- GitHub Secrets required: `ARTIFACTORY_USERNAME`, `ARTIFACTORY_PASSWORD`
-- Workflow: `.github/workflows/jfrog-publish.yml`
 
-**Note on credentials:**
-- `JF_USER`/`JF_PASSWORD` in `.env` → Bootstrap only (installing hyperlib during development)
-- GitHub Secrets → Production publishing to JFrog Artifactory
+Two publishing methods are available:
+
+1. **GitHub Actions (Production)** - Triggered by version tags
+   - Workflow: `.github/workflows/jfrog-publish.yml`
+   - Uses GitHub Secrets: `ARTIFACTORY_USERNAME`, `ARTIFACTORY_PASSWORD`
+   - Automatic on version tag push
+
+2. **Local Publishing (Development/Testing)** - Direct upload via twine
+   ```bash
+   # Publish with auto-detect (uses creds from .env)
+   ./ci/run --script 80-build.py publish
+
+   # Force publish even without auto-detect
+   JFROG_PUBLISH=true ./ci/run --script 80-build.py publish
+
+   # Skip publishing
+   JFROG_PUBLISH=false ./ci/run --script 80-build.py publish
+   ./ci/run --script 80-build.py publish --no-publish
+   ```
+
+**JFrog Authentication Methods:**
+
+Supports both token and username/password authentication:
+
+1. **Token Auth (Preferred)**:
+   ```bash
+   JF_TOKEN=your-access-token
+   JF_TOKEN_USER=artifactory@hypersec.io  # Optional, default shown
+   ```
+
+2. **Username/Password (Fallback)**:
+   ```bash
+   JF_USER=your-username
+   JF_PASSWORD=your-password
+   ```
+
+**JFROG_PUBLISH Environment Variable:**
+
+Controls local JFrog publishing behavior:
+
+- `JFROG_PUBLISH=false` - Never publish (skip)
+- `JFROG_PUBLISH=true` - Always publish (requires credentials)
+- `JFROG_PUBLISH` unset - Auto-detect from credentials (default)
+
+**Credential Sources:**
+- `.env` file → Local development (bootstrap + publishing)
+- GitHub Secrets → Production publishing via GitHub Actions
 
 ## Role in Forge Ecosystem
 
