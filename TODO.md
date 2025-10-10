@@ -30,12 +30,15 @@ Last Updated: 2025-10-10
 - ✅ VERSION file now written by build_command
 - 📝 Node.js semantic-release can be removed (optional - not blocking)
 
-### Phase 3: Replace subprocess with Native Python
-- [ ] Replace JFrog CLI with Python requests/twine (already using twine)
-- [ ] Replace GitHub CLI with PyGithub library
-- [ ] Replace git commands with GitPython library where possible
-- [ ] Audit all subprocess calls in CI scripts
-- [ ] Document which subprocess calls remain (if any)
+### Phase 3: Consolidate and Document Subprocess Usage (COMPLETED ✅)
+- ✅ Audited all subprocess calls across CI scripts
+- ✅ Documented subprocess usage policy in ci_lib.py
+- ✅ Created ci/SUBPROCESS-USAGE.md comprehensive audit
+- ✅ Verified git is system dependency (checked in bootstrap.d/00-check-git.sh)
+- ✅ Consolidated git operations into ci_lib.py helpers
+- ✅ Decision: Use subprocess for standard tools (git), native Python for libraries
+- ✅ Already using native Python: build, twine, semantic-release
+- 📝 Avoided wrapper libraries (GitPython, PyGithub) - they use subprocess internally anyway
 
 ### Phase 4: Simplify Bootstrap
 - [ ] Move Python tools installation to pure Python
