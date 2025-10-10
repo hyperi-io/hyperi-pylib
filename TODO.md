@@ -2,21 +2,31 @@
 
 Last Updated: 2025-10-10
 
-## Current Sprint: Pure Python CI with venv Protection
+## Current Sprint: Pure Python CI with Full Self-Containment
 
-### Phase 1: Multi-Layer venv Protection (In Progress)
-- [ ] Implement environment variables in activation scripts (.venv/bin/activate)
-- [ ] Add marker files (.venv/.THIS_IS_DEV_VENV, ci/.venv/.THIS_IS_CI_VENV)
-- [ ] Update STATE.md with clear venv usage guidelines for LLMs
-- [ ] Create venv validation helper function for reuse
-- [ ] Document protection strategy in docs/
+### Phase 0: Full Self-Containment (COMPLETED ✅)
+- ✅ Restructured /scripts → /ci directory
+- ✅ Moved .venv-ci → ci/.venv (full isolation)
+- ✅ Renamed scripts/ci → ci/run (clearer naming)
+- ✅ Cleaned up pyproject.toml dev extras (removed CI tools)
+- ✅ CI dependencies now in ci/bootstrap.d/20-python-tools.py only
+- ✅ Updated all paths across codebase and docs
+- ✅ Tested bootstrap and CI work correctly
 
-### Phase 2: Replace semantic-release CLI with Python
-- [ ] Research python-semantic-release library
-- [ ] Install python-semantic-release in ci/.venv
-- [ ] Rewrite 90-semantic-release.py to use Python library
-- [ ] Test semantic versioning with Python library
-- [ ] Remove npm semantic-release dependency
+### Phase 1: Multi-Layer venv Protection (COMPLETED ✅)
+- ✅ Implement environment variables in activation scripts
+- ✅ Add marker files (.venv/.THIS_IS_DEV_VENV, ci/.venv/.THIS_IS_CI_VENV)
+- ✅ Update STATE.md with clear venv usage guidelines for LLMs
+- ✅ Create venv validation helper function (ci_lib.py)
+- ✅ Document protection strategy (8 layers implemented)
+
+### Phase 2: Replace Node.js semantic-release with Python (IN PROGRESS)
+- ✅ Research python-semantic-release library
+- ✅ Install python-semantic-release in ci/.venv
+- ✅ Configure in pyproject.toml [tool.semantic_release]
+- 🔄 Simplify 90-semantic-release.py to use Python CLI
+- [ ] Test Python semantic-release creates clean commits
+- [ ] Remove npm semantic-release dependency (if desired)
 
 ### Phase 3: Replace subprocess with Native Python
 - [ ] Replace JFrog CLI with Python requests/twine (already using twine)
@@ -45,15 +55,17 @@ Last Updated: 2025-10-10
 - [ ] Verify all commits this session use 'fix:' prefix
 - [ ] Document the refactored CI workflow
 
-## Completed
+## Completed (Earlier Sessions)
 - ✅ Removed 85-deploy.py (local JFrog publishing)
 - ✅ Removed sampling.py module
 - ✅ Updated CI workflow to GitHub Actions only
 - ✅ Fixed bootstrap to be self-contained
-- ✅ Added runtime venv checks to CI scripts (80-build.py, 90-semantic-release.py, 20-python-test.py, 95-python-version-sync.py)
-- ✅ Enforced ci/.venv in ci/ci (removed fallback)
+- ✅ Added runtime venv checks to CI scripts
+- ✅ Enforced ci/.venv in CI runner (removed fallback)
 - ✅ Tested semantic-release creates v1.6.0 tag
 - ✅ Designed 8-layer venv protection strategy
+- ✅ Full CI restructure: /scripts → /ci with full self-containment
+- ✅ pyproject.toml cleanup: CI tools separated from project deps
 
 ## Deferred
 - GitHub Actions JFrog publishing (workflow exists, not testing now)
