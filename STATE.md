@@ -345,6 +345,21 @@ Hyperlib uses a two-stage Nuitka build approach:
 - **Safety**: Test locally before triggering expensive cloud builds
 - **Flexibility**: Local builds for development, cloud builds for distribution
 
+**BuildJet Configuration (ARM64 Support):**
+
+Hyperlib uses **BuildJet** for ARM64 runners in private repositories (enabled by default):
+
+```yaml
+# ci/ci.yaml
+nuitka:
+  buildjet:
+    enabled: true  # Default: true - use BuildJet for ARM64
+```
+
+- **When enabled**: ARM64 builds use `buildjet-2vcpu-ubuntu-2204-arm` ($0.004/min)
+- **When disabled**: ARM64 builds use `ubuntu-24.04-arm` (fails for private repos)
+- **Cost savings**: BuildJet is 75% cheaper than GitHub theoretical ARM64 pricing
+
 **Nuitka Build Commands:**
 
 ```bash
