@@ -317,22 +317,55 @@ Hyperlib supports **Nuitka Commercial** compilation for creating standalone exec
 - C compiler availability (provides installation hints if missing)
 - Nuitka Commercial installation (installs from HyperSec PyPI if needed)
 
+**Dual-Build Strategy: Local vs GitHub Actions**
+
+Hyperlib uses a two-stage Nuitka build approach:
+
+1. **Local Build** (Fast Testing):
+   - Purpose: Quick validation that Nuitka compilation works
+   - Architecture: **Local CPU only** (x64 or ARM64, whichever you're on)
+   - Trigger: `BUILD_PROFILE=nuitka ./ci/ci build`
+   - Output: `dist-nuitka/hyperlib-linux-{arch}.bin` (or `.exe` on Windows)
+   - Cost: Free (local machine)
+   - Use: Test Nuitka before expensive GitHub Actions run
+
+2. **GitHub Actions Build** (Multi-Architecture):
+   - Purpose: Production builds for all supported architectures
+   - Architectures: **x64 AND ARM64** (configurable in `ci/ci.yaml`)
+   - Trigger: Automatic on version tags (`v*`) or manual workflow_dispatch
+   - Output: Compiled wheels (`.whl` with `.so` files) for each architecture
+   - Publishing: Uploads to JFrog Artifactory PyPI repository
+   - Cost: ~$0.056-0.168 per build (depending on enabled platforms)
+   - Use: Production releases with multi-arch support
+
+**Why Two Build Modes?**
+
+- **Speed**: Local builds complete in 5-10 minutes on your machine
+- **Cost**: GitHub Actions ARM64 builds cost 2x Linux x64, macOS costs 20x
+- **Safety**: Test locally before triggering expensive cloud builds
+- **Flexibility**: Local builds for development, cloud builds for distribution
+
 **Nuitka Build Commands:**
 
 ```bash
-# Build with default protection (recommended)
+# Local build (tests on your architecture only)
 BUILD_PROFILE=nuitka ./ci/ci build
 
-# Build with specific protection level
+# With specific protection level
 BUILD_PROFILE=nuitka NUITKA_PROTECTION=data-hiding ./ci/ci build
 
-# Build with no protection (fastest)
+# Fast build (no protection, for testing)
 BUILD_PROFILE=nuitka NUITKA_PROTECTION=none ./ci/ci build
+
+# GitHub Actions multi-arch build (automatic on tag push)
+FORCE_RELEASE=1 ./ci/ci publish  # Creates tag, triggers GitHub Actions
 ```
 
 **Output:**
-- Standard build: `dist/*.whl` and `dist/*.tar.gz`
-- Nuitka build: `dist-nuitka/*.bin` (or `.exe` on Windows)
+
+- **Local build**: `dist-nuitka/*.bin` (or `.exe` on Windows) - single architecture
+- **GitHub Actions**: `dist/*.whl` - compiled wheels for x64 and ARM64 (if enabled)
+- **Standard build**: `dist/*.whl` and `dist/*.tar.gz` - pure Python (no Nuitka)
 
 **Key Management (Traceback Encryption):**
 
@@ -407,6 +440,142 @@ Hyperlib serves two roles:
 2. **Template test case**: Real-world validation of forge-python package template
 
 All changes to hyperlib that affect template structure should be documented in `docs/TEMPLATE-CHANGES.md` for backporting to forge-python.
+
+## AI Assistant Knowledge Base - GitHub Actions
+
+**Last Updated**: 2025-10-16 (Web search verified)
+**Purpose**: Reference for AI assistants to avoid outdated assumptions
+
+### GitHub Actions ARM64 Runners (2025)
+
+**Availability** (as of August 2025 - Generally Available):
+
+- **Public repositories**: ARM64 runners are **FREE** ✅
+  - Labels: `ubuntu-24.04-arm`, `ubuntu-22.04-arm`
+  - Specs: 4 vCPU, Cobalt 100 processors
+  - Performance: Up to 40% faster than previous generation Azure ARM VMs
+  - Status: Generally Available (GA as of August 2025)
+
+- **Private repositories** (HyperSec uses private repos): Requires GitHub Team or Enterprise Cloud plan
+  - Available as standard hosted runners (not "larger runners")
+  - Labels: `ubuntu-24.04-arm`, `ubuntu-22.04-arm` (same as public)
+  - Cost: Billed per minute (see pricing below)
+
+**Pricing** (verified 2025) - **HyperSec private repositories**:
+
+| Runner Type | vCPU | Cost/min | Cost/Build (7min) | Applies to HyperSec |
+|-------------|------|----------|-------------------|---------------------|
+| Linux x64 standard | 2 | $0.008 | $0.056 | ✅ Used |
+| Linux ARM64 standard | 4 | $0.016 | $0.112 | ✅ Used (2x cost) |
+| Linux ARM64 larger (8-core) | 8 | $0.02 | $0.14 | ❌ Not used |
+| macOS ARM64 | 3 | $0.16 | $1.12 | ❌ Disabled (20x!) |
+
+**Note**: Public repos get ARM64 for FREE, but HyperSec uses **private repositories** which are billed at $0.016/min for ARM64 (2x Linux x64 cost).
+
+**Key Facts for AI Assistants (HyperSec Context)**:
+
+1. ✅ **ARM64 runners ARE natively available** (not via QEMU emulation)
+2. ⚠️ **HyperSec uses PRIVATE repositories** - ARM64 costs $0.016/min (2x Linux x64)
+3. ✅ **Runner labels are stable**: `ubuntu-24.04-arm`, `ubuntu-22.04-arm`
+4. ⚠️ **Requires GitHub Team/Enterprise plan** (HyperSec has this)
+5. ⚠️ **macOS ARM64 is 20x more expensive** than Linux x64 - DISABLED by default
+6. ⚠️ **Monthly cost** for private repos: ~$1.68/month (10 releases, x64 + ARM64)
+
+**Workflow Configuration** (HyperSec private repos):
+
+```yaml
+# ARM64 runner for private repositories (billed at $0.016/min)
+runs-on: ubuntu-24.04-arm
+```
+
+**Cost Optimization for HyperSec (Private Repos)**:
+
+- **Linux x64**: Always enabled ($0.056 per build) ✅
+- **Linux ARM64**: Enabled ($0.112 per build, 2x cost) ✅ - Provides ARM64 wheel distribution
+- **macOS ARM64**: Disabled ($1.12 per build, 20x cost) ❌ - Only enable if absolutely needed
+- **Monthly estimate**: $0.056 + $0.112 = $0.168 per release → ~$1.68/month (10 releases)
+- **Alternative**: Self-hosted ARM64 runner (free but requires maintenance)
+
+**Sources**:
+- GitHub Changelog: "Linux arm64 hosted runners now available for free in public repositories" (Jan 2025)
+- GitHub Changelog: "arm64 hosted runners for public repositories are now generally available" (Aug 2025)
+- GitHub Docs: "About larger runners" (pricing details)
+
+### Active Checking Strategy (CRITICAL for AI Assistants)
+
+**PROBLEM**: Waiting with long timeouts (e.g., 10 minutes) only to discover the task failed in the first 2 seconds wastes time and causes frustration.
+
+**SOLUTION**: Use `gh` CLI and `jf` CLI to **actively check progress** instead of passive waiting.
+
+**Tools Available**:
+
+1. **gh CLI** - GitHub Actions monitoring:
+   ```bash
+   gh run list --limit 5                    # List recent runs
+   gh run view <run_id> --log              # View logs in real-time
+   gh run watch <run_id>                   # Watch run progress
+   gh workflow view <workflow_name>         # View workflow status
+   ```
+
+2. **jf CLI** - JFrog Artifactory verification:
+   ```bash
+   # Check if package exists in JFrog (requires JF_TOKEN/JF_USER in .env)
+   jf rt search "hypersec-pypi-local/hyperlib/*" --count
+   jf rt download "hypersec-pypi-local/hyperlib/<version>/*.whl" --dry-run
+   ```
+
+3. **Git remote status**:
+   ```bash
+   git log --oneline origin/main..HEAD     # Unpushed commits
+   git status                               # Local changes
+   ```
+
+**Best Practices for AI Assistants**:
+
+1. ✅ **Push and immediately check**: After `git push`, run `gh run list` to see if workflow started
+2. ✅ **Check every 30-60 seconds**: Use `gh run view <run_id>` to check status, don't wait blindly
+3. ✅ **Fail fast**: If logs show errors, stop waiting and investigate immediately
+4. ✅ **Verify artifacts**: After build, check JFrog with `jf rt search` to confirm upload
+5. ❌ **DON'T**: Set a 10-minute timer and hope for the best
+6. ❌ **DON'T**: Assume success without verification
+
+**Example Active Checking Workflow**:
+
+```bash
+# 1. Push changes
+git push origin main
+
+# 2. Immediately check if workflow started (within 10 seconds)
+gh run list --limit 1
+
+# 3. Get run ID and watch it
+RUN_ID=$(gh run list --limit 1 --json databaseId --jq '.[0].databaseId')
+echo "Watching run: $RUN_ID"
+
+# 4. Check every 30 seconds (don't wait 10 minutes!)
+while true; do
+  STATUS=$(gh run view $RUN_ID --json status,conclusion --jq '.status')
+  echo "Status: $STATUS"
+
+  if [ "$STATUS" = "completed" ]; then
+    CONCLUSION=$(gh run view $RUN_ID --json conclusion --jq '.conclusion')
+    echo "Conclusion: $CONCLUSION"
+    break
+  fi
+
+  sleep 30
+done
+
+# 5. If successful, verify in JFrog immediately
+jf rt search "hypersec-pypi-local/hyperlib/1.6.0/*.whl" --count
+```
+
+**Why This Matters**:
+
+- GitHub Actions can fail due to: missing secrets, workflow syntax errors, runner unavailable
+- JFrog uploads can fail due to: credentials, network, duplicate version
+- **Early detection** saves time and prevents cascading failures
+- **Active monitoring** provides immediate feedback for debugging
 
 ## Documentation
 
