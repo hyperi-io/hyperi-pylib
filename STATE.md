@@ -103,6 +103,61 @@ Use `./.tmp/` only (not `/tmp`, `~/tmp`, `/var/tmp`)
 ### CI Environment
 Always use `ci/.venv` for CI/tooling. Bootstrap creates/populates it. CI scripts run bootstrap first.
 
+### Pip Install from JFrog ONLY (CRITICAL)
+
+**BEST SOLUTION: Use `uv` with `tool.uv.sources` configuration:**
+
+```bash
+uv pip install <package>
+```
+
+With pyproject.toml:
+```toml
+[[tool.uv.index]]
+name = "jfrog"
+url = "https://your-jfrog-url/simple"
+explicit = true
+
+[tool.uv.sources]
+package-name = { index = "jfrog" }
+```
+
+This forces the package to ONLY come from JFrog with no fallback to public PyPI.
+
+**ALTERNATIVE (if not using uv): Use `--no-index` with `--find-links`:**
+
+```bash
+pip install <package> --no-index --find-links <jfrog_url>
+```
+
+**Why each approach:**
+- `uv pip install` - Respects `tool.uv.sources` in pyproject.toml (cleanest solution)
+- `--no-index` - Prevents pip from using any default indexes (including PyPI)
+- `--find-links` - Specifies the ONLY source to check
+
+**CRITICAL for Nuitka:**
+- **hypersec-pypi-LOCAL repository ONLY has Nuitka Commercial 2.7.16 (Commercial: 3.8.5)**
+- Confirmed by manual download: `Nuitka/2.7.16/nuitka-2.7.16-cp311-cp311-linux_x86_64.whl` is Commercial
+- **AI AGENTS: JFrog LOCAL repo is ALWAYS Commercial - NEVER assume it has OSS!**
+- Artifactory MAY cache public PyPI packages, but hypersec-pypi-LOCAL is curated and contains ONLY Commercial
+- Install with version pinning: `pip install nuitka==2.7.16` forces JFrog version (public PyPI has 2.8.1)
+
+**IMPORTANT: Do NOT use `--no-index` with `--index-url`!**
+- `--no-index` tells pip to ignore ALL indexes, including the one specified in `--index-url`
+- This is documented pip behavior and will cause "no matching distribution" errors
+
+**WRONG (will check multiple indexes):**
+```bash
+pip install <package> --index-url <jfrog_url>  # WRONG - still checks pip.conf and env vars
+```
+
+**ALSO WRONG (incompatible flags):**
+```bash
+pip install <package> --no-index --index-url <jfrog_url>  # WRONG - --no-index overrides --index-url
+```
+
+**This is critical for packages like Nuitka where JFrog should have Commercial but public PyPI has OSS.**
+
 ### Character Policy
 
 **MUST follow `CHARS-POLICY.md`**:
@@ -235,31 +290,102 @@ Flags:
 FORCE_RELEASE=1 ./ci/ci publish  # Full release: version → tag → push → GitHub Actions publishes
 ```
 
-**Publishing to JFrog:**
+### Nuitka Build Profile (Code Protection)
 
-Two publishing methods are available:
+Hyperlib supports **Nuitka Commercial** compilation for creating standalone executables with code protection. This is controlled via environment variables and integrates seamlessly with the existing CI system.
 
-1. **GitHub Actions (Production)** - Triggered by version tags
-   - Workflow: `.github/workflows/jfrog-publish.yml`
-   - Uses GitHub Secrets: `ARTIFACTORY_USERNAME`, `ARTIFACTORY_PASSWORD`
-   - Automatic on version tag push
+**Build Profiles:**
 
-2. **Local Publishing (Development/Testing)** - Direct upload via twine
+- `BUILD_PROFILE=package` (default): Standard Python wheel/sdist
+- `BUILD_PROFILE=nuitka`: Nuitka-compiled standalone executable
+
+**Protection Levels (NUITKA_PROTECTION):**
+
+- `none`: Basic compilation only
+- `minimal`: Standalone mode only
+- `data-hiding`: Encrypt string constants and names
+- `traceback`: Encrypt stdout/stderr and tracebacks
+- `recommended` (default): Full protection stack (data-hiding + traceback + isolated)
+
+**Requirements:**
+
+1. C compiler (gcc/clang for Linux/macOS, MSVC/MinGW for Windows)
+2. Nuitka Commercial from HyperSec private PyPI
+3. JFrog credentials in `.env`
+
+**Bootstrap automatically checks:**
+- C compiler availability (provides installation hints if missing)
+- Nuitka Commercial installation (installs from HyperSec PyPI if needed)
+
+**Nuitka Build Commands:**
+
+```bash
+# Build with default protection (recommended)
+BUILD_PROFILE=nuitka ./ci/ci build
+
+# Build with specific protection level
+BUILD_PROFILE=nuitka NUITKA_PROTECTION=data-hiding ./ci/ci build
+
+# Build with no protection (fastest)
+BUILD_PROFILE=nuitka NUITKA_PROTECTION=none ./ci/ci build
+```
+
+**Output:**
+- Standard build: `dist/*.whl` and `dist/*.tar.gz`
+- Nuitka build: `dist-nuitka/*.bin` (or `.exe` on Windows)
+
+**Key Management (Traceback Encryption):**
+
+When using `traceback` or `recommended` protection, encryption keys are automatically generated:
+
+- Keys stored in: `.keys/hyperlib-<version>-<timestamp>.key`
+- Keys are gitignored (NEVER commit!)
+- Keys required to decrypt logs/tracebacks from compiled binaries
+- Backup keys securely (password manager, key vault)
+
+**Security Warning:**
+
+When traceback encryption is enabled, the build prints a prominent security banner with key location and backup instructions. **CRITICAL**: These keys are required to decrypt logs!
+
+**Testing Nuitka Build:**
+
+```bash
+# Build Nuitka executable locally
+BUILD_PROFILE=nuitka ./ci/ci build
+```
+
+**See also:** [ci/docs/NUITKA.md](ci/docs/NUITKA.md) for detailed Nuitka usage guide
+
+### Publishing to JFrog
+
+**Publishing is handled EXCLUSIVELY by GitHub Actions**
+
+Local CI builds artifacts to `dist/`, GitHub Actions publishes them to JFrog Artifactory.
+
+**Workflow:**
+
+1. **Local**: Build and create version tag
    ```bash
-   # Publish with auto-detect (uses creds from .env)
-   ./ci/run --script 80-build.py publish
-
-   # Force publish even without auto-detect
-   JFROG_PUBLISH=true ./ci/run --script 80-build.py publish
-
-   # Skip publishing
-   JFROG_PUBLISH=false ./ci/run --script 80-build.py publish
-   ./ci/run --script 80-build.py publish --no-publish
+   ./ci/ci build                    # Build to dist/
+   FORCE_RELEASE=1 ./ci/ci publish  # Create version, tag, push
    ```
 
-**JFrog Authentication Methods:**
+2. **GitHub Actions**: Automatically triggered by version tag push
+   - Workflow: `.github/workflows/jfrog-publish.yml`
+   - Builds package fresh from source
+   - Publishes to JFrog using GitHub Secrets
+   - Uses: `ARTIFACTORY_USERNAME`, `ARTIFACTORY_PASSWORD`
 
-Supports both token and username/password authentication:
+**Why GitHub Actions Only?**
+
+- **Single Source of Truth**: Only one place publishes
+- **Security**: JFrog credentials only in GitHub Secrets
+- **Auditability**: All publishes tracked in GitHub Actions logs
+- **Consistency**: Same build process for everyone
+
+**JFrog Authentication (Bootstrap Only):**
+
+JFrog credentials in `.env` are used ONLY for bootstrap (installing dependencies):
 
 1. **Token Auth (Preferred)**:
    ```bash
@@ -272,18 +398,6 @@ Supports both token and username/password authentication:
    JF_USER=your-username
    JF_PASSWORD=your-password
    ```
-
-**JFROG_PUBLISH Environment Variable:**
-
-Controls local JFrog publishing behavior:
-
-- `JFROG_PUBLISH=false` - Never publish (skip)
-- `JFROG_PUBLISH=true` - Always publish (requires credentials)
-- `JFROG_PUBLISH` unset - Auto-detect from credentials (default)
-
-**Credential Sources:**
-- `.env` file → Local development (bootstrap + publishing)
-- GitHub Secrets → Production publishing via GitHub Actions
 
 ## Role in Forge Ecosystem
 
