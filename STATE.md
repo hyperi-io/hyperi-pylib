@@ -11,7 +11,7 @@ AI AGENTS: Read these files BEFORE starting work:
 5. docs/CHARS-POLICY.md - Character restrictions (ASCII logs, limited emoji)
 6. docs/CONTRIBUTING.md - Workflow and conventions
 7. README.md - Project overview
-8. docs/ARTIFACTORY.md - JFrog publishing
+8. ci/docs/JFROG.md - JFrog publishing
 -->
 
 ## Project Overview
@@ -701,8 +701,8 @@ jf rt search "hypersec-pypi-local/hyperlib/1.6.0/*.whl" --count
 
 - **STATE.md** (this file) - Project state and instructions
 - **README.md** - User-facing documentation
-- **docs/ARTIFACTORY.md** - JFrog setup and publishing
-- **docs/BOOTSTRAP-ANALYSIS.md** - Bootstrap implementation details
+- **ci/docs/JFROG.md** - JFrog setup and publishing
+- **ci/docs/BOOTSTRAP-INTERNALS.md** - Bootstrap implementation details
 - **docs/TEMPLATE-CHANGES.md** - Template change tracking
 - **TODO.md** - Task list
 - **CHANGELOG.md** - Version history
