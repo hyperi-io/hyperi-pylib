@@ -226,11 +226,14 @@ Hyperlib's bootstrap.py installs hyperlib from JFrog, not from local source. Thi
 
 1. Make changes to `src/hyperlib/`
 2. Commit with conventional commit messages (feat:, fix:, etc.)
-3. Run: `FORCE_RELEASE=1 ./ci/ci publish`
+3. Create release tag and push to GitHub:
+   ```bash
+   FORCE_RELEASE=1 ./ci/ci publish  # Creates tag, pushes to GitHub
+   ```
    - Semantic-release auto-versions based on commits
    - Creates/updates CHANGELOG.md
    - Tags and pushes to GitHub
-   - GitHub Actions builds and publishes to JFrog Artifactory
+   - **GitHub Actions automatically builds and publishes to JFrog** (no manual publish!)
 
 ### Version Management
 
@@ -418,30 +421,41 @@ BUILD_PROFILE=nuitka ./ci/ci build
 
 ### Publishing to JFrog
 
-**Publishing is handled EXCLUSIVELY by GitHub Actions**
+**⚠️ CRITICAL: Publishing is handled EXCLUSIVELY by GitHub Actions**
 
-Local CI builds artifacts to `dist/`, GitHub Actions publishes them to JFrog Artifactory.
+**NEVER publish manually to JFrog Artifactory.** All publishing must go through GitHub Actions.
 
-**Workflow:**
+**Production Workflow:**
 
-1. **Local**: Build and create version tag
+1. **Local Development**: Make changes and create version tag
    ```bash
-   ./ci/ci build                    # Build to dist/
-   FORCE_RELEASE=1 ./ci/ci publish  # Create version, tag, push
+   # Make your changes
+   git add .
+   git commit -m "feat: add new feature"
+
+   # Let semantic-release create version tag
+   FORCE_RELEASE=1 ./ci/ci publish  # Creates tag, pushes to GitHub
    ```
 
-2. **GitHub Actions**: Automatically triggered by version tag push
+2. **GitHub Actions**: Automatically triggered by version tag push (`v*`)
    - Workflow: `.github/workflows/jfrog-publish.yml`
-   - Builds package fresh from source
+   - Builds package fresh from source (clean environment)
    - Publishes to JFrog using GitHub Secrets
    - Uses: `ARTIFACTORY_USERNAME`, `ARTIFACTORY_PASSWORD`
 
 **Why GitHub Actions Only?**
 
-- **Single Source of Truth**: Only one place publishes
-- **Security**: JFrog credentials only in GitHub Secrets
+- **Security**: JFrog credentials only in GitHub Secrets (never local)
 - **Auditability**: All publishes tracked in GitHub Actions logs
 - **Consistency**: Same build process for everyone
+- **Single Source of Truth**: One place publishes, prevents conflicts
+- **Clean Environment**: Fresh build every time, no local artifacts
+
+**For Testing:**
+
+The test suite (`tests/ci/test_ci.py`) includes `test_nuitka_publish_and_install()`
+which validates the publish/install flow, but this is for CI validation only.
+Production publishing must always use GitHub Actions.
 
 **JFrog Authentication (Bootstrap Only):**
 
