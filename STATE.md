@@ -433,19 +433,22 @@ Local CI builds artifacts to `dist/`, GitHub Actions publishes them to JFrog Art
 
 **JFrog Authentication (Bootstrap Only):**
 
-JFrog credentials in `.env` are used ONLY for bootstrap (installing dependencies):
+JFrog credentials in `.env` are used ONLY for bootstrap (installing dependencies).
+**IMPORTANT**: Use ARTIFACTORY_* variables (matching GitHub Actions secrets):
 
-1. **Token Auth (Preferred)**:
+1. **Username/Password (Primary)**:
    ```bash
-   JF_TOKEN=your-access-token
-   JF_TOKEN_USER=artifactory@hypersec.io  # Optional, default shown
+   ARTIFACTORY_USERNAME=your-username
+   ARTIFACTORY_PASSWORD=your-password
    ```
 
-2. **Username/Password (Fallback)**:
+2. **Token Auth (Alternative)**:
    ```bash
-   JF_USER=your-username
-   JF_PASSWORD=your-password
+   ARTIFACTORY_TOKEN=your-access-token
+   ARTIFACTORY_TOKEN_USER=artifactory@hypersec.io  # Optional, default shown
    ```
+
+**Migration from old JF_* variables**: Run `python migrate_env.py` to automatically update your .env file.
 
 ## Role in Forge Ecosystem
 
