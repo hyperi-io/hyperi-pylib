@@ -5,11 +5,12 @@
 <!--
 AI AGENTS: Read these files BEFORE starting work:
 1. STATE.md (or CLAUDE.md symlink)
-2. docs/CHARS-POLICY.md - Character restrictions (ASCII logs, limited emoji)
-3. docs/CONTRIBUTING.md - Workflow and conventions
-4. docs/DEVELOPMENT.md - Setup and build
-5. README.md - Project overview
-6. docs/ARTIFACTORY.md - JFrog publishing
+2. HyperCI section below - ci/ is git subtree from hypersec-io/hyperci
+3. ci/docs/SUBTREE-USAGE.md - How to use hyperci subtree
+4. docs/CHARS-POLICY.md - Character restrictions (ASCII logs, limited emoji)
+5. docs/CONTRIBUTING.md - Workflow and conventions
+6. README.md - Project overview
+7. docs/ARTIFACTORY.md - JFrog publishing
 -->
 
 ## Project Overview
@@ -22,6 +23,54 @@ AI AGENTS: Read these files BEFORE starting work:
 - **Repository**: `https://github.com/hypersec-io/hyperlib`
 - **Published to**: JFrog Artifactory private PyPI
 - **Version**: 1.5.0 (see VERSION file)
+
+## HyperCI - Centralized CI Infrastructure
+
+**CRITICAL**: Hyperlib uses [HyperCI](https://github.com/hypersec-io/hyperci) via **git subtree**.
+
+### Architecture
+
+The `ci/` directory is a git subtree from `hypersec-io/hyperci`:
+- **Central Repo**: https://github.com/hypersec-io/hyperci
+- **Method**: Git subtree (embedded in project)
+- **Updates**: `git subtree pull --prefix ci https://github.com/hypersec-io/hyperci.git main --squash`
+- **Customization**: `ci/ci.yaml` (project-specific, protected from updates)
+
+### What This Means
+
+**CI Scripts are Centralized:**
+- ✅ All `ci/` scripts come from hyperci repo
+- ✅ Bootstrap, build, test, Nuitka scripts shared across ALL projects
+- ✅ Updates to hyperci automatically available to all projects
+- ✅ One fix in hyperci → all projects benefit
+
+**Configuration is Project-Specific:**
+- ✅ Each project has its own `ci/ci.yaml`
+- ✅ Protected from subtree updates (`.gitattributes: ci/ci.yaml merge=ours`)
+- ✅ Hyperlib's `ci/ci.yaml` stays under version control in this repo
+
+### Updating HyperCI
+
+```bash
+# Pull latest from hyperci (updates all scripts, keeps ci/ci.yaml intact)
+git subtree pull --prefix ci https://github.com/hypersec-io/hyperci.git main --squash
+
+# Test after update
+./ci/bootstrap --install
+ci/.venv/bin/python ci/python/ci.d/20-python-test.py check
+```
+
+### Contributing Back to HyperCI
+
+```bash
+# If you improve a script in hyperlib's ci/
+git subtree push --prefix ci https://github.com/hypersec-io/hyperci.git fix/my-improvement
+
+# Create PR in hyperci repo
+# Once merged, all projects can pull the improvement
+```
+
+**See Also**: [ci/docs/SUBTREE-USAGE.md](ci/docs/SUBTREE-USAGE.md) for complete guide
 
 ## Bootstrap (ALWAYS Run First)
 
