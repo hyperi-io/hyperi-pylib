@@ -5,12 +5,13 @@
 <!--
 AI AGENTS: Read these files BEFORE starting work:
 1. STATE.md (or CLAUDE.md symlink)
-2. HyperCI section below - ci/ is git subtree from hypersec-io/hyperci
-3. ci/docs/SUBTREE-USAGE.md - How to use hyperci subtree
-4. docs/CHARS-POLICY.md - Character restrictions (ASCII logs, limited emoji)
-5. docs/CONTRIBUTING.md - Workflow and conventions
-6. README.md - Project overview
-7. docs/ARTIFACTORY.md - JFrog publishing
+2. HyperCI section below - ci/ is git submodule from hypersec-io/hyperci
+3. ci/docs/SUBMODULE-USAGE.md - How to use hyperci submodule
+4. ci/docs/README.md - HyperCI dependencies and requirements
+5. docs/CHARS-POLICY.md - Character restrictions (ASCII logs, limited emoji)
+6. docs/CONTRIBUTING.md - Workflow and conventions
+7. README.md - Project overview
+8. docs/ARTIFACTORY.md - JFrog publishing
 -->
 
 ## Project Overview
@@ -26,34 +27,47 @@ AI AGENTS: Read these files BEFORE starting work:
 
 ## HyperCI - Centralized CI Infrastructure
 
-**CRITICAL**: Hyperlib uses [HyperCI](https://github.com/hypersec-io/hyperci) via **git subtree**.
+**CRITICAL**: Hyperlib uses [HyperCI](https://github.com/hypersec-io/hyperci) via **git submodule**.
 
 ### Architecture
 
-The `ci/` directory is a git subtree from `hypersec-io/hyperci`:
+The `ci/` directory is a git submodule pointing to `hypersec-io/hyperci`:
 - **Central Repo**: https://github.com/hypersec-io/hyperci
-- **Method**: Git subtree (embedded in project)
-- **Updates**: `git subtree pull --prefix ci https://github.com/hypersec-io/hyperci.git main --squash`
-- **Customization**: `ci/ci.yaml` (project-specific, protected from updates)
+- **Method**: Git submodule (reference to hyperci repo)
+- **Pin Version**: `cd ci && git checkout v1.0.0` (explicit version control)
+- **Updates**: `cd ci && git pull origin main` (standard git workflow)
+- **Configuration**: `ci.yaml` at project root (project-specific, NOT in submodule)
 
 ### What This Means
 
 **CI Scripts are Centralized:**
-- ✅ All `ci/` scripts come from hyperci repo
+- ✅ All `ci/` scripts come from hyperci repo (via submodule)
 - ✅ Bootstrap, build, test, Nuitka scripts shared across ALL projects
-- ✅ Updates to hyperci automatically available to all projects
-- ✅ One fix in hyperci → all projects benefit
+- ✅ Updates to hyperci available to all projects (explicit pull)
+- ✅ One fix in hyperci → all projects can update
+- ✅ Version pinning: Each project controls which hyperci version to use
 
 **Configuration is Project-Specific:**
-- ✅ Each project has its own `ci/ci.yaml`
-- ✅ Protected from subtree updates (`.gitattributes: ci/ci.yaml merge=ours`)
-- ✅ Hyperlib's `ci/ci.yaml` stays under version control in this repo
+- ✅ Each project has `ci.yaml` at project root (NOT in ci/ submodule)
+- ✅ Managed independently from hyperci updates
+- ✅ Hyperlib's `ci.yaml` stays under version control in this repo
 
 ### Updating HyperCI
 
 ```bash
-# Pull latest from hyperci (updates all scripts, keeps ci/ci.yaml intact)
-git subtree pull --prefix ci https://github.com/hypersec-io/hyperci.git main --squash
+# Update to latest hyperci
+cd ci
+git pull origin main
+cd ..
+git add ci
+git commit -m "chore: update hyperci submodule to latest"
+
+# Or pin to specific version
+cd ci
+git checkout v1.2.0  # Pin to tagged version
+cd ..
+git add ci
+git commit -m "chore: pin hyperci to v1.2.0"
 
 # Test after update
 ./ci/bootstrap --install
@@ -63,14 +77,27 @@ ci/.venv/bin/python ci/python/ci.d/20-python-test.py check
 ### Contributing Back to HyperCI
 
 ```bash
-# If you improve a script in hyperlib's ci/
-git subtree push --prefix ci https://github.com/hypersec-io/hyperci.git fix/my-improvement
+# If you improve a script in hyperlib's ci/ submodule:
+cd ci
+git checkout -b fix/my-improvement
+# Make changes
+git add .
+git commit -m "fix: my improvement"
+git push origin fix/my-improvement
+cd ..
 
 # Create PR in hyperci repo
-# Once merged, all projects can pull the improvement
+gh pr create --repo hypersec-io/hyperci
+
+# After merge, update hyperlib to use new version
+cd ci
+git pull origin main
+cd ..
+git add ci
+git commit -m "chore: update hyperci with my-improvement"
 ```
 
-**See Also**: [ci/docs/SUBTREE-USAGE.md](ci/docs/SUBTREE-USAGE.md) for complete guide
+**See Also**: [ci/docs/SUBMODULE-USAGE.md](ci/docs/SUBMODULE-USAGE.md) for complete guide
 
 ## Bootstrap (ALWAYS Run First)
 
