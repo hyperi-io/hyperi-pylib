@@ -61,14 +61,14 @@ Update test script to use .venv for pytest (has project deps + test tools).
 
 ---
 
-## Priority 2: Complete ci/local/ Migration ⚠️
+## Priority 2: Complete ci-local/ Migration ⚠️
 
-**Change:** `.ci.local/` → `ci/local/` (cleaner, all CI in one place)
+**Change:** `ci-local/` → `ci-local/` (cleaner, all CI in one place)
 
 **Status:**
 - ✅ ci/.gitignore has "local/" (submodule ignores it)
-- ⚠️ bootstrap.py still scans `.ci.local/` (needs update)
-- ⚠️ ci/run still scans `.ci.local/` (needs update)
+- ⚠️ bootstrap.py still scans `ci-local/` (needs update)
+- ⚠️ ci/run still scans `ci-local/` (needs update)
 
 **Files to Update:**
 - ci/python/bootstrap.py (change paths)
@@ -77,9 +77,9 @@ Update test script to use .venv for pytest (has project deps + test tools).
 
 **Test:**
 ```bash
-mkdir -p ci/local/python/ci.d
-echo '#!/usr/bin/env python3' > ci/local/python/ci.d/95-test.py
-chmod +x ci/local/python/ci.d/95-test.py
+mkdir -p ci-local/python/ci.d
+echo '#!/usr/bin/env python3' > ci-local/python/ci.d/95-test.py
+chmod +x ci-local/python/ci.d/95-test.py
 ./ci/run check  # Should find ci/local scripts
 ```
 
@@ -113,9 +113,9 @@ chmod +x ci/local/python/ci.d/95-test.py
 
 **Options:**
 
-**A) ci/local/uv.lock** (Per-project, RECOMMENDED):
+**A) ci-local/uv.lock** (Per-project, RECOMMENDED):
 - Each project can lock CI tool versions separately
-- ci/local/pyproject.toml + ci/local/uv.lock
+- ci-local/pyproject.toml + ci-local/uv.lock
 - Flexibility for projects with different needs
 
 **B) ci/uv.lock** (Shared across all projects):
@@ -127,7 +127,7 @@ chmod +x ci/local/python/ci.d/95-test.py
 - Latest compatible versions
 - Simpler, less reproducible
 
-**Recommendation:** Option A (ci/local/uv.lock)
+**Recommendation:** Option A (ci-local/uv.lock)
 - Gives projects control while maintaining defaults
 - Document in ci/docs/README.md
 
@@ -196,7 +196,7 @@ After hyperlib CI fully working:
 1. Created hypersec-io/hyperci central repository
 2. Converted hyperlib to use hyperci submodule
 3. Implemented native uv mode (uv sync, uv build)
-4. Created extension system (ci/local/)
+4. Created extension system (ci-local/)
 5. Built Nuitka compiled wheels (556 KB with .so)
 6. Published to JFrog successfully
 7. Analyzed 3 DFE projects for compatibility
