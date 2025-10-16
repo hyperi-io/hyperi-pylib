@@ -345,20 +345,32 @@ Hyperlib uses a two-stage Nuitka build approach:
 - **Safety**: Test locally before triggering expensive cloud builds
 - **Flexibility**: Local builds for development, cloud builds for distribution
 
-**BuildJet Configuration (ARM64 Support):**
+**Third-Party Runner Configuration:**
 
-Hyperlib uses **BuildJet** for ARM64 runners in private repositories (enabled by default):
+Hyperlib uses cost-optimized third-party runners for significant savings:
 
 ```yaml
 # ci/ci.yaml
 nuitka:
+  # BuildJet for ALL Linux builds (50% cheaper)
   buildjet:
-    enabled: true  # Default: true - use BuildJet for ARM64
+    enabled: true  # Default: true - use BuildJet for x64 AND ARM64
+
+  # Cirrus Runners for macOS builds (95% cheaper)
+  cirrus:
+    enabled: true  # Default: true - use Cirrus for macOS
 ```
 
-- **When enabled**: ARM64 builds use `buildjet-2vcpu-ubuntu-2204-arm` ($0.004/min)
-- **When disabled**: ARM64 builds use `ubuntu-24.04-arm` (fails for private repos)
-- **Cost savings**: BuildJet is 75% cheaper than GitHub theoretical ARM64 pricing
+**BuildJet** (Linux x64 + ARM64):
+- **When enabled**: Both x64 and ARM64 use BuildJet runners ($0.004/min each)
+- **When disabled**: Falls back to GitHub ($0.008/min x64, ARM64 unavailable for private)
+- **Cost savings**: 50% cheaper for x64, enables ARM64 for private repos
+
+**Cirrus Runners** (macOS):
+- **When enabled**: Uses M4 Pro runners ($0.015/min effective)
+- **When disabled**: Falls back to GitHub macOS ($0.16/min - 10x more!)
+- **Cost savings**: 95% cheaper than GitHub
+- **Setup required**: https://cirrus-runners.app/setup/
 
 **Nuitka Build Commands:**
 
