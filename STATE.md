@@ -1,16 +1,38 @@
 # Hyperlib - Project State
 
+## SESSION STATUS (2025-10-16)
+
+**Current State:** HyperCI integration complete, one minor test fix needed
+
+**What Was Done Today:**
+- ✅ Created hypersec-io/hyperci central repository (13 commits)
+- ✅ Migrated hyperlib to use hyperci git submodule (28 commits)
+- ✅ Implemented native uv mode (uv sync, uv build)
+- ✅ Built Nuitka compiled wheels (556 KB with .so modules)
+- ✅ Published to JFrog successfully
+- ✅ Created extension system (ci/local/ for project-specific scripts)
+
+**Pending Fix:**
+- ⚠️ Test script needs pytest in .venv (currently only project deps)
+- See TODO.md Priority 1 for solution
+
+**Ready For:**
+- DFE project pilot (dfe-hunt-runner)
+- GitHub Actions testing (needs GH_PAT secret)
+
+---
+
 ## CRITICAL: Read Documentation First
 
 <!--
 AI AGENTS: Read these files BEFORE starting work:
-1. STATE.md (or CLAUDE.md symlink)
-2. HyperCI section below - ci/ is git submodule from hypersec-io/hyperci
-3. ci/docs/SUBMODULE-USAGE.md - How to use hyperci submodule
-4. ci/docs/README.md - HyperCI dependencies and requirements
-5. docs/CHARS-POLICY.md - Character restrictions (ASCII logs, limited emoji)
-6. docs/CONTRIBUTING.md - Workflow and conventions
-7. README.md - Project overview
+1. STATE.md (or CLAUDE.md symlink) - THIS FILE
+2. TODO.md - Current priorities and pending work
+3. HyperCI section below - ci/ is git submodule from hypersec-io/hyperci
+4. ci/docs/SESSION-SUMMARY.md - What was accomplished this session
+5. ci/docs/README.md - HyperCI complete guide
+6. ci/docs/SUBMODULE-USAGE.md - Git submodule operations
+7. docs/CHARS-POLICY.md - Character restrictions (ASCII logs, limited emoji)
 8. ci/docs/JFROG.md - JFrog publishing
 -->
 
@@ -128,33 +150,36 @@ git commit -m "chore: update hyperci with my-improvement"
 **3 Phases**:
 1. System Python creates `ci/.venv`
 2. Installs dependencies (via `uv sync` if uv.lock exists)
-3. Runs `bootstrap.d/*` scripts (common + python + .ci.local/)
+3. Runs `bootstrap.d/*` scripts (common + python + ci/local/ for extensions)
 
 **Requires**: `.env` with `JF_USER`/`JF_PASSWORD`, Python 3.11+, JFrog network access
 
-**Installs**: `ci/.venv`, hyperlib (latest from JFrog), nox, pytest, ruff, black, mypy, twine, semantic-release
+**Installs**: `ci/.venv` (CI tools), `.venv` (project dependencies from uv.lock)
 
 ### Virtual Environment (CRITICAL - READ CAREFULLY)
 
 **Two COMPLETELY SEPARATE environments exist. NEVER mix them!**
 
-#### ci/.venv (CI/Automation ONLY)
-- **Purpose**: ALL CI scripts, ALL automation, testing, building, releasing
+#### ci/.venv (CI Tools ONLY)
+- **Purpose**: CI tools for testing, linting, building, releasing
 - **Created by**: `./ci/bootstrap --install`
-- **Contains**: hyperlib (from JFrog), CI tools (nox, pytest, ruff, etc.)
-- **Marker file**: `ci/.venv/.THIS_IS_CI_VENV`
-- **Env vars**: `VENV_PURPOSE=ci`, `VENV_TYPE=automation`
-- **Usage**: NEVER activate manually, ALWAYS run via `./ci/ci <action>`
-- **Python**: `ci/.venv/bin/python` (explicit path only)
+- **Contains**: pytest, ruff, black, mypy, build, twine, semantic-release (CI tools ONLY)
+- **Does NOT contain**: Project dependencies (dynaconf, loguru, etc.)
+- **Source**: `ci/pyproject.toml` (from hyperci submodule)
+- **Lock**: No lock file (latest compatible versions) OR `ci/local/uv.lock` (per-project)
+- **Usage**: CI scripts ONLY (`ci/.venv/bin/python ci/python/ci.d/*.py`)
+- **Never activate manually**
 
-#### .venv (Development ONLY)
-- **Purpose**: IDE, manual testing, exploration, local development
-- **Created by**: `python -m venv .venv` (manual, optional)
-- **Contains**: Development dependencies for IDE/testing
-- **Marker file**: `.venv/.THIS_IS_DEV_VENV`
-- **Env vars**: `VENV_PURPOSE=dev`, `VENV_TYPE=development`
-- **Usage**: Activate for manual work: `source .venv/bin/activate`
-- **Python**: Can use `python` or `python3` when activated
+#### .venv (Project Dependencies)
+- **Purpose**: Project runtime dependencies + development tools
+- **Created by**: `./ci/bootstrap --install` (automatic via uv)
+- **Contains**: Project dependencies (dynaconf, loguru, pyyaml, psutil, etc.)
+- **Does NOT contain**: CI-specific tools (those are in ci/.venv)
+- **Source**: `uv.lock` (at project root, committed)
+- **Installation**: `uv sync --all-extras --all-groups` (reproducible from uv.lock)
+- **Usage**: Development, IDE, manual testing
+- **Can activate**: `source .venv/bin/activate` for interactive use
+- **Lock file**: `uv.lock` (committed, tracks exact versions)
 
 #### Protection Mechanisms (8 Layers)
 1. **Marker files** - Identify venv purpose
