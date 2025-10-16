@@ -10,7 +10,7 @@
 - ✅ Implemented native uv mode (uv sync, uv build)
 - ✅ Built Nuitka compiled wheels (556 KB with .so modules)
 - ✅ Published to JFrog successfully
-- ✅ Created extension system (ci/local/ for project-specific scripts)
+- ✅ Created extension system (ci-local/ for project-specific scripts)
 
 **Pending Fix:**
 - ⚠️ Test script needs pytest in .venv (currently only project deps)
@@ -121,7 +121,7 @@ git commit -m "chore: update hyperci with my-improvement"
 
 **See Also**:
 - [ci/docs/SUBMODULE-USAGE.md](ci/docs/SUBMODULE-USAGE.md) - Submodule operations
-- [ci/docs/PROJECT-EXTENSIONS.md](ci/docs/PROJECT-EXTENSIONS.md) - Custom scripts (.ci.local/)
+- [ci/docs/PROJECT-EXTENSIONS.md](ci/docs/PROJECT-EXTENSIONS.md) - Custom scripts (ci-local/)
 - [ci/docs/README.md](ci/docs/README.md) - Complete HyperCI documentation
 - [ci/docs/MIGRATE-dfe-hunt-runner.md](ci/docs/MIGRATE-dfe-hunt-runner.md) - Migration guide example
 
@@ -150,7 +150,7 @@ git commit -m "chore: update hyperci with my-improvement"
 **3 Phases**:
 1. System Python creates `ci/.venv`
 2. Installs dependencies (via `uv sync` if uv.lock exists)
-3. Runs `bootstrap.d/*` scripts (common + python + ci/local/ for extensions)
+3. Runs `bootstrap.d/*` scripts (common + python + ci-local/ for extensions)
 
 **Requires**: `.env` with `JF_USER`/`JF_PASSWORD`, Python 3.11+, JFrog network access
 
@@ -166,7 +166,7 @@ git commit -m "chore: update hyperci with my-improvement"
 - **Contains**: pytest, ruff, black, mypy, build, twine, semantic-release (CI tools ONLY)
 - **Does NOT contain**: Project dependencies (dynaconf, loguru, etc.)
 - **Source**: `ci/pyproject.toml` (from hyperci submodule)
-- **Lock**: No lock file (latest compatible versions) OR `ci/local/uv.lock` (per-project)
+- **Lock**: No lock file (latest compatible versions) OR `ci-local/uv.lock` (per-project)
 - **Usage**: CI scripts ONLY (`ci/.venv/bin/python ci/python/ci.d/*.py`)
 - **Never activate manually**
 
