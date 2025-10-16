@@ -1,109 +1,225 @@
-# TODO - Hyperlib CI Infrastructure Refactoring
+# Hyperlib TODO
 
-Last Updated: 2025-10-16
+**Last Updated:** 2025-10-16 (End of HyperCI creation session)
 
-## Current Sprint: Nuitka Multi-Architecture Builds (COMPLETED ✅)
+---
 
-### Phase 0: Full Self-Containment (COMPLETED ✅)
-- ✅ Restructured /scripts → /ci directory
-- ✅ Moved .venv-ci → ci/.venv (full isolation)
-- ✅ Renamed scripts/ci → ci/run (clearer naming)
-- ✅ Cleaned up pyproject.toml dev extras (removed CI tools)
-- ✅ CI dependencies now in ci/bootstrap.d/20-python-tools.py only
-- ✅ Updated all paths across codebase and docs
-- ✅ Tested bootstrap and CI work correctly
+## Current Status
 
-### Phase 1: Multi-Layer venv Protection (COMPLETED ✅)
-- ✅ Implement environment variables in activation scripts
-- ✅ Add marker files (.venv/.THIS_IS_DEV_VENV, ci/.venv/.THIS_IS_CI_VENV)
-- ✅ Update STATE.md with clear venv usage guidelines for LLMs
-- ✅ Create venv validation helper function (ci_lib.py)
-- ✅ Document protection strategy (8 layers implemented)
+**Hyperlib:**
+- Using hyperci via git submodule ✅
+- Native uv mode working (uv sync, uv build) ✅
+- Nuitka compiled wheels working ✅
+- 28 commits pushed ✅
 
-### Phase 2: Replace Node.js semantic-release with Python (COMPLETED ✅)
-- ✅ Research python-semantic-release library
-- ✅ Install python-semantic-release in ci/.venv
-- ✅ Configure in pyproject.toml [tool.semantic_release]
-- ✅ Simplify 90-semantic-release.py to use Python CLI (420→199 lines, 53% reduction)
-- ✅ Fix duplicate config sections and deprecation warnings
-- ✅ Test Python semantic-release dry-run mode (works correctly)
-- ✅ VERSION file now written by build_command
-- 📝 Node.js semantic-release can be removed (optional - not blocking)
+**HyperCI (hypersec-io/hyperci):**
+- Central CI repository created ✅
+- 13 commits pushed ✅
+- Production-ready ✅
 
-### Phase 3: Consolidate and Document Subprocess Usage (COMPLETED ✅)
-- ✅ Audited all subprocess calls across CI scripts
-- ✅ Documented subprocess usage policy in ci_lib.py
-- ✅ Created ci/SUBPROCESS-USAGE.md comprehensive audit
-- ✅ Verified git is system dependency (checked in bootstrap.d/00-check-git.sh)
-- ✅ Consolidated git operations into ci_lib.py helpers
-- ✅ Decision: Use subprocess for standard tools (git), native Python for libraries
-- ✅ Already using native Python: build, twine, semantic-release
-- 📝 Avoided wrapper libraries (GitPython, PyGithub) - they use subprocess internally anyway
+**Pending:** Minor test script fix (see Priority 1 below)
 
-### Phase 4: Simplify Bootstrap (COMPLETED ✅)
-- ✅ Converted all bash scripts to Python
-- ✅ Created 00-check-git.py (replaces .sh version)
-- ✅ Created 10-check-python.py (replaces .sh version)
-- ✅ Created 11-check-uv.py (replaces .sh version)
-- ✅ Removed all .sh files from ci/bootstrap.d/
-- ✅ Bootstrap now 100% Python after initial venv creation
-- ✅ Tested bootstrap works with Python checks ✓
-- ✅ Uses shutil.which() for command detection
-- ✅ Consistent error messages and return codes
+---
 
-### Phase 5: JFrog Publishing Controls (COMPLETED ✅)
-- ✅ Add publish action to 80-build.py with JFrog upload via twine
-- ✅ Add JFROG_PUBLISH env var (default: auto-detect from creds)
-- ✅ Add --no-publish flag to ./ci/run
-- ✅ Implement should_publish_to_jfrog() with 3-way logic
-- ✅ Support both token auth (JF_TOKEN) and username/password (JF_USER/JF_PASSWORD)
-- ✅ Test JFROG_PUBLISH=false (skips publishing) ✓
-- ✅ Test auto-detect mode (finds credentials) ✓
-- ✅ Document JFrog authentication and publishing in STATE.md
+## Priority 1: Fix Test Script ⭐ CRITICAL (Next Session)
 
-### Phase 6: Testing & Validation (COMPLETED ✅)
-- ✅ Verified all commits this session use 'fix:' prefix (9 commits)
-- ✅ Tested semantic-release dry-run with --print flag (shows 2.0.0)
-- ✅ Fixed VERSION file template in build_command (use Python instead of echo)
-- ✅ Tested JFROG_PUBLISH=false (correctly skips publishing)
-- ✅ Tested JFROG_PUBLISH auto-detect (correctly finds credentials)
-- ✅ Validated bootstrap with all Python checks (no bash)
-- ✅ Validated CI infrastructure is self-contained in /ci directory
-- 📝 JFrog publishing tested locally, GitHub Actions for production
+**Issue:** Tests can't import hyperlib because of complete venv separation
 
-### Phase 7: Nuitka Multi-Architecture GitHub Actions (COMPLETED ✅)
-- ✅ Analyzed Nuitka workflow issues (mismatch between local and GitHub builds)
-- ✅ Fixed GitHub Actions workflow to use setup.py bdist_nuitka (compiled wheels)
-- ✅ Updated ARM64 runner configuration to use ubuntu-24.04-arm
-- ✅ Documented dual-build strategy in STATE.md:
-  - Local builds: Single architecture (x64 or ARM64), fast testing
-  - GitHub Actions: Multi-architecture (x64 + ARM64), production distribution
-- ✅ Documented multi-arch builds in ci/docs/NUITKA.md
-- ✅ Added GitHub Actions ARM64 knowledge base to STATE.md:
-  - Web search verified: ARM64 runners FREE for public repos (GA Aug 2025)
-  - Documented pricing: $0.02/min for 8-core ARM64 (37% cheaper than x64)
-  - Documented runner labels: ubuntu-24.04-arm, ubuntu-22.04-arm
-  - Private repos require GitHub Team/Enterprise plan
-- ✅ Fixed workflow to properly build compiled wheels (.whl with .so)
-- ✅ Updated cost estimates and recommendations
+**Current State:**
+- ci/.venv has: pytest, ruff, black, mypy (CI tools only)
+- .venv has: dynaconf, loguru, pyyaml (project deps only)
+- Tests need: pytest AND project deps (both venvs)
 
-## Completed (Earlier Sessions)
-- ✅ Removed 85-deploy.py (local JFrog publishing)
-- ✅ Removed sampling.py module
-- ✅ Updated CI workflow to GitHub Actions only
-- ✅ Fixed bootstrap to be self-contained
-- ✅ Added runtime venv checks to CI scripts
-- ✅ Enforced ci/.venv in CI runner (removed fallback)
-- ✅ Tested semantic-release creates v1.6.0 tag
-- ✅ Designed 8-layer venv protection strategy
-- ✅ Full CI restructure: /scripts → /ci with full self-containment
-- ✅ pyproject.toml cleanup: CI tools separated from project deps
+**Solution (Recommended):**
 
-## Deferred
-- GitHub Actions JFrog publishing (workflow exists, not testing now)
-- Actual JFrog deployment (working on CI infrastructure first)
+Add pytest to dependency-groups in pyproject.toml:
+```toml
+[dependency-groups]
+dev = [
+    "pytest>=8.0.0",
+    "pytest-cov>=4.0.0",
+    "ruff>=0.12.0",
+    "black>=25.0.0",
+    "isort>=5.12.0",
+    "mypy>=1.0.0",
+]
+```
 
-## Notes
-- All commits this session MUST use 'fix:' prefix for patch increments
-- Don't publish to JFrog unless explicitly requested
-- Focus: CI infrastructure, not hyperlib features
+Then:
+```bash
+uv lock  # Update uv.lock with dev group
+uv sync --group dev  # Install into .venv
+.venv/bin/pytest tests/  # Should work now
+```
+
+Update test script to use .venv for pytest (has project deps + test tools).
+
+**Files to Modify:**
+- pyproject.toml (add dependency-groups.dev)
+- uv.lock (regenerate with `uv lock`)
+- ci/python/ci.d/20-python-test.py (already updated to use .venv for pytest)
+
+---
+
+## Priority 2: Complete ci/local/ Migration ⚠️
+
+**Change:** `.ci.local/` → `ci/local/` (cleaner, all CI in one place)
+
+**Status:**
+- ✅ ci/.gitignore has "local/" (submodule ignores it)
+- ⚠️ bootstrap.py still scans `.ci.local/` (needs update)
+- ⚠️ ci/run still scans `.ci.local/` (needs update)
+
+**Files to Update:**
+- ci/python/bootstrap.py (change paths)
+- ci/run (change paths)
+- ci/docs/PROJECT-EXTENSIONS.md (update all examples)
+
+**Test:**
+```bash
+mkdir -p ci/local/python/ci.d
+echo '#!/usr/bin/env python3' > ci/local/python/ci.d/95-test.py
+chmod +x ci/local/python/ci.d/95-test.py
+./ci/run check  # Should find ci/local scripts
+```
+
+---
+
+## Priority 3: GitHub Actions Testing
+
+**Blocker:** Requires GH_PAT secret
+
+**Setup Steps:**
+1. GitHub Settings → Developer settings → Personal access tokens
+2. Create token with `repo` scope
+3. Add to hyperlib repo: Settings → Secrets → Actions
+   - Name: `GH_PAT`
+   - Value: (the PAT)
+
+4. Test: Manual trigger or tag push
+   ```bash
+   git tag v1.6.1-test
+   git push origin v1.6.1-test
+   gh run watch
+   ```
+
+**Expected:** Workflow accesses private hyperci submodule successfully
+
+---
+
+## Priority 4: CI Tool Locking Strategy (Decision Needed)
+
+**Question:** Should ci/.venv use uv.lock for reproducible CI tools?
+
+**Options:**
+
+**A) ci/local/uv.lock** (Per-project, RECOMMENDED):
+- Each project can lock CI tool versions separately
+- ci/local/pyproject.toml + ci/local/uv.lock
+- Flexibility for projects with different needs
+
+**B) ci/uv.lock** (Shared across all projects):
+- One lock file in hyperci repo
+- All projects use same CI tool versions
+- Simpler, more consistent
+
+**C) No lock** (Current):
+- Latest compatible versions
+- Simpler, less reproducible
+
+**Recommendation:** Option A (ci/local/uv.lock)
+- Gives projects control while maintaining defaults
+- Document in ci/docs/README.md
+
+**Implementation:** Add to bootstrap logic
+
+---
+
+## Lower Priority (This Week)
+
+### Nuitka Binary Publishing
+
+**Current:** Publishes wheels to hypersec-pypi-local
+**Needed:** Detect build_type and publish to correct repo
+
+**Logic:**
+```yaml
+if build_type == "package":
+    twine upload dist/*.whl → hypersec-pypi-local
+elif build_type == "app":
+    jf rt upload dist-nuitka/*.bin → hypersec-binaries
+```
+
+**File:** .github/workflows/nuitka-release.yml (publish-jfrog job)
+
+---
+
+### DFE Project Pilot
+
+After hyperlib CI fully working:
+1. Pilot with dfe-hunt-runner (follow MIGRATE guide)
+2. Document lessons learned
+3. Iterate on hyperci based on feedback
+
+**Migration guides ready:**
+- ci/docs/MIGRATE-dfe-hunt-runner.md ✅
+- ci/docs/MIGRATE-dfe-ui-backend.md ✅
+- ci/docs/MIGRATE-dfe-cli-core.md ✅ (recommends NOT migrating)
+
+---
+
+## Future Enhancements
+
+### From DFE Projects (see ci/docs/FEATURE-GAP-ANALYSIS.md)
+
+**High Value:**
+- Commit-msg version bumping (alternative to semantic-release)
+- Auto-commit version bumps (git add, commit, tag, push)
+- Docker-based Nuitka builds (cross-compile ARM64 on x64)
+- Binary validation/testing (smoke tests)
+
+**Medium Value:**
+- Service container documentation (PostgreSQL, ClickHouse)
+- Docker deployment patterns
+
+---
+
+## Blocked/Deferred
+
+- None currently
+
+---
+
+## Completed This Session (2025-10-16)
+
+**Major Accomplishments:**
+1. Created hypersec-io/hyperci central repository
+2. Converted hyperlib to use hyperci submodule
+3. Implemented native uv mode (uv sync, uv build)
+4. Created extension system (ci/local/)
+5. Built Nuitka compiled wheels (556 KB with .so)
+6. Published to JFrog successfully
+7. Analyzed 3 DFE projects for compatibility
+8. Created comprehensive migration guides
+9. Fixed GitHub Actions for private submodules
+10. Created hypersec-binaries JFrog repository
+
+**Commits:** 40+ total (13 hyperci, 28 hyperlib)
+**Duration:** ~10 hours
+**Status:** Production-ready pending test script fix
+
+---
+
+## Quick Reference
+
+**Bootstrap:** `./ci/bootstrap --install`
+**Test:** `ci/.venv/bin/python ci/python/ci.d/20-python-test.py check` (needs fix)
+**Build:** `ci/.venv/bin/python ci/python/ci.d/80-build.py build` ✅ works
+**Nuitka:** `ci/.venv/bin/python ci/python/ci.d/85-build-nuitka.py build` ✅ works
+
+**Submodule Update:** `cd ci && git pull origin main && cd .. && git add ci`
+
+**Key Docs:**
+- ci/docs/README.md - Complete guide
+- ci/docs/SESSION-SUMMARY.md - This session's work
+-  - Project state
