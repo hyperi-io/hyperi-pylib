@@ -97,7 +97,29 @@ git add ci
 git commit -m "chore: update hyperci with my-improvement"
 ```
 
-**See Also**: [ci/docs/SUBMODULE-USAGE.md](ci/docs/SUBMODULE-USAGE.md) for complete guide
+**See Also**:
+- [ci/docs/SUBMODULE-USAGE.md](ci/docs/SUBMODULE-USAGE.md) - Submodule operations
+- [ci/docs/PROJECT-EXTENSIONS.md](ci/docs/PROJECT-EXTENSIONS.md) - Custom scripts (.ci.local/)
+- [ci/docs/README.md](ci/docs/README.md) - Complete HyperCI documentation
+- [ci/docs/MIGRATE-dfe-hunt-runner.md](ci/docs/MIGRATE-dfe-hunt-runner.md) - Migration guide example
+
+### Native UV Mode (Automatic!)
+
+**CRITICAL:** HyperCI now auto-detects and uses native uv mode.
+
+**Hyperlib has `uv.lock`**, so bootstrap automatically uses:
+- ✅ `uv sync --locked` (respects uv.lock → reproducible builds)
+- ✅ `uv build` (native uv build → faster than python -m build)
+
+**Auto-detection:**
+- Detects `uv.lock` → uses native uv commands
+- No `uv.lock` → uses pip compatibility mode
+
+**Benefits:**
+- ✅ Reproducible (exact versions from uv.lock)
+- ✅ Faster (no dependency resolution)
+- ✅ Compatible with DFE projects (all use uv.lock)
+- ✅ No configuration needed (just works!)
 
 ## Bootstrap (ALWAYS Run First)
 
@@ -105,8 +127,8 @@ git commit -m "chore: update hyperci with my-improvement"
 
 **3 Phases**:
 1. System Python creates `ci/.venv`
-2. Installs `hyperlib` from JFrog Artifactory
-3. Imports hyperlib, runs `bootstrap.d/*` scripts
+2. Installs dependencies (via `uv sync` if uv.lock exists)
+3. Runs `bootstrap.d/*` scripts (common + python + .ci.local/)
 
 **Requires**: `.env` with `JF_USER`/`JF_PASSWORD`, Python 3.11+, JFrog network access
 
