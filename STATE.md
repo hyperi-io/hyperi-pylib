@@ -148,55 +148,62 @@ git commit -m "chore: update hyperci with my-improvement"
 **Setup**: `./ci/bootstrap --install` | **Check**: `./ci/bootstrap`
 
 **3 Phases**:
-1. System Python creates `ci/.venv`
-2. Installs dependencies (via `uv sync` if uv.lock exists)
+1. System Python creates `ci-local/.venv` (NOT ci/.venv - ci/ is READ-ONLY!)
+2. Installs CI tools into ci-local/.venv (via `uv sync` from ci-local/uv.lock)
 3. Runs `bootstrap.d/*` scripts (common + python + ci-local/ for extensions)
 
 **Requires**: `.env` with `JF_USER`/`JF_PASSWORD`, Python 3.11+, JFrog network access
 
-**Installs**: `ci/.venv` (CI tools), `.venv` (project dependencies from uv.lock)
+**Installs**: `ci-local/.venv` (CI tools), `.venv` (project dependencies from uv.lock)
 
 ### Virtual Environment (CRITICAL - READ CAREFULLY)
 
 **Two COMPLETELY SEPARATE environments exist. NEVER mix them!**
 
-#### ci/.venv (CI Tools ONLY)
+#### ci-local/.venv (CI Tools ONLY) ← NEW!
 - **Purpose**: CI tools for testing, linting, building, releasing
-- **Created by**: `./ci/bootstrap --install`
-- **Contains**: pytest, ruff, black, mypy, build, twine, semantic-release (CI tools ONLY)
-- **Does NOT contain**: Project dependencies (dynaconf, loguru, etc.)
-- **Source**: `ci/pyproject.toml` (from hyperci submodule)
-- **Lock**: No lock file (latest compatible versions) OR `ci-local/uv.lock` (per-project)
-- **Usage**: CI scripts ONLY (`ci/.venv/bin/python ci/python/ci.d/*.py`)
+- **Created by**: `ci/bootstrap --install`
+- **Contains**: pytest, ruff, black, mypy, build, twine, semantic-release, dynaconf (CI tools ONLY)
+- **Does NOT contain**: Project dependencies (your app's dynaconf, loguru, etc.)
+- **Source**: `ci-local/pyproject.toml` (project-specific CI tools)
+- **Lock**: `ci-local/uv.lock` (committed, reproducible)
+- **Usage**: CI scripts ONLY (`ci-local/.venv/bin/python ci/python/ci.d/*.py`)
+- **Location**: ci-local/.venv (WRITABLE, gitignored)
 - **Never activate manually**
+
+**CRITICAL: ci/ is READ-ONLY for everything, including .venv!**
+All operational writes go to ci-local/ (not ci/)
 
 #### .venv (Project Dependencies)
 - **Purpose**: Project runtime dependencies + development tools
-- **Created by**: `./ci/bootstrap --install` (automatic via uv)
+- **Created by**: `ci/bootstrap --install` (automatic via uv)
 - **Contains**: Project dependencies (dynaconf, loguru, pyyaml, psutil, etc.)
-- **Does NOT contain**: CI-specific tools (those are in ci/.venv)
+- **Does NOT contain**: CI-specific tools (those are in ci-local/.venv)
 - **Source**: `uv.lock` (at project root, committed)
 - **Installation**: `uv sync --all-extras --all-groups` (reproducible from uv.lock)
 - **Usage**: Development, IDE, manual testing
 - **Can activate**: `source .venv/bin/activate` for interactive use
 - **Lock file**: `uv.lock` (committed, tracks exact versions)
 
-#### Protection Mechanisms (8 Layers)
-1. **Marker files** - Identify venv purpose
-2. **Environment variables** - Set on activation
-3. **Runtime checks** - Every CI script validates venv
-4. **CI runner enforcement** - ci/ci uses explicit path
-5. **Bootstrap separation** - Only creates ci/.venv
-6. **Documentation** - This section and shebangs
-7. **Shared library** - ci/ci_lib.py with `enforce_venv_ci()`
-8. **Gitignore** - Both venvs ignored
+#### Protection Mechanisms (Enforced Separation)
+1. **Complete READ-ONLY ci/**: No .venv creation in ci/ directory
+2. **ci-local/.venv**: All CI tool installations go here
+3. **Marker files** - Identify venv purpose
+4. **Runtime checks** - Every CI script validates venv path
+5. **CI runner enforcement** - All scripts use ci-local/.venv explicit path
+6. **Documentation** - This section and README files
+7. **Gitignore** - ci-local/.venv ignored (ci/.venv removed from ci/.gitignore)
 
 #### For AI Assistants / LLMs - CRITICAL RULES
 
+**CRITICAL: ci/ is READ-ONLY for EVERYTHING (including .venv creation)**
+
 **When writing CI scripts:**
-- ✅ ALWAYS use: `from ci_lib import enforce_venv_ci` at top
-- ✅ ALWAYS call: `enforce_venv_ci(__name__)` immediately
-- ✅ ALWAYS run via: `./ci/ci <action>`
+- ✅ ALWAYS use: `ci-local/.venv/bin/python` for CI operations
+- ✅ ALWAYS check: Script prefix contains "ci-local/.venv"
+- ✅ CI tools live in: `ci-local/.venv` (NOT ci/.venv)
+- ✅ CI scripts are in: `ci/` (READ-ONLY)
+- ❌ NEVER write to: `ci/` directory (including ci/.venv)
 - ❌ NEVER use: `#!/usr/bin/env python3` without checks
 - ❌ NEVER use: `python` or `python3` commands
 - ❌ NEVER use: `.venv` for CI
@@ -204,16 +211,21 @@ git commit -m "chore: update hyperci with my-improvement"
 **When writing development code:**
 - ✅ Use `.venv/bin/python` or activate `.venv`
 - ✅ For manual testing and exploration only
-- ❌ NEVER use `ci/.venv` for development
-- ❌ NEVER install dev dependencies in `ci/.venv`
+- ❌ NEVER use `ci-local/.venv` for development
+- ❌ NEVER install dev dependencies in `ci-local/.venv`
 
 **How to check which venv:**
 ```bash
 # Before running any command, verify:
-echo $VIRTUAL_ENV           # Should show ci/.venv or .venv
+echo $VIRTUAL_ENV           # Should show ci-local/.venv or .venv
 echo $VENV_PURPOSE          # Should show 'ci' or 'dev'
 python -c "import sys; print(sys.prefix)"  # Check Python location
 ```
+
+**Why ci-local/.venv (not ci/.venv):**
+- ci/ is a git submodule and must be READ-ONLY for all operations
+- ci-local/ is project-writable space for CI tools, configs, and venvs
+- This enforces clean separation: ci/ (scripts, READ-ONLY) vs ci-local/ (data, WRITABLE)
 
 ## Universal Policies
 
