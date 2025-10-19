@@ -142,6 +142,96 @@ def copy_file(target_file: Path, source_file: Path, overwrite: bool = True) -> b
     return True
 
 
+def create_todo_md_from_template() -> bool:
+    """
+    Create TODO.md from template if it doesn't exist (IDEMPOTENT).
+
+    Safety rules:
+    - NEVER overwrites existing TODO.md
+    - Only creates if file doesn't exist
+    - Replaces YYYY-MM-DD with current date
+
+    Returns:
+        True if TODO.md was created, False if already exists or template missing
+    """
+    target_file = PROJECT_ROOT / "TODO.md"
+
+    # SAFETY: Never overwrite existing TODO.md
+    if target_file.exists():
+        return False
+
+    # Find template (prefer common, no language-specific TODO templates)
+    template_file = CI_DIR / "common" / "claude" / "TODO.md"
+
+    if not template_file.exists():
+        return False
+
+    # Read template
+    template_content = template_file.read_text()
+
+    # Replace date placeholder
+    import datetime
+    today = datetime.date.today().strftime("%Y-%m-%d")
+    content = template_content.replace("YYYY-MM-DD", today)
+
+    # Write TODO.md
+    target_file.write_text(content)
+
+    return True
+
+
+def append_state_md(target_file: Path, source_file: Path) -> bool:
+    """
+    Append STATE.md content from source to target (IDEMPOTENT).
+
+    Uses markers to prevent duplicate appends:
+    - Marker: <!-- HYPERCI_STATE_MD: <relative_path> -->
+
+    Args:
+        target_file: Target STATE.md (project root)
+        source_file: Source STATE.md (ci/*/claude/)
+
+    Returns:
+        True if content was appended, False if already present or skipped
+    """
+    if not source_file.exists():
+        return False
+
+    # Ensure target exists (create if needed)
+    if not target_file.exists():
+        target_file.touch()
+
+    # Read source content
+    source_content = source_file.read_text()
+
+    # Create marker (relative path from PROJECT_ROOT)
+    try:
+        relative_source = source_file.relative_to(PROJECT_ROOT)
+    except ValueError:
+        # Not relative to PROJECT_ROOT, use absolute
+        relative_source = source_file
+
+    marker = f"<!-- HYPERCI_STATE_MD: {relative_source} -->"
+
+    # Read target content
+    target_content = target_file.read_text()
+
+    # Check if already appended (idempotent check)
+    if marker in target_content:
+        # Already appended, skip
+        return False
+
+    # Append with marker
+    separator = "\n\n---\n\n"
+    appended_content = f"{separator}{marker}\n{source_content}"
+
+    # Write back
+    with open(target_file, 'a') as f:
+        f.write(appended_content)
+
+    return True
+
+
 def merge_claude_settings(merge_mode: str = "merge") -> int:
     """
     Merge Claude Code settings from ci/ and ci-local/ into .claude/.
@@ -189,6 +279,18 @@ def merge_claude_settings(merge_mode: str = "merge") -> int:
             target_file = CLAUDE_DIR / "commands" / source_file.name
             if copy_file(target_file, source_file, overwrite):
                 merged_files.append(f"  commands/{source_file.name} ← {source_dir.relative_to(PROJECT_ROOT)}")
+
+    # Append STATE.md files (idempotent - uses markers)
+    state_md_target = PROJECT_ROOT / "STATE.md"
+    for source_dir in source_dirs:
+        state_md_source = source_dir / "STATE.md"
+        if state_md_source.exists():
+            if append_state_md(state_md_target, state_md_source):
+                merged_files.append(f"  STATE.md (appended) ← {source_dir.relative_to(PROJECT_ROOT)}")
+
+    # Create TODO.md from template (ONLY if doesn't exist - never overwrite)
+    if create_todo_md_from_template():
+        merged_files.append(f"  TODO.md (created from template)")
 
     if merged_files:
         print(f"[INFO] Merged {len(merged_files)} Claude settings file(s):")
