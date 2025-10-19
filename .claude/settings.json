@@ -1,14 +1,24 @@
 {
   "env": {
     "ANTHROPIC_MODEL": "opusplan",
-    "ANTHROPIC_DEFAULT_OPUS_MODEL": "claude-opus-4-1-20250805[1m]",
-    "ANTHROPIC_DEFAULT_SONNET_MODEL": "claude-sonnet-4-5-20250929[1m]",
-    "CLAUDE_CODE_MAX_OUTPUT_TOKENS": "8192",
+    "ANTHROPIC_DEFAULT_OPUS_MODEL": "claude-opus-4-1-20250805",
+    "ANTHROPIC_DEFAULT_SONNET_MODEL": "claude-sonnet-4-5-20250929",
+    "CLAUDE_CODE_MAX_OUTPUT_TOKENS": "16384",
     "MAX_THINKING_TOKENS": "16000",
+    "CLAUDE_CODE_CONTEXT_WINDOW_TOKENS": "200000",
+    "CLAUDE_CODE_AGGRESSIVE_CONTEXT_MANAGEMENT": "0",
     "DISABLE_NON_ESSENTIAL_MODEL_CALLS": "1",
     "CLAUDE_BASH_MAINTAIN_PROJECT_WORKING_DIR": "1",
-    "USE_BUILTIN_RIPGREP": "0",
-    "DISABLE_COST_WARNINGS": "1"
+    "USE_BUILTIN_RIPGREP": "1",
+    "DISABLE_COST_WARNINGS": "1",
+    "CLAUDE_CODE_ENABLE_PARALLEL_TOOLS": "1",
+    "CLAUDE_CODE_MAX_PARALLEL_TOOLS": "3"
+  },
+  "enabledPlugins": {
+    "docker": true,
+    "kubernetes": true,
+    "terraform": true,
+    "aws": true
   },
   "permissions": {
     "allow": [
