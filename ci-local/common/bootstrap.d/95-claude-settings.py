@@ -17,9 +17,9 @@ Merge Target:
   .claude/                      # Project's Claude Code settings
 
 Environment Control:
-  CI_CLAUDE_MERGE=merge         # Overwrite existing settings (default)
+  CI_CLAUDE_MERGE=merge         # Overwrite existing settings
   CI_CLAUDE_MERGE=no-overwrite  # Keep existing, only add new
-  CI_CLAUDE_MERGE=skip          # Skip Claude settings merge entirely
+  CI_CLAUDE_MERGE=skip          # Skip Claude settings merge (default - opt-in model)
 
 Run modes:
 - check: Verify Claude settings can be merged (always succeeds)
@@ -222,8 +222,8 @@ def main() -> int:
 
     action = sys.argv[1]
 
-    # Get merge mode from environment
-    merge_mode = os.environ.get("CI_CLAUDE_MERGE", "merge").lower()
+    # Get merge mode from environment (default: skip - opt-in model)
+    merge_mode = os.environ.get("CI_CLAUDE_MERGE", "skip").lower()
     valid_modes = ["merge", "no-overwrite", "skip"]
 
     if merge_mode not in valid_modes:
