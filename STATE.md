@@ -1,8 +1,15 @@
 # Hyperlib - Project State
 
-## SESSION STATUS (2025-10-16)
+## SESSION STATUS (2025-10-20)
 
-**Current State:** HyperCI integration complete, one minor test fix needed
+**Current State:** Dual VERSION pre-sync strategy implemented and tested
+
+**Latest Achievement:**
+✅ **Dual Pre-sync Strategy** - BOTH pre-commit hook AND CI script implemented
+- Pre-commit hook pre-syncs VERSION before local commits
+- CI script pre-syncs VERSION before semantic-release in CI
+- Prevents {version} template corruption completely
+- Successfully tested with v2.2.0 release
 
 **What Was Done Today:**
 - ✅ Created hypersec-io/hyperci central repository (13 commits)
@@ -377,7 +384,105 @@ Hyperlib's bootstrap.py installs hyperlib from JFrog, not from local source. Thi
 - VERSION file auto-synced by semantic-release
 - pyproject.toml and `__version__` auto-updated
 
-Current version: **1.5.5**
+Current version: **2.2.0**
+
+### Dual Pre-sync Strategy (VERSION Corruption Prevention)
+
+**CRITICAL**: Hyperlib implements a **dual pre-sync strategy** to prevent VERSION file corruption during semantic-release.
+
+**The Problem**:
+- Semantic-release uses `{version}` template in `build_command`
+- If build fails, `{version}` literal can get written to VERSION file
+- This corrupts the VERSION file and breaks future releases
+
+**The Solution - Dual Pre-sync**:
+
+**Option 1: Pre-commit Hook** ([.git/hooks/pre-commit](.git/hooks/pre-commit))
+- Runs BEFORE every commit on `main`/`master` branches
+- Calls `semantic-release version --print` to get next version
+- Pre-syncs VERSION file BEFORE commit is created
+- **Benefit**: Local commits already have correct VERSION
+
+**Option 2: CI Pre-sync Script** ([ci-local/common/ci.d/89-version-pre-sync.py](ci-local/common/ci.d/89-version-pre-sync.py))
+- Runs BEFORE semantic-release in CI environments
+- Uses `semantic-release version --print` to get next version
+- Pre-syncs VERSION file before semantic-release modifies pyproject.toml
+- **Benefit**: CI releases are protected even if pre-commit hook didn't run
+
+**Architecture**:
+```
+ci-local/
+├── common/
+│   ├── ci_local_lib.py               # Helper functions (get_next_semantic_version, etc.)
+│   └── ci.d/
+│       └── 89-version-pre-sync.py    # Common layer - handles VERSION file (ALL project types)
+└── python/
+    └── ci.d/
+        └── 89-python-version-sync.py # Python layer - validates pyproject.toml/__init__.py
+```
+
+**Layered Design**:
+- **Common layer** (89-version-pre-sync.py): Handles VERSION file for ALL project types (Python, Node.js, Go, etc.)
+- **Python layer** (89-python-version-sync.py): Validates Python-specific files (pyproject.toml, __init__.py)
+- **Separation of concerns**: Common functionality separate from language-specific logic
+
+**How It Works**:
+
+1. **Developer makes commit with conventional commit message**:
+   ```bash
+   git commit -m "fix: prevent VERSION corruption"
+   ```
+
+2. **Pre-commit hook runs automatically**:
+   - Detects commit is on `main`/`master`
+   - Runs `semantic-release version --print` → gets "2.2.0"
+   - Writes "2.2.0" to VERSION file
+   - Stages VERSION in the commit
+
+3. **Commit completes with correct VERSION**
+
+4. **Later, semantic-release runs (manual or CI)**:
+   - Updates pyproject.toml and __init__.py to "2.2.0"
+   - Runs build_command (which no longer needs to write VERSION)
+   - Creates release commit and tag
+   - Pushes to GitHub (if CI_PUSH=1)
+
+**Build Command**:
+```toml
+# pyproject.toml
+build_command = "echo 'VERSION already synced by pre-commit hook/CI script' && rm -rf dist build src/*.egg-info && ci-local/.venv/bin/python -m build"
+```
+
+**Benefits**:
+- ✅ **No VERSION corruption** - Pre-sync ensures VERSION is always correct
+- ✅ **No shell escaping issues** - build_command doesn't need to handle {version} template
+- ✅ **Fail-fast** - If semantic-release fails, VERSION is already correct
+- ✅ **Dual protection** - Both local (pre-commit hook) and CI (script) coverage
+- ✅ **Language-agnostic** - Common layer works for any project type
+
+**Disabling**:
+```bash
+# Skip pre-sync (for testing)
+CI_SKIP_VERSION_SYNC=1 git commit -m "fix: test without pre-sync"
+```
+
+**Testing**:
+```bash
+# Test pre-commit hook
+git commit -m "fix: test pre-sync"  # VERSION should be auto-updated
+
+# Test CI script
+CI_FORCE_RELEASE=1 ci-local/.venv/bin/python ci/common/ci.d/90-semantic-release.py release
+```
+
+**Recovery** (if VERSION gets corrupted):
+```bash
+# Manual fix
+echo "2.2.0" > VERSION
+
+# Or use recovery script
+ci-local/.venv/bin/python ci-local/python/ci.d/99-fix-version.py fix
+```
 
 ## Module Structure
 
