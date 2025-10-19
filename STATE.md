@@ -234,6 +234,44 @@ CI_CLAUDE_MERGE=merge ./ci/bootstrap --install  # Safe to rerun
 
 **Setup**: `./ci/bootstrap --install` | **Check**: `./ci/bootstrap`
 
+### Project Type Auto-detection
+
+**Bootstrap automatically detects project type** on first run (when `ci.yaml` doesn't exist).
+
+**Detection logic** (from `pyproject.toml`):
+- **package** (library): No entry points → `build_type: package` (compiled wheels)
+- **app** (application): Has `project.scripts` or `project.gui-scripts` → `build_type: app` (standalone binary)
+
+**Override mechanism:**
+- Auto-detection only runs ONCE (first bootstrap)
+- Creates `ci.yaml` with detected type
+- User can manually edit `ci.yaml` to override:
+  ```yaml
+  nuitka:
+    build_type: app  # Changed from package
+  ```
+- Future bootstrap runs respect manual `ci.yaml` settings
+
+**Example:**
+```bash
+# First bootstrap
+./ci/bootstrap --install
+# → Detects "package" (no entry points)
+# → Creates ci.yaml with build_type: package
+
+# User edits ci.yaml manually
+vim ci.yaml  # Change build_type to "app"
+
+# Future bootstrap
+./ci/bootstrap --install
+# → Uses "app" (respects ci.yaml override)
+```
+
+**Configuration cascade:**
+1. `ci.yaml` (project-specific, highest priority)
+2. Environment variables (`CI_*` overrides)
+3. Defaults from auto-detection
+
 **3 Phases**:
 1. System Python creates `ci-local/.venv` (NOT ci/.venv - ci/ is READ-ONLY!)
 2. Installs CI tools into ci-local/.venv (via `uv sync` from ci-local/uv.lock)
