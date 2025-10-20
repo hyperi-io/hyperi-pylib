@@ -21,6 +21,9 @@ Thumbs.db
 .venv/
 .venv-ci/
 ci/.venv/
+
+# Claude Code / AI assistant data
+.claude/claude-memory
 # Test artifacts
 tests/ci/test_ci/
 tests/ci/test_output.log
