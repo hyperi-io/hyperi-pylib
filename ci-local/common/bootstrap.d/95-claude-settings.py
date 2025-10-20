@@ -142,22 +142,74 @@ def copy_file(target_file: Path, source_file: Path, overwrite: bool = True) -> b
     return True
 
 
-def create_todo_md_from_template() -> bool:
+def copy_standards_directory(overwrite: bool = True) -> list[str]:
+    """
+    Copy standards/*.md files from ci/ to docs/standards/ (IDEMPOTENT).
+
+    Copies from (in order):
+    1. ci/common/claude/standards/*.md
+    2. ci/python/claude/standards/*.md
+    3. ci-local/common/claude/standards/*.md (if exists)
+    4. ci-local/python/claude/standards/*.md (if exists)
+
+    Args:
+        overwrite: If True, overwrite existing files
+
+    Returns:
+        List of copied files (for logging)
+    """
+    target_dir = PROJECT_ROOT / "docs" / "standards"
+    target_dir.mkdir(parents=True, exist_ok=True)
+
+    copied_files = []
+
+    # Discover source directories
+    source_dirs = [
+        CI_DIR / "common" / "claude" / "standards",
+        CI_DIR / "python" / "claude" / "standards",
+        CI_LOCAL_DIR / "common" / "claude" / "standards",
+        CI_LOCAL_DIR / "python" / "claude" / "standards",
+    ]
+
+    for source_dir in source_dirs:
+        if not source_dir.exists():
+            continue
+
+        # Copy all .md files
+        for source_file in source_dir.glob("*.md"):
+            target_file = target_dir / source_file.name
+
+            # Skip if exists and overwrite=False
+            if target_file.exists() and not overwrite:
+                continue
+
+            # Copy file
+            import shutil
+            shutil.copy2(source_file, target_file)
+            copied_files.append(f"  docs/standards/{source_file.name} ← {source_dir.relative_to(PROJECT_ROOT)}")
+
+    return copied_files
+
+
+def create_todo_md_from_template(force: bool = False) -> bool:
     """
     Create TODO.md from template if it doesn't exist (IDEMPOTENT).
 
     Safety rules:
-    - NEVER overwrites existing TODO.md
+    - NEVER overwrites existing TODO.md (unless force=True)
     - Only creates if file doesn't exist
     - Replaces YYYY-MM-DD with current date
+
+    Args:
+        force: If True, overwrite existing TODO.md (CI_CLAUDE_MERGE=force)
 
     Returns:
         True if TODO.md was created, False if already exists or template missing
     """
     target_file = PROJECT_ROOT / "TODO.md"
 
-    # SAFETY: Never overwrite existing TODO.md
-    if target_file.exists():
+    # SAFETY: Never overwrite existing TODO.md (unless force mode)
+    if target_file.exists() and not force:
         return False
 
     # Find template (prefer common, no language-specific TODO templates)
@@ -232,12 +284,13 @@ def append_state_md(target_file: Path, source_file: Path) -> bool:
     return True
 
 
-def merge_claude_settings(merge_mode: str = "merge") -> int:
+def merge_claude_settings(merge_mode: str = "merge", force: bool = False) -> int:
     """
     Merge Claude Code settings from ci/ and ci-local/ into .claude/.
 
     Args:
         merge_mode: "merge" (overwrite), "no-overwrite" (keep existing), or "skip"
+        force: If True, overwrite TODO.md (force mode)
 
     Returns:
         0 on success, 1 on failure
@@ -288,9 +341,16 @@ def merge_claude_settings(merge_mode: str = "merge") -> int:
             if append_state_md(state_md_target, state_md_source):
                 merged_files.append(f"  STATE.md (appended) ← {source_dir.relative_to(PROJECT_ROOT)}")
 
-    # Create TODO.md from template (ONLY if doesn't exist - never overwrite)
-    if create_todo_md_from_template():
-        merged_files.append(f"  TODO.md (created from template)")
+    # Copy standards/*.md files to docs/standards/
+    standards_copied = copy_standards_directory(overwrite)
+    merged_files.extend(standards_copied)
+
+    # Create TODO.md from template (ONLY if doesn't exist - never overwrite unless force)
+    if create_todo_md_from_template(force=force):
+        if force:
+            merged_files.append(f"  TODO.md (FORCE OVERWRITTEN from template)")
+        else:
+            merged_files.append(f"  TODO.md (created from template)")
 
     if merged_files:
         print(f"[INFO] Merged {len(merged_files)} Claude settings file(s):")
@@ -326,17 +386,23 @@ def main() -> int:
 
     # Get merge mode from environment (default: skip - opt-in model)
     merge_mode = os.environ.get("CI_CLAUDE_MERGE", "skip").lower()
-    valid_modes = ["merge", "no-overwrite", "skip"]
+    valid_modes = ["merge", "no-overwrite", "skip", "force"]
 
     if merge_mode not in valid_modes:
-        print(f"[WARN] Invalid CI_CLAUDE_MERGE='{merge_mode}', using 'merge'")
-        merge_mode = "merge"
+        print(f"[WARN] Invalid CI_CLAUDE_MERGE='{merge_mode}', using 'skip'")
+        merge_mode = "skip"
+
+    # Force mode = merge + overwrite TODO.md
+    force_mode = (merge_mode == "force")
+    if force_mode:
+        merge_mode = "merge"  # Treat as merge for settings/STATE
+        print("[WARN] CI_CLAUDE_MERGE=force - Will overwrite TODO.md (nuclear option)")
 
     if action == "check":
         return check_claude_settings()
 
     elif action == "install":
-        return merge_claude_settings(merge_mode)
+        return merge_claude_settings(merge_mode, force=force_mode)
 
     else:
         print(f"ERROR: Unknown action '{action}'")
