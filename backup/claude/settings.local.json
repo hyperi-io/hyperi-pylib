@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git mv modules/common/ai/claude/standards modules/common/ai/standards)",
+      "Bash(git mv modules/python/ai/claude/standards modules/python/ai/standards)",
+      "Bash(./ci/git setup)",
+      "Bash(git mv modules/common/ai/claude/STATE.md modules/common/ai/STATE.md)",
+      "Bash(git mv modules/common/ai/claude/TODO.md modules/common/ai/TODO.md)",
+      "Bash(git mv modules/python/ai/claude/STATE.md modules/python/ai/STATE.md)",
+      "Bash(git mv modules/python/ai/claude/settings.json modules/python/ai/claude/settings-claude-pro-max.json)",
+      "Bash(/projects/hyperlib/ci/vcs check)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
