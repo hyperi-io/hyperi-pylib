@@ -4,56 +4,52 @@
 
 ## Active ⭐
 
-- [ ] **PHASE 1: Create /ci/ai tool** - IN PROGRESS
-  - [ ] Extract code from 95-ai-settings.py into modular ai.d/ scripts
-  - [ ] Create /ci/ai master script (bash wrapper + Python)
-  - [ ] Create ci/common/ai.d/ modules (10-check, 20-merge, 30-append, 40-create, 50-copy)
-  - [ ] Create ci/python/ai.d/ modules (Python-specific)
-  - [ ] Test /ci/ai independently
-  - [ ] Update bootstrap.d/95-ai-settings.py to thin wrapper
-  - [ ] Update all CI documentation
-
-- [ ] **PHASE 2: Standardize config cascade** - PLANNED
-  - [ ] Add get_config_cascade() to ci_lib.py
-  - [ ] Add ai: section to ci.yaml
-  - [ ] Update all ai.d/ scripts to use cascade
-  - [ ] Test cascade: CLI > ENV > .env > ci.yaml > defaults
-  - [ ] Update CODE-ASSISTANT.md with detailed cascade
+- [ ] **PHASE 2: Standardize config cascade** - NEXT
+  - [ ] Update all ai.d/ scripts to use get_config_value() from ci_lib.py
+  - [ ] Add ai: section example to ci.yaml
+  - [ ] Test config cascade: CLI > ENV > .env > ci.yaml > defaults
+  - [ ] Update CODE-ASSISTANT.md with detailed cascade documentation
+  - [ ] Update  with /ci/ai tool usage
 
 ## Planned
 
-- [ ] PHASE 3: Refactor /ci/bootstrap and /ci/run (Future)
-  - [ ] Standardize bootstrap to use same pattern
-  - [ ] Standardize run to use same pattern
+- [ ] PHASE 3: Standardize /ci/bootstrap and /ci/run (Future)
+  - [ ] Apply same .d pattern to bootstrap
+  - [ ] Apply same .d pattern to run
   - [ ] Unified config cascade across all tools
 
 ## Done ✓
 
+- [x] **PHASE 1: Create /ci/ai tool** - COMPLETE ✅
+  - [x] Created /ci/ai master script (bash + Python)
+  - [x] Created ci/common/ai.d/ modules (5 files)
+  - [x] Created ci/python/ai.d/ module
+  - [x] Updated 95-ai-settings.py to 70-line thin wrapper (was 505 lines!)
+  - [x] Tested /ci/ai independently - ALL TESTS PASS
+  - [x] Enhanced ci_lib.py with config cascade + logging from hyperlib
+
 - [x] Dual pre-sync strategy (VERSION corruption prevention)
 - [x] settings merge (CI_MERGE)
-- [x] Standards directory (CHARS-POLICY, CODE-ASSISTANT, GIT-WORKFLOW)
-- [x] Code of Conduct (no marketing, factual language)
+- [x] Standards directory (4 files, 1,443 lines)
+- [x] CODE-ASSISTANT.md (965 lines with Code of Conduct)
 - [x] Australian communication style
-- [x] Configuration cascade guidance (no hardcoding)
+- [x] Configuration cascade guidance
 - [x] Logging guidance (use hyperlib)
-- [x] Rename  → ai/ (brand-neutral)
-- [x] MCP memory server (mcp-knowledge-graph)
-- [x] Template substitution for paths ({{PROJECT_ROOT}})
+- [x] Rename  → ai/
+- [x] MCP servers (sequential-thinking, mcp-knowledge-graph)
+- [x] Template substitution ({{PROJECT_ROOT}})
 
 ## Backlog
 
-- [ ] Extract hardcoded update script from ci/bootstrap to separate file
-- [ ] Add more standards (security, testing, deployment)
-- [ ] Create migration guides for other projects
+- [ ] Extract hardcoded update script from ci/bootstrap
+- [ ] Add more standards
+- [ ] Migration guides for other projects
 
 ---
 
-**Format Guide:**
-- Checkbox: `- [ ]` pending | `- [x]` done | `- [-]` cancelled
-- Status: IN PROGRESS, BLOCKED: reason, WAITING: event
-- Keep Active small (3-7 items for focus)
-
-**Usage:**
-- "Update TODO - mark X as done"
-- "Move task X from Planned to Active"
-- "Add new task: implement Y"
+**Phase 1 Results:**
+✅ /ci/ai check - Works
+✅ /ci/ai setup --mode merge - Works  
+✅ Backward compat (CI_MERGE) - Works
+✅ Modular (897 lines across 8 files)
+✅ Thin wrapper (70 lines, was 505)
