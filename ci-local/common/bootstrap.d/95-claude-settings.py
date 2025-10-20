@@ -142,53 +142,105 @@ def copy_file(target_file: Path, source_file: Path, overwrite: bool = True) -> b
     return True
 
 
+def append_or_copy_standard(target_file: Path, source_file: Path, source_label: str) -> tuple[bool, str]:
+    """
+    Append or copy a standards file (MERGE behavior for same filename).
+
+    If target exists:
+    - Appends source content with separator and marker
+    - Uses marker to prevent duplicate appends (idempotent)
+
+    If target doesn't exist:
+    - Copies source file
+
+    Args:
+        target_file: Target file in docs/standards/
+        source_file: Source file from ci/*/claude/standards/
+        source_label: Label for source (e.g., "ci/common/claude/standards")
+
+    Returns:
+        (was_modified, log_message) tuple
+    """
+    if not source_file.exists():
+        return (False, "")
+
+    # Create marker for idempotent append
+    marker = f"<!-- HYPERCI_STANDARD: {source_label}/{source_file.name} -->"
+
+    if target_file.exists():
+        # File exists - append if not already present
+        target_content = target_file.read_text()
+
+        # Check if already appended (idempotent)
+        if marker in target_content:
+            return (False, "")
+
+        # Append with marker
+        source_content = source_file.read_text()
+        separator = "\n\n---\n\n"
+        appended_content = f"{separator}{marker}\n{source_content}"
+
+        with open(target_file, 'a') as f:
+            f.write(appended_content)
+
+        return (True, f"  docs/standards/{source_file.name} (appended) ← {source_label}")
+    else:
+        # File doesn't exist - copy
+        import shutil
+        target_file.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(source_file, target_file)
+
+        return (True, f"  docs/standards/{source_file.name} (created) ← {source_label}")
+
+
 def copy_standards_directory(overwrite: bool = True) -> list[str]:
     """
-    Copy standards/*.md files from ci/ to docs/standards/ (IDEMPOTENT).
+    Copy/merge standards/*.md files from ci/ to docs/standards/ (IDEMPOTENT).
 
-    Copies from (in order):
+    MERGE behavior: If same filename exists in multiple sources, they are MERGED (appended)
+    not replaced. Example: CODE-ASSISTANT.md from common + Python = merged file.
+
+    Copies/merges from (in order):
     1. ci/common/claude/standards/*.md
     2. ci/python/claude/standards/*.md
     3. ci-local/common/claude/standards/*.md (if exists)
     4. ci-local/python/claude/standards/*.md (if exists)
 
     Args:
-        overwrite: If True, overwrite existing files
+        overwrite: If True, allow appending to existing files (merge)
+                   If False, skip files that already exist
 
     Returns:
-        List of copied files (for logging)
+        List of copied/merged files (for logging)
     """
     target_dir = PROJECT_ROOT / "docs" / "standards"
     target_dir.mkdir(parents=True, exist_ok=True)
 
-    copied_files = []
+    merged_files = []
 
-    # Discover source directories
+    # Discover source directories (in order)
     source_dirs = [
-        CI_DIR / "common" / "claude" / "standards",
-        CI_DIR / "python" / "claude" / "standards",
-        CI_LOCAL_DIR / "common" / "claude" / "standards",
-        CI_LOCAL_DIR / "python" / "claude" / "standards",
+        (CI_DIR / "common" / "claude" / "standards", "ci/common/claude/standards"),
+        (CI_DIR / "python" / "claude" / "standards", "ci/python/claude/standards"),
+        (CI_LOCAL_DIR / "common" / "claude" / "standards", "ci-local/common/claude/standards"),
+        (CI_LOCAL_DIR / "python" / "claude" / "standards", "ci-local/python/claude/standards"),
     ]
 
-    for source_dir in source_dirs:
+    for source_dir, label in source_dirs:
         if not source_dir.exists():
             continue
 
-        # Copy all .md files
+        # Process all .md files
         for source_file in source_dir.glob("*.md"):
             target_file = target_dir / source_file.name
 
-            # Skip if exists and overwrite=False
-            if target_file.exists() and not overwrite:
-                continue
+            # Use append/copy logic (merges same filenames)
+            was_modified, log_msg = append_or_copy_standard(target_file, source_file, label)
 
-            # Copy file
-            import shutil
-            shutil.copy2(source_file, target_file)
-            copied_files.append(f"  docs/standards/{source_file.name} ← {source_dir.relative_to(PROJECT_ROOT)}")
+            if was_modified:
+                merged_files.append(log_msg)
 
-    return copied_files
+    return merged_files
 
 
 def create_todo_md_from_template(force: bool = False) -> bool:
