@@ -362,17 +362,40 @@ def merge_claude_settings(merge_mode: str = "merge", force: bool = False) -> int
     return 0
 
 
-def check_claude_settings() -> int:
+def check_nodejs_available() -> bool:
     """
-    Check if Claude settings can be merged (always succeeds).
-
-    This is a no-op check that always passes. The actual merge happens
-    during 'install' phase.
+    Check if Node.js and npx are available.
 
     Returns:
-        0 (always succeeds)
+        True if both node and npx are available
     """
-    print("[INFO] Claude settings merge check (no-op, always passes)")
+    import shutil
+
+    node_available = shutil.which("node") is not None
+    npx_available = shutil.which("npx") is not None
+
+    return node_available and npx_available
+
+
+def check_claude_settings() -> int:
+    """
+    Check if Claude settings can be merged.
+
+    Verifies:
+    - Node.js is available (required for Claude Code)
+    - npx is available (required for Claude Code)
+
+    Returns:
+        0 if requirements met, 1 if missing Node.js/npx
+    """
+    # Check Node.js/npx availability
+    if not check_nodejs_available():
+        print("[ERROR] Node.js and/or npx not found")
+        print("[ERROR] Claude Code requires Node.js with npx")
+        print("[ERROR] Install: https://nodejs.org/ (includes npx)")
+        return 1
+
+    print("[INFO] Node.js and npx available (required for Claude Code)")
     return 0
 
 
@@ -402,6 +425,15 @@ def main() -> int:
         return check_claude_settings()
 
     elif action == "install":
+        # Check Node.js/npx availability if not skipping
+        if merge_mode != "skip":
+            if not check_nodejs_available():
+                print("[ERROR] Cannot merge Claude settings: Node.js and/or npx not found")
+                print("[ERROR] Claude Code requires Node.js with npx")
+                print("[ERROR] Install: https://nodejs.org/ (includes npx)")
+                print("[ERROR] Or set CI_CLAUDE_MERGE=skip to skip Claude setup")
+                return 1
+
         return merge_claude_settings(merge_mode, force=force_mode)
 
     else:
