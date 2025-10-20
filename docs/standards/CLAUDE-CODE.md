@@ -1,0 +1,328 @@
+# Claude Code Standards for AI Assistants
+
+**Auto-copied to `docs/standards/` by CI_CLAUDE_MERGE**
+
+This document provides critical guidance for AI assistants (like Claude Code) working with HyperCI projects.
+
+---
+
+## Session Start Checklist
+
+**On every session start, you should:**
+
+1. ✅ Read STATE.md (project context and CI documentation)
+2. ✅ Read TODO.md (current tasks and priorities)
+3. ✅ Read docs/standards/*.md (coding standards)
+4. ✅ Review project structure for context:
+   - Check `pyproject.toml` or equivalent for project metadata
+   - Scan `src/` or equivalent for main code structure
+   - Note key directories (tests/, docs/, ci/, ci-local/)
+   - Identify project type (package/library vs application)
+5. ✅ Be ready to assist with tasks from TODO.md
+
+**Important:**
+- STATE.md includes auto-appended CI documentation from HyperCI
+- TODO.md follows todo-md standard (update it as work progresses)
+- ci/ directory is READ-ONLY (git submodule)
+- ci-local/ is writable (for project-specific CI customizations)
+
+**Do not respond with greetings or confirmations.**
+**Simply load the context and wait for the user's first question or task.**
+
+---
+
+## Virtual Environment Rules (CRITICAL)
+
+### When Writing CI Scripts
+
+**ALWAYS use ci-local/.venv for CI operations:**
+
+- ✅ **ALWAYS use:** `ci-local/.venv/bin/python` for CI script execution
+- ✅ **ALWAYS check:** Script shebang or prefix contains "ci-local/.venv"
+- ✅ **CI tools live in:** `ci-local/.venv` (NOT ci/.venv - ci/ is READ-ONLY!)
+- ✅ **CI scripts located in:** `ci/` (READ-ONLY) or `ci-local/` (writable)
+- ❌ **NEVER write to:** `ci/` directory (including ci/.venv)
+- ❌ **NEVER use:** `#!/usr/bin/env python3` without explicit venv checks
+- ❌ **NEVER use:** `python` or `python3` commands directly (ambiguous)
+- ❌ **NEVER use:** `.venv` for CI operations (that's for development)
+
+**Enforcement pattern for CI scripts:**
+```python
+#!/usr/bin/env python3
+"""CI Script - MUST run in ci-local/.venv"""
+
+import sys
+from pathlib import Path
+
+# CRITICAL: Enforce ci-local/.venv usage (FAIL HARD if not in correct venv)
+if "ci-local/.venv" not in sys.prefix:
+    print("ERROR: This script must run in ci-local/.venv")
+    print(f"Current Python: {sys.executable}")
+    print("Expected: ci-local/.venv/bin/python")
+    print("Run via: ci-local/.venv/bin/python path/to/script.py")
+    sys.exit(1)
+
+# Import CI libraries (available in ci-local/.venv)
+sys.path.insert(0, str(Path(__file__).parent.parent / "ci" / "common"))
+from ci_lib import logger, get_project_root
+
+# CI script logic here...
+```
+
+**Why this matters:**
+- `ci-local/.venv` contains CI tools (pytest, ruff, black, build, twine)
+- `.venv` contains project runtime dependencies
+- Mixing them causes dependency conflicts and breaks reproducibility
+
+### When Writing Development Code
+
+**Use .venv for development:**
+
+- ✅ **Use:** `.venv/bin/python` or activate `.venv`
+- ✅ **For:** Manual testing, exploration, IDE integration
+- ✅ **Contains:** Project runtime dependencies from `uv.lock`
+- ❌ **NEVER use:** `ci-local/.venv` for development
+- ❌ **NEVER install:** Dev dependencies in `ci-local/.venv`
+
+**How to identify which venv:**
+```bash
+echo $VIRTUAL_ENV           # Should show ci-local/.venv or .venv
+python -c "import sys; print(sys.prefix)"  # Check Python location
+```
+
+---
+
+## Temporary Files Policy
+
+**ALWAYS use `./.tmp/` directory (project root):**
+
+- ✅ **Use:** `./.tmp/` only (relative to project root)
+- ❌ **NEVER use:** `/tmp`, `~/tmp`, `/var/tmp`, or other system locations
+
+**Reasons:**
+1. Keeps temp files in project context (easy to find)
+2. Automatically cleaned by project cleanup scripts
+3. Gitignored by default (`.tmp/` in `.gitignore`)
+4. Consistent across all developers and CI environments
+5. No permission issues (project-owned directory)
+
+**Examples:**
+```bash
+# Create temporary directory
+mkdir -p .tmp
+
+# Write temporary files
+python script.py > .tmp/output.log
+echo "test" > .tmp/test-data.txt
+
+# Use in scripts
+BUILD_DIR=.tmp/build
+```
+
+**Cleanup:**
+```bash
+# Clean all temp files
+rm -rf .tmp/*
+
+# Or let git clean do it
+git clean -fdX  # Removes gitignored files including .tmp/
+```
+
+---
+
+## READ-ONLY ci/ Directory
+
+**The ci/ directory is a git submodule and is COMPLETELY READ-ONLY:**
+
+- ✅ **READ from:** `ci/` (scripts, docs, templates, configurations)
+- ✅ **EXECUTE:** Scripts from `ci/` (they read-only, safe to run)
+- ✅ **WRITE to:** `ci-local/` (project-specific CI customizations)
+- ❌ **NEVER write:** Any files to `ci/` directory
+- ❌ **NEVER create:** `ci/.venv` (use `ci-local/.venv` instead)
+- ❌ **NEVER modify:** Scripts in `ci/` (commit to hyperci repo instead)
+- ❌ **NEVER run:** `pip install` targeting `ci/` directory
+
+**Enforcement:**
+- Claude Code permissions include: `"deny": ["Write(ci/**)", "Edit(ci/**)"]`
+- This prevents accidental modifications to READ-ONLY ci/ submodule
+
+**To contribute improvements to HyperCI:**
+```bash
+cd ci
+git checkout -b fix/my-improvement
+# Make changes in ci/ (this is a git repo)
+git add .
+git commit -m "fix: my improvement"
+git push origin fix/my-improvement
+# Create PR to hypersec-io/hyperci repository
+
+# After merge, update your project
+cd ..
+git add ci
+git commit -m "chore: update ci/ submodule with my-improvement"
+```
+
+---
+
+## Project Structure Recognition
+
+**AI assistants should recognize these directories:**
+
+- `ci/` - HyperCI scripts (READ-ONLY git submodule)
+- `ci-local/` - Project CI customizations (writable)
+- `src/` - Source code (varies by language)
+- `tests/` - Test suite
+- `docs/` - Documentation
+- `.venv` - Development virtual environment
+- `.tmp/` - Temporary files (gitignored)
+- `dist/` - Build artifacts (gitignored)
+
+**Configuration files:**
+- `ci.yaml` - Project CI configuration (HyperCI settings)
+- `pyproject.toml` - Python project metadata and dependencies
+- `uv.lock` - Locked project dependencies
+- `ci-local/pyproject.toml` - CI tool dependencies
+- `ci-local/uv.lock` - Locked CI tool dependencies
+
+---
+
+## Common Mistakes to Avoid
+
+**❌ Using system Python for CI:**
+```python
+#!/usr/bin/env python3  # WRONG - which python3?
+```
+
+**✅ Correct - explicit venv:**
+```python
+#!/usr/bin/env python3
+import sys
+if "ci-local/.venv" not in sys.prefix:
+    sys.exit(1)  # Fail hard
+```
+
+**❌ Writing to ci/ directory:**
+```bash
+pip install package -t ci/.venv  # WRONG - ci/ is READ-ONLY!
+```
+
+**✅ Correct - write to ci-local/:**
+```bash
+pip install package -t ci-local/.venv  # Correct
+```
+
+**❌ Using /tmp:**
+```bash
+output_file=/tmp/result.txt  # WRONG - use .tmp/
+```
+
+**✅ Correct - use .tmp/:**
+```bash
+output_file=.tmp/result.txt  # Correct
+```
+
+---
+
+---
+
+## Active Checking Strategy (GitHub Actions & JFrog)
+
+**PROBLEM:** Waiting with long timeouts (e.g., 10 minutes) only to discover the task failed in the first 2 seconds wastes time.
+
+**SOLUTION:** Use active checking instead of passive waiting.
+
+### Tools Available
+
+**GitHub CLI (`gh`):**
+```bash
+gh run list --limit 5                    # List recent runs
+gh run view <run_id>                     # View run details
+gh run view <run_id> --log              # View logs in real-time
+gh run watch <run_id>                    # Watch run progress
+gh workflow view <workflow_name>         # View workflow status
+```
+
+**JFrog CLI (`jf`):**
+```bash
+# Check if package exists
+jf rt search "hypersec-pypi-local/package/*" --count
+
+# Verify specific version
+jf rt download "hypersec-pypi-local/package/1.0.0/*.whl" --dry-run
+```
+
+**Git status:**
+```bash
+git log --oneline origin/main..HEAD     # Unpushed commits
+git status                               # Local changes
+```
+
+### Best Practices for AI Assistants
+
+1. ✅ **Push and immediately check:** After `git push`, run `gh run list` to verify workflow started
+2. ✅ **Check every 30-60 seconds:** Use `gh run view <run_id>` to monitor status, don't wait blindly
+3. ✅ **Fail fast:** If logs show errors, stop waiting and investigate immediately
+4. ✅ **Verify artifacts:** After build, check JFrog with `jf rt search` to confirm upload
+5. ❌ **DON'T:** Set a 10-minute timer and hope for the best
+6. ❌ **DON'T:** Assume success without verification
+
+### Example Active Checking Workflow
+
+```bash
+# 1. Push changes
+git push origin main
+
+# 2. Immediately check if workflow started (within 10 seconds)
+gh run list --limit 1
+
+# 3. Get run ID and monitor
+RUN_ID=$(gh run list --limit 1 --json databaseId --jq '.[0].databaseId')
+echo "Watching run: $RUN_ID"
+
+# 4. Check every 30 seconds (don't wait 10 minutes!)
+while true; do
+  STATUS=$(gh run view $RUN_ID --json status,conclusion --jq '.status')
+  echo "Status: $STATUS"
+
+  if [ "$STATUS" = "completed" ]; then
+    CONCLUSION=$(gh run view $RUN_ID --json conclusion --jq '.conclusion')
+    echo "Conclusion: $CONCLUSION"
+    break
+  fi
+
+  sleep 30
+done
+
+# 5. If successful, verify in JFrog immediately
+jf rt search "hypersec-pypi-local/package/1.0.0/*.whl" --count
+```
+
+### Why This Matters
+
+**GitHub Actions can fail due to:**
+- Missing secrets (ARTIFACTORY_USERNAME, GH_PAT, etc.)
+- Workflow syntax errors
+- Runner unavailable
+- Build errors (caught early with active checking)
+
+**JFrog uploads can fail due to:**
+- Invalid credentials
+- Network issues
+- Duplicate version (version already exists)
+- Repository permissions
+
+**Early detection saves time and prevents cascading failures.**
+
+---
+
+## For More Information
+
+**HyperCI Documentation:**
+- See STATE.md for complete HyperCI architecture
+- See ci/docs/README.md for full CI documentation
+- See ci/docs/SUBMODULE-USAGE.md for git submodule guide
+
+**Standards:**
+- See docs/standards/GIT-WORKFLOW.md for git conventions
+- See docs/standards/CHARS-POLICY.md for character usage
+- See docs/standards/python-coding-standards.md (Python projects)
