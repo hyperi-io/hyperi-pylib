@@ -154,6 +154,28 @@ git commit -m "chore: update hyperci with my-improvement"
 
 **CRITICAL**: HyperCI can automatically configure Claude Code settings for your project.
 
+### Requirements
+
+**Node.js and npx** are required for Claude Code:
+- Claude Code runs on Node.js runtime
+- npx is used for package execution
+- Install: https://nodejs.org/ (includes npx)
+
+**Verification:**
+```bash
+# Bootstrap automatically checks during --install
+./ci/bootstrap --install
+# If Node.js missing, bootstrap will fail with clear error
+
+# Manual check
+node --version && npx --version
+```
+
+**If Node.js is not available:**
+- Bootstrap will fail during Claude settings merge (if `CI_CLAUDE_MERGE != skip`)
+- Error message provides installation instructions
+- To skip Claude setup: `CI_CLAUDE_MERGE=skip ./ci/bootstrap --install`
+
 ### CI_CLAUDE_MERGE Environment Variable
 
 Controls whether HyperCI's standardized Claude Code settings are merged into your `.claude/` directory.
