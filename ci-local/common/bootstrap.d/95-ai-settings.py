@@ -2,19 +2,19 @@
 """
 Claude Code Settings Merge (Bootstrap Step)
 
-Merges Claude Code settings from HyperCI into project .claude/ directory.
+Merges Claude Code settings from HyperCI into project .ai/ directory.
 
 This allows HyperCI to provide standardized Claude Code configuration while
 letting projects customize settings.
 
 Merge Sources (in order):
-  1. ci/common/claude/          # Universal settings (all projects)
-  2. ci/python/claude/          # Language-specific (Python only)
-  3. ci-local/common/claude/    # Project overrides (optional)
-  4. ci-local/python/claude/    # Project Python overrides (optional)
+  1. ci/common/ai/          # Universal settings (all projects)
+  2. ci/python/ai/          # Language-specific (Python only)
+  3. ci-local/common/ai/    # Project overrides (optional)
+  4. ci-local/python/ai/    # Project Python overrides (optional)
 
 Merge Target:
-  .claude/                      # Project's Claude Code settings
+  .ai/                      # Project's Claude Code settings
 
 Environment Control:
   CI_CLAUDE_MERGE=merge         # Overwrite existing settings
@@ -26,8 +26,8 @@ Run modes:
 - install: Perform the actual merge
 
 Usage:
-    ci-local/.venv/bin/python ci-local/common/bootstrap.d/95-claude-settings.py check
-    ci-local/.venv/bin/python ci-local/common/bootstrap.d/95-claude-settings.py install
+    ci-local/.venv/bin/python ci-local/common/bootstrap.d/95-ai-settings.py check
+    ci-local/.venv/bin/python ci-local/common/bootstrap.d/95-ai-settings.py install
 """
 
 import json
@@ -40,7 +40,7 @@ from typing import Any, Dict
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent.parent
 CI_DIR = PROJECT_ROOT / "ci"
 CI_LOCAL_DIR = PROJECT_ROOT / "ci-local"
-CLAUDE_DIR = PROJECT_ROOT / ".claude"
+AI_DIR = PROJECT_ROOT / ".claude"
 
 
 def deep_merge_json(target: Dict[str, Any], source: Dict[str, Any], overwrite: bool = True) -> Dict[str, Any]:
@@ -77,7 +77,7 @@ def merge_json_file(target_file: Path, source_file: Path, overwrite: bool = True
     Merge a JSON file from source into target.
 
     Args:
-        target_file: Target JSON file (in .claude/)
+        target_file: Target JSON file (in .ai/)
         source_file: Source JSON file (from ci/ or ci-local/)
         overwrite: If True, overwrite existing keys
 
@@ -155,8 +155,8 @@ def append_or_copy_standard(target_file: Path, source_file: Path, source_label: 
 
     Args:
         target_file: Target file in docs/standards/
-        source_file: Source file from ci/*/claude/standards/
-        source_label: Label for source (e.g., "ci/common/claude/standards")
+        source_file: Source file from ci/*/ai/standards/
+        source_label: Label for source (e.g., "ci/common/ai/standards")
 
     Returns:
         (was_modified, log_message) tuple
@@ -201,10 +201,10 @@ def copy_standards_directory(overwrite: bool = True) -> list[str]:
     not replaced. Example: CODE-ASSISTANT.md from common + Python = merged file.
 
     Copies/merges from (in order):
-    1. ci/common/claude/standards/*.md
-    2. ci/python/claude/standards/*.md
-    3. ci-local/common/claude/standards/*.md (if exists)
-    4. ci-local/python/claude/standards/*.md (if exists)
+    1. ci/common/ai/standards/*.md
+    2. ci/python/ai/standards/*.md
+    3. ci-local/common/ai/standards/*.md (if exists)
+    4. ci-local/python/ai/standards/*.md (if exists)
 
     Args:
         overwrite: If True, allow appending to existing files (merge)
@@ -220,10 +220,10 @@ def copy_standards_directory(overwrite: bool = True) -> list[str]:
 
     # Discover source directories (in order)
     source_dirs = [
-        (CI_DIR / "common" / "claude" / "standards", "ci/common/claude/standards"),
-        (CI_DIR / "python" / "claude" / "standards", "ci/python/claude/standards"),
-        (CI_LOCAL_DIR / "common" / "claude" / "standards", "ci-local/common/claude/standards"),
-        (CI_LOCAL_DIR / "python" / "claude" / "standards", "ci-local/python/claude/standards"),
+        (CI_DIR / "common" / "ai" / "standards", "ci/common/ai/standards"),
+        (CI_DIR / "python" / "ai" / "standards", "ci/python/ai/standards"),
+        (CI_LOCAL_DIR / "common" / "ai" / "standards", "ci-local/common/ai/standards"),
+        (CI_LOCAL_DIR / "python" / "ai" / "standards", "ci-local/python/ai/standards"),
     ]
 
     for source_dir, label in source_dirs:
@@ -265,7 +265,7 @@ def create_todo_md_from_template(force: bool = False) -> bool:
         return False
 
     # Find template (prefer common, no language-specific TODO templates)
-    template_file = CI_DIR / "common" / "claude" / "TODO.md"
+    template_file = CI_DIR / "common" / "ai" / "TODO.md"
 
     if not template_file.exists():
         return False
@@ -293,7 +293,7 @@ def append_state_md(target_file: Path, source_file: Path) -> bool:
 
     Args:
         target_file: Target STATE.md (project root)
-        source_file: Source STATE.md (ci/*/claude/)
+        source_file: Source STATE.md (ci/*/ai/)
 
     Returns:
         True if content was appended, False if already present or skipped
@@ -336,9 +336,9 @@ def append_state_md(target_file: Path, source_file: Path) -> bool:
     return True
 
 
-def merge_claude_settings(merge_mode: str = "merge", force: bool = False) -> int:
+def merge_ai_settings(merge_mode: str = "merge", force: bool = False) -> int:
     """
-    Merge Claude Code settings from ci/ and ci-local/ into .claude/.
+    Merge Claude Code settings from ci/ and ci-local/ into .ai/.
 
     Args:
         merge_mode: "merge" (overwrite), "no-overwrite" (keep existing), or "skip"
@@ -358,10 +358,10 @@ def merge_claude_settings(merge_mode: str = "merge", force: bool = False) -> int
 
     # Discover source directories (in order)
     source_dirs = [
-        CI_DIR / "common" / "claude",
-        CI_DIR / "python" / "claude",
-        CI_LOCAL_DIR / "common" / "claude",
-        CI_LOCAL_DIR / "python" / "claude",
+        CI_DIR / "common" / "ai",
+        CI_DIR / "python" / "ai",
+        CI_LOCAL_DIR / "common" / "ai",
+        CI_LOCAL_DIR / "python" / "ai",
     ]
 
     # Track what was merged
@@ -371,7 +371,7 @@ def merge_claude_settings(merge_mode: str = "merge", force: bool = False) -> int
     for source_dir in source_dirs:
         settings_file = source_dir / "settings.json"
         if settings_file.exists():
-            if merge_json_file(CLAUDE_DIR / "settings.json", settings_file, overwrite):
+            if merge_json_file(AI_DIR / "settings.json", settings_file, overwrite):
                 merged_files.append(f"  settings.json ← {source_dir.relative_to(PROJECT_ROOT)}")
 
     # Copy command files (*.md) from all sources
@@ -381,7 +381,7 @@ def merge_claude_settings(merge_mode: str = "merge", force: bool = False) -> int
             continue
 
         for source_file in commands_dir.glob("*.md"):
-            target_file = CLAUDE_DIR / "commands" / source_file.name
+            target_file = AI_DIR / "commands" / source_file.name
             if copy_file(target_file, source_file, overwrite):
                 merged_files.append(f"  commands/{source_file.name} ← {source_dir.relative_to(PROJECT_ROOT)}")
 
@@ -429,7 +429,7 @@ def check_nodejs_available() -> bool:
     return node_available and npx_available
 
 
-def check_claude_settings() -> int:
+def check_ai_settings() -> int:
     """
     Check if Claude settings can be merged.
 
@@ -454,7 +454,7 @@ def check_claude_settings() -> int:
 def main() -> int:
     """Main entry point."""
     if len(sys.argv) < 2:
-        print("ERROR: Usage: 95-claude-settings.py [check|install]")
+        print("ERROR: Usage: 95-ai-settings.py [check|install]")
         return 1
 
     action = sys.argv[1]
@@ -474,7 +474,7 @@ def main() -> int:
         print("[WARN] CI_CLAUDE_MERGE=force - Will overwrite TODO.md (nuclear option)")
 
     if action == "check":
-        return check_claude_settings()
+        return check_ai_settings()
 
     elif action == "install":
         # Check Node.js/npx availability if not skipping
@@ -486,7 +486,7 @@ def main() -> int:
                 print("[ERROR] Or set CI_CLAUDE_MERGE=skip to skip Claude setup")
                 return 1
 
-        return merge_claude_settings(merge_mode, force=force_mode)
+        return merge_ai_settings(merge_mode, force=force_mode)
 
     else:
         print(f"ERROR: Unknown action '{action}'")
