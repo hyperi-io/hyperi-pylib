@@ -45,9 +45,23 @@
 
 ## Backlog
 
-- [ ] Extract hardcoded update script from ci/bootstrap
-- [ ] Add more standards
-- [ ] Migration guides for other projects
+- [x] Extract hardcoded update script from ci/bootstrap
+  - ✅ Already done: ci/bootstrap.update-ci.sh exists as separate file
+  - ✅ Bootstrap uses template substitution ({{PROJECT_ROOT}}, {{REMAINING_ARGS}})
+  - ✅ No embedded shell scripts in Python code
+
+- [x] Migration guides for other projects
+  - ✅ Already done: ci/docs/MIGRATE-dfe-hunt-runner.md
+  - ✅ Already done: ci/docs/MIGRATE-dfe-ui-backend.md
+  - ✅ Already done: ci/docs/MIGRATE-dfe-cli-core.md
+
+- [ ] Add more standards (ongoing)
+  - ✅ Existing: CODE-ASSISTANT.md (common + python, 965+ lines)
+  - ✅ Existing: CODE-HEADER.md (REUSE/SPDX compliance)
+  - ✅ Existing: CHARS-POLICY.md (character restrictions)
+  - ✅ Existing: GIT-WORKFLOW.md (git best practices)
+  - ✅ Existing: PYTHON-CODING.md (Python-specific standards)
+  - Future: Add more as needed
 
 ---
 
