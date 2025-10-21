@@ -1,9 +1,5 @@
 {
   "env": {
-    "ANTHROPIC_MODEL": "opusplan",
-    "ANTHROPIC_DEFAULT_OPUS_MODEL": "claude-opus-4-1-20250805",
-    "ANTHROPIC_DEFAULT_SONNET_MODEL": "claude-sonnet-4-5-20250929",
-    "CLAUDE_CODE_SUBAGENT_MODEL": "claude-opus-4-1-20250805",
     "CLAUDE_CODE_MAX_OUTPUT_TOKENS": "16384",
     "MAX_THINKING_TOKENS": "16000",
     "CLAUDE_CODE_CONTEXT_WINDOW_TOKENS": "200000",
@@ -22,24 +18,6 @@
   },
   "enabledPlugins": {
     "docker": true
-  },
-  "mcpServers": {
-    "sequential-thinking": {
-      "command": "npx",
-      "args": [
-        "-y",
-        "@modelcontextprotocol/server-sequential-thinking"
-      ]
-    },
-    "memory": {
-      "command": "npx",
-      "args": [
-        "-y",
-        "mcp-knowledge-graph",
-        "--memory-path",
-        "/projects/hyperlib/.claude/claude-memory"
-      ]
-    }
   },
   "permissions": {
     "allow": [
@@ -92,9 +70,31 @@
           {
             "type": "command",
             "command": "bash -c 'echo \"Today: $(date +%Y-%m-%d)\"; echo \"\"; if [ -f STATE.md ]; then cat STATE.md; elif [ -f CLAUDE.md ]; then cat CLAUDE.md; fi; echo \"\"; if [ -f TODO.md ]; then cat TODO.md; fi; echo \"\"; if [ -d docs/standards ]; then for std in docs/standards/*.md; do [ -f \"$std\" ] && cat \"$std\" && echo \"\"; done; fi'"
+          },
+          {
+            "type": "prompt",
+            "prompt": "Session initialized. Before responding to the user:\n\n1. Query the memory MCP for existing project knowledge (use mcp__memory__search_nodes with query about this project)\n2. Briefly summarize what you found in memory (or note if this is a fresh start)\n3. Silently prepare to use both memory and sequential-thinking MCPs throughout this session as needed\n\nDo NOT greet the user with pleasantries. Simply report what you found in memory and wait for their first task.\n\nIf the user asks a question or gives a task in their first message, handle that task AND execute the memory query - do both in your first response."
           }
         ]
       }
     ]
+  },
+  "mcpServers": {
+    "sequential-thinking": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-sequential-thinking"
+      ]
+    },
+    "memory": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "mcp-knowledge-graph",
+        "--memory-path",
+        "/projects/hyperlib/.claude/claude-memory"
+      ]
+    }
   }
 }

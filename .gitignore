@@ -37,6 +37,9 @@ htmlcov/
 *~
 .DS_Store
 
+# Claude Code
+.claude/claude-memory/
+
 # Environment & Secrets
 .env
 .env.local
