@@ -1,15 +1,10 @@
 # TODO
 
-**Last Updated:** 2025-10-20
+**Last Updated:** 2025-10-22
 
 ## Active ⭐
 
-- [ ] **PHASE 2: Standardize config cascade** - NEXT
-  - [ ] Update all ai.d/ scripts to use get_config_value() from ci_lib.py
-  - [ ] Add ai: section example to ci.yaml
-  - [ ] Test config cascade: CLI > ENV > .env > ci.yaml > defaults
-  - [ ] Update CODE-ASSISTANT.md with detailed cascade documentation
-  - [ ] Update CLAUDE.md with /ci/ai tool usage
+(No active tasks - Phase 2 complete!)
 
 ## Planned
 
@@ -19,6 +14,15 @@
   - [ ] Unified config cascade across all tools
 
 ## Done ✓
+
+- [x] **PHASE 2: Standardize config cascade** - COMPLETE ✅
+  - [x] Updated all ai.d/ scripts to use get_config_value() from ci_lib.py
+  - [x] Added ai: section example to ci.yaml.template
+  - [x] Added ai: section to ci-local/ci.yaml (hyperlib)
+  - [x] Tested config cascade: CLI > ENV > .env > ci.yaml > defaults
+  - [x] Updated CODE-ASSISTANT.md with detailed cascade documentation
+  - [x] Updated STATE.md with /ci/ai tool usage guide
+  - [x] All changes committed to hyperci and hyperlib
 
 - [x] **PHASE 1: Create /ci/ai tool** - COMPLETE ✅
   - [x] Created /ci/ai master script (bash + Python)
