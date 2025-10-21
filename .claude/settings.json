@@ -69,7 +69,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash -c 'echo \"Today: $(date +%Y-%m-%d)\"; echo \"\"; if [ -f STATE.md ]; then cat STATE.md; elif [ -f CLAUDE.md ]; then cat CLAUDE.md; fi; echo \"\"; if [ -f TODO.md ]; then cat TODO.md; fi; echo \"\"; if [ -d docs/standards ]; then for std in docs/standards/*.md; do [ -f \"$std\" ] && cat \"$std\" && echo \"\"; done; fi'"
+            "command": "bash -c 'echo \"Today: $(date +%Y-%m-%d)\"; echo \"\"; echo \"=== CONTEXT DETECTION ===\"; if [ -f ci.yaml ] && [ -f STATE.md ]; then echo \"Context: PROJECT (has ci.yaml)\"; echo \"\"; cat STATE.md; elif [ -f ci/STATE.md ] && [ ! -f ci.yaml ]; then echo \"Context: HYPERCI REPOSITORY (ci infrastructure)\"; echo \"\"; cat ci/STATE.md; elif [ -f STATE.md ]; then cat STATE.md; elif [ -f CLAUDE.md ]; then cat CLAUDE.md; fi; echo \"\"; if [ -f TODO.md ]; then cat TODO.md; fi; echo \"\"; if [ -d docs/standards ]; then for std in docs/standards/*.md; do [ -f \"$std\" ] && cat \"$std\" && echo \"\"; done; fi'"
           },
           {
             "type": "prompt",
