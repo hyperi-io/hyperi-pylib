@@ -7,7 +7,6 @@
     "DISABLE_NON_ESSENTIAL_MODEL_CALLS": "1",
     "CLAUDE_BASH_MAINTAIN_PROJECT_WORKING_DIR": "1",
     "USE_BUILTIN_RIPGREP": "1",
-    "DISABLE_COST_WARNINGS": "1",
     "CLAUDE_CODE_ENABLE_PARALLEL_TOOLS": "1",
     "CLAUDE_CODE_MAX_PARALLEL_TOOLS": "3",
     "BASH_MAX_OUTPUT_LENGTH": "50000",
@@ -18,6 +17,24 @@
   },
   "enabledPlugins": {
     "docker": true
+  },
+  "mcpServers": {
+    "sequential-thinking": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-sequential-thinking"
+      ]
+    },
+    "memory": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "mcp-knowledge-graph",
+        "--memory-path",
+        "/projects/hyperlib/.claude/claude-memory"
+      ]
+    }
   },
   "permissions": {
     "allow": [
@@ -78,23 +95,5 @@
         ]
       }
     ]
-  },
-  "mcpServers": {
-    "sequential-thinking": {
-      "command": "npx",
-      "args": [
-        "-y",
-        "@modelcontextprotocol/server-sequential-thinking"
-      ]
-    },
-    "memory": {
-      "command": "npx",
-      "args": [
-        "-y",
-        "mcp-knowledge-graph",
-        "--memory-path",
-        "/projects/hyperlib/.claude/claude-memory"
-      ]
-    }
   }
 }
