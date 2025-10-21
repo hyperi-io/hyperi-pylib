@@ -303,6 +303,149 @@ CI_CLAUDE_MERGE=merge ./ci/bootstrap --install
 CI_CLAUDE_MERGE=merge ./ci/bootstrap --install  # Safe to rerun
 ```
 
+## /ci/ai Tool - AI Assistant Setup
+
+**HyperCI provides the `/ci/ai` tool for configuring AI assistant settings** (Claude Code, etc.).
+
+This tool is the modern replacement for `CI_CLAUDE_MERGE` environment variable.
+
+### Quick Start
+
+```bash
+# Check AI assistant configuration
+ci/ai check
+
+# Setup AI assistant (merge settings, MCP servers, docs)
+CI_AI_MERGE_MODE=merge ci/ai setup
+
+# Clean AI assistant configuration
+ci/ai clean
+```
+
+### Configuration Cascade
+
+The `/ci/ai` tool uses the standardized HyperCI config cascade:
+
+```
+ENV > .env > ci.yaml > defaults
+```
+
+**Environment Variables:**
+- `CI_AI_MERGE_MODE` - Controls merge behavior (skip, merge, no-overwrite, force)
+- `CI_AI_CLAUDE_TIER` - Claude tier selection (pro, pro-max)
+- `CI_AI_CHECK_REQUIREMENTS` - Enable/disable Node.js/npx check
+- `CI_AI_SETUP_MCP` - Enable/disable MCP server setup
+- `CI_AI_MCP_MEMORY_PATH` - Custom memory directory path
+
+**ci.yaml Configuration:**
+```yaml
+# ci-local/ci.yaml
+ai:
+  merge_mode: skip  # Options: skip, merge, no-overwrite, force
+  claude_tier: pro-max  # Options: pro, pro-max
+  check_requirements: true
+  mcp:
+    enabled: true
+    servers:
+      sequential_thinking:
+        enabled: true
+        package: "@modelcontextprotocol/server-sequential-thinking"
+      memory:
+        enabled: true
+        package: "mcp-knowledge-graph"
+        memory_path: ".claude/claude-memory"
+```
+
+### Merge Modes
+
+**skip** (default):
+- No automatic merge (opt-in model)
+- Safest option, requires explicit enable
+
+**merge**:
+- Deep merge settings.json (overwrites existing keys)
+- Appends STATE.md (idempotent with markers)
+- Creates TODO.md if missing (never overwrites)
+- Copies standards to docs/standards/
+
+**no-overwrite**:
+- Deep merge settings.json (keeps existing values)
+- Same as merge but preserves your custom settings
+
+**force**:
+- Like merge but also overwrites TODO.md
+- **DANGEROUS** - Only use for testing
+
+### What ci/ai setup Does
+
+**1. Check Requirements** (10-check-requirements.py)
+- Verifies Node.js and npx are available
+- Required for MCP servers
+- Skippable: `CI_AI_CHECK_REQUIREMENTS=false`
+
+**2. Setup MCP Servers** (15-setup-mcp-servers.py)
+- Installs sequential-thinking server (structured reasoning)
+- Installs memory server (knowledge graph)
+- Creates memory directory (.claude/claude-memory/)
+- Skippable: `CI_AI_SETUP_MCP=false`
+
+**3. Merge Settings** (20-merge-settings.py)
+- Deep merges settings-claude-{tier}.json
+- Supports: pro ($20/month, 4K tokens) or pro-max ($100-200/month, 16K tokens)
+- Template substitution: {{PROJECT_ROOT}}
+
+**4. Append STATE.md** (30-append-state.py)
+- Appends CI documentation from ci/
+- Idempotent (uses HTML markers)
+- Covers: HyperCI architecture, bootstrap, config cascade
+
+**5. Create TODO.md** (40-create-todo.py)
+- Creates from template if missing
+- NEVER overwrites existing TODO.md (unless force mode)
+- Follows todo-md standard
+
+**6. Copy Standards** (50-copy-standards.py)
+- Copies/merges docs/standards/*.md
+- Includes CODE-ASSISTANT.md (965+ lines)
+- Merges multiple sources (common + python)
+
+### Examples
+
+```bash
+# First time setup (merge all settings)
+CI_AI_MERGE_MODE=merge ci/ai setup
+
+# Update settings without overwriting customizations
+CI_AI_MERGE_MODE=no-overwrite ci/ai setup
+
+# Setup with pro tier (default is pro-max)
+CI_AI_CLAUDE_TIER=pro CI_AI_MERGE_MODE=merge ci/ai setup
+
+# Setup without MCP servers
+CI_AI_SETUP_MCP=false CI_AI_MERGE_MODE=merge ci/ai setup
+
+# Clean all AI assistant config
+ci/ai clean
+```
+
+### Migration from CI_CLAUDE_MERGE
+
+**Old (deprecated):**
+```bash
+CI_CLAUDE_MERGE=merge ./ci/bootstrap --install
+```
+
+**New (recommended):**
+```bash
+CI_AI_MERGE_MODE=merge ci/ai setup
+# Or add to ci.yaml for permanent configuration
+```
+
+**Backward Compatibility:**
+- `CI_CLAUDE_MERGE` still works (mapped to `CI_AI_MERGE_MODE`)
+- Both will be supported for transition period
+- New projects should use `ci/ai` tool exclusively
+
 ## Bootstrap (ALWAYS Run First)
 
 **Setup**: `./ci/bootstrap --install` | **Check**: `./ci/bootstrap`
