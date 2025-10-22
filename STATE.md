@@ -1315,6 +1315,48 @@ if "ci-local/.venv" not in sys.prefix:
 - ❌ NEVER use: `ci-local/.venv` for development
 - ❌ NEVER install: Dev dependencies in `ci-local/.venv`
 
+### TODO Management Policy
+
+**CRITICAL: Use TODO.md exclusively for all task tracking**
+
+- ✅ **ALWAYS** add todos to `TODO.md` file (project root)
+- ✅ Use TodoWrite tool to update TODO.md programmatically
+- ❌ **NEVER** put TODOs in code comments (`# TODO:`, `// TODO:`, etc.)
+- ❌ **NEVER** put TODOs in commit messages
+- ❌ **NEVER** create separate task lists elsewhere
+
+**Why this matters:**
+- Single source of truth for all project tasks
+- Visible to all team members and AI assistants
+- Tracked in version control
+- Can be updated by tools and scripts
+- Easy to search and reference
+
+**Code comments are for explaining code, NOT for task tracking.**
+
+**Example:**
+```python
+# ❌ BAD - TODO in code comment
+def process_data(data):
+    # TODO: Add validation
+    # TODO: Handle edge cases
+    return data
+
+# ✅ GOOD - Add to TODO.md instead
+# (No TODOs in code, clean implementation)
+def process_data(data):
+    """Process data with validation."""
+    # Implementation note: Validation added in v2.0
+    return validated_data
+```
+
+Then add to TODO.md:
+```markdown
+## Planned
+- [ ] Add data validation to process_data()
+- [ ] Handle edge cases in data processing
+```
+
 ### Temporary Files Policy
 
 **ALWAYS use `./.tmp/` directory:**
