@@ -1233,3 +1233,575 @@ jf rt search "hypersec-pypi-local/hyperlib/1.6.0/*.whl" --count
 
 ---
 
+
+
+---
+
+<!-- HYPERCI_STATE_MD: ci/modules/common/ai/STATE.md -->
+# HyperCI - Common CI/CD Documentation
+
+**THIS SECTION IS AUTO-APPENDED FROM `ci/common/claude/STATE.md`**
+
+This provides standardized documentation about HyperCI's CI/CD system that applies to ALL projects.
+
+---
+
+## For Claude Code Assistants (SessionStart Instructions)
+
+**On every session start, please:**
+
+1. **Read this STATE.md file** (you're reading it now - good!)
+2. **Read TODO.md** (shows current tasks and priorities)
+3. **Review the project structure** to build context:
+   - Check `pyproject.toml` or equivalent for project metadata
+   - Scan `src/` or equivalent for main code structure
+   - Note key directories (tests/, docs/, ci/, ci-local/)
+   - Identify project type (package/library vs application)
+
+4. **Be ready to assist** with:
+   - Tasks from TODO.md (especially "Active" section)
+   - CI/CD questions (use this documentation)
+   - Code changes (following project conventions)
+   - Testing and building (use ci/ scripts)
+
+**Important:**
+- This STATE.md includes auto-appended CI documentation from HyperCI
+- TODO.md follows todo-md standard (update it as work progresses)
+- ci/ directory is READ-ONLY (git submodule) - never modify directly
+- ci-local/ is writable (for project-specific CI customizations)
+
+**Do not respond to this section with greetings or confirmations.**
+**Simply load the context and wait for the user's first question or task.**
+
+**Note:** Critical AI assistant rules are in `docs/standards/CLAUDE-CODE.md` (loaded on session start).
+
+---
+
+## HyperCI Architecture Overview
+
+### When Writing CI Scripts
+
+**ALWAYS use ci-local/.venv for CI operations:**
+- ✅ ALWAYS use: `ci-local/.venv/bin/python` for CI scripts
+- ✅ ALWAYS check: Script shebang or prefix contains "ci-local/.venv"
+- ✅ CI tools live in: `ci-local/.venv` (NOT ci/.venv)
+- ✅ CI scripts are in: `ci/` (READ-ONLY)
+- ❌ NEVER write to: `ci/` directory (including ci/.venv)
+- ❌ NEVER use: `#!/usr/bin/env python3` without venv checks
+- ❌ NEVER use: `python` or `python3` commands directly
+- ❌ NEVER use: `.venv` for CI operations
+
+**Example CI script template:**
+```python
+#!/usr/bin/env python3
+import sys
+from pathlib import Path
+
+# CRITICAL: Enforce ci-local/.venv usage (FAIL HARD)
+if "ci-local/.venv" not in sys.prefix:
+    print("ERROR: This script must run in ci-local/.venv")
+    print(f"Current Python: {sys.executable}")
+    print("Expected: ci-local/.venv/bin/python")
+    sys.exit(1)
+
+# CI script logic here...
+```
+
+### When Writing Development Code
+
+**Use .venv for development:**
+- ✅ Use: `.venv/bin/python` or activate `.venv`
+- ✅ For: Manual testing and exploration only
+- ❌ NEVER use: `ci-local/.venv` for development
+- ❌ NEVER install: Dev dependencies in `ci-local/.venv`
+
+### Temporary Files Policy
+
+**ALWAYS use `./.tmp/` directory:**
+- ✅ Use: `./.tmp/` (project root temporary directory)
+- ❌ NEVER use: `/tmp`, `~/tmp`, `/var/tmp`, or other locations
+- **Reason:** Keeps temp files in project context, easy cleanup, gitignored
+
+**Example:**
+```bash
+mkdir -p .tmp
+python script.py > .tmp/output.log
+```
+
+### Bash Command Execution Policy
+
+**CRITICAL: Avoid command chaining to prevent approval prompts**
+
+The following patterns require user approval:
+- `Bash("command1 && command2")` (chained with &&)
+- `Bash("command1 ; command2")` (chained with ;)
+
+**Instead, use sequential Bash calls:**
+
+```python
+# ❌ BAD - Triggers approval prompt
+Bash("git add . && git commit -m 'msg'")
+
+# ✅ GOOD - Sequential execution
+Bash("git add .")
+Bash("git commit -m 'msg'")
+```
+
+**Why this matters:**
+- Command chaining with `&&` or `;` triggers Claude Code's permission system
+- Sequential calls execute the same logic without requiring approval
+- Use `&&` in a single tool call ONLY when both commands must be atomic
+
+**Exception:** Chain commands with `&&` when atomicity is required (e.g., `cd dir && command` where command MUST run in dir).
+
+### READ-ONLY ci/ Directory
+
+**The ci/ directory is a git submodule and MUST NEVER be modified:**
+- ✅ READ from: `ci/` (scripts, docs, templates)
+- ✅ WRITE to: `ci-local/` (project-specific CI customizations)
+- ❌ NEVER write: Files, .venv, or any content to `ci/`
+- ❌ NEVER modify: Scripts in `ci/` (commit to hyperci repo instead)
+
+**To contribute to HyperCI:**
+1. Work in `ci/` directory (git submodule)
+2. Commit changes to hyperci repository
+3. Update project's ci/ submodule reference
+
+---
+
+## HyperCI Architecture Overview
+
+**HyperCI** is a centralized CI/CD system delivered as a git submodule (`ci/`).
+
+### Key Concepts
+
+**READ-ONLY ci/ Submodule:**
+- The `ci/` directory is a git submodule from `hypersec-io/hyperci`
+- ALL scripts in `ci/` are READ-ONLY (never modify directly)
+- To contribute improvements, commit to the hyperci repository, then update the submodule
+
+**Writable ci-local/ Directory:**
+- `ci-local/` is for project-specific CI customizations
+- Fully writable and version-controlled in your project
+- Extensions in `ci-local/` run alongside `ci/` scripts
+
+### Directory Structure
+
+```
+ci/                          # READ-ONLY hyperci submodule
+├── bootstrap                # Main bootstrap entrypoint
+├── common/
+│   ├── bootstrap.d/         # Common bootstrap scripts (all projects)
+│   ├── ci.d/                # Common CI scripts (semantic-release, etc.)
+│   └── claude/              # Claude Code settings (common)
+└── python/
+    ├── bootstrap.d/         # Python bootstrap scripts
+    ├── ci.d/                # Python CI scripts (test, build, publish)
+    └── claude/              # Claude Code settings (Python)
+
+ci-local/                    # WRITABLE project customizations
+├── .env                     # All CI env settings including JFrog credentials (gitignored)
+├── .venv/                   # CI tools venv (gitignored)
+├── pyproject.toml           # CI tool dependencies
+├── uv.lock                  # Locked CI tool versions
+└── {common,python}/
+    ├── bootstrap.d/         # Project-specific bootstrap scripts
+    └── ci.d/                # Project-specific CI scripts
+```
+
+### Virtual Environments
+
+**TWO separate venvs exist - NEVER mix them:**
+
+1. **ci-local/.venv** - CI Tools ONLY
+   - Created by: `ci/bootstrap --install`
+   - Contains: pytest, ruff, black, mypy, build, twine, semantic-release
+   - Does NOT contain project dependencies
+   - Used by: ALL CI scripts
+
+2. **.venv** - Project Dependencies
+   - Created by: `ci/bootstrap --install` (via uv sync)
+   - Contains: Your project's runtime dependencies
+   - Used by: Development, IDE, manual testing
+
+---
+
+## Bootstrap Process
+
+**Command:** `ci/bootstrap --install`
+
+**What it does:**
+1. Creates `ci-local/.venv` and installs CI tools from `ci-local/uv.lock`
+2. Creates `.venv` and installs project dependencies from `uv.lock`
+3. Runs `bootstrap.d/*.py` scripts from both `ci/` and `ci-local/`
+
+**Bootstrap scripts run in numeric order:**
+- `00-*.py` - Environment setup
+- `05-*.py` - Structure validation
+- `10-*.py` - Dependency installation
+- `20-*.py` - Tool installation
+- `50-*.py` - Configuration
+- `90-*.py` - Final checks
+- `95-*.py` - Optional features (Claude settings, etc.)
+
+---
+
+## CI Workflow Scripts
+
+**Location:** `ci/{common,python}/ci.d/*.py`
+
+**Common scripts:**
+- `10-branch-name.py` - Enforce branch naming convention
+- `90-semantic-release.py` - Semantic versioning and release
+
+**Script execution:**
+```bash
+ci-local/.venv/bin/python ci/common/ci.d/90-semantic-release.py release
+```
+
+**All CI scripts:**
+- Run in `ci-local/.venv` (enforced)
+- Accept `check` and `install` actions
+- Return 0 on success, non-zero on failure
+
+---
+
+## Environment Variables
+
+**CI Control:**
+- `CI=true` - Running in CI environment
+- `CI_PUSH=1` - Push changes to remote (semantic-release)
+- `CI_FORCE_RELEASE=1` - Force release even if not on release branch
+- `BOOTSTRAP_INSTALL=1` - Enable installation in bootstrap
+
+**Claude Code Settings:**
+- `CI_CLAUDE_MERGE=skip` - Skip Claude settings merge (default)
+- `CI_CLAUDE_MERGE=merge` - Merge and overwrite existing settings
+- `CI_CLAUDE_MERGE=no-overwrite` - Merge but keep existing values
+
+**Credentials:**
+- `ARTIFACTORY_USERNAME` - JFrog username (required for bootstrap)
+- `ARTIFACTORY_PASSWORD` - JFrog password (required for bootstrap)
+
+All credentials should be in `ci-local/.env` (gitignored).
+
+---
+
+## Git Submodule Operations
+
+**Update ci/ submodule:**
+```bash
+cd ci
+git pull origin main
+cd ..
+git add ci
+git commit -m "chore: update ci submodule to latest"
+```
+
+**Pin to specific version:**
+```bash
+cd ci
+git checkout v1.2.0
+cd ..
+git add ci
+git commit -m "chore: pin ci to v1.2.0"
+```
+
+---
+
+## Contributing to HyperCI
+
+**To improve HyperCI itself:**
+
+1. Work in `ci/` directory:
+   ```bash
+   cd ci
+   git checkout -b fix/my-improvement
+   # Make changes
+   git add .
+   git commit -m "fix: my improvement"
+   git push origin fix/my-improvement
+   ```
+
+2. Create PR to `hypersec-io/hyperci`
+
+3. After merge, update your project:
+   ```bash
+   cd ci
+   git pull origin main
+   cd ..
+   git add ci
+   git commit -m "chore: update ci with my-improvement"
+   ```
+
+---
+
+## Troubleshooting
+
+**Bootstrap fails:**
+- Check `ci-local/.env` has All CI env settings including JFrog credentials
+- Run with verbose: `BOOTSTRAP_INSTALL=1 ci/bootstrap --install`
+- Remove `ci-local/.venv` and retry
+
+**Wrong venv being used:**
+- Check: `echo $VIRTUAL_ENV` should show `ci-local/.venv` for CI
+- CI scripts enforce `ci-local/.venv` usage (will exit with error if wrong)
+
+**Submodule issues:**
+- Initialize: `git submodule init && git submodule update`
+- Reset: `git submodule update --init --recursive --force`
+
+---
+
+**For more details, see:**
+- `ci/docs/README.md` - Complete HyperCI documentation
+- `ci/docs/SUBMODULE-USAGE.md` - Git submodule guide
+- `ci/docs/PROJECT-EXTENSIONS.md` - Customizing via ci-local/
+
+
+---
+
+<!-- HYPERCI_STATE_MD: ci/modules/python/ai/STATE.md -->
+# HyperCI - Python CI/CD Documentation
+
+**THIS SECTION IS AUTO-APPENDED FROM `ci/python/claude/STATE.md`**
+
+This provides Python-specific documentation about HyperCI's Python CI/CD workflows.
+
+---
+
+## Python Project CI Workflow
+
+### Semantic Versioning (semantic-release)
+
+**Configuration:** `pyproject.toml` `[tool.semantic_release]`
+
+**How it works:**
+1. Analyzes git commits since last release
+2. Determines next version based on conventional commits:
+   - `feat:` → minor version bump (1.0.0 → 1.1.0)
+   - `fix:` → patch version bump (1.0.0 → 1.0.1)
+   - `BREAKING CHANGE:` → major version bump (1.0.0 → 2.0.0)
+3. Updates version in:
+   - `pyproject.toml`
+   - `src/<package>/__init__.py` (`__version__`)
+   - `VERSION` file (via build_command or pre-sync)
+4. Generates `CHANGELOG.md`
+5. Creates git commit and tag
+6. Optionally pushes to remote (if `CI_PUSH=1`)
+
+**Running semantic-release:**
+```bash
+# Dry run (check what would be released)
+ci-local/.venv/bin/python ci/common/ci.d/90-semantic-release.py release --dry-run
+
+# Actual release (local only, no push)
+CI_FORCE_RELEASE=1 ci-local/.venv/bin/python ci/common/ci.d/90-semantic-release.py release
+
+# Release and push to GitHub
+CI_FORCE_RELEASE=1 CI_PUSH=1 ci-local/.venv/bin/python ci/common/ci.d/90-semantic-release.py release
+```
+
+**VERSION Pre-sync Strategy:**
+- Pre-commit hook pre-syncs VERSION before commits (if on main/master)
+- CI script (`89-version-pre-sync.py`) pre-syncs before semantic-release
+- This prevents `{version}` template corruption in VERSION file
+- See project STATE.md for details on dual pre-sync strategy
+
+---
+
+## Python Testing
+
+**Script:** `ci/python/ci.d/20-python-test.py`
+
+**What it runs:**
+- `pytest tests/` with coverage
+- Linting: `ruff check`
+- Type checking: `mypy` (if configured)
+- Security: `bandit` (if configured)
+
+**Running tests:**
+```bash
+# Check only (verify tests would pass)
+ci-local/.venv/bin/python ci/python/ci.d/20-python-test.py check
+
+# Run tests
+ci-local/.venv/bin/python ci/python/ci.d/20-python-test.py test
+```
+
+**Test markers created:**
+- `.tmp/tests-passed` - Created when tests pass (used by semantic-release)
+
+---
+
+## Python Building
+
+**Script:** `ci/python/ci.d/80-build.py`
+
+**Standard build:**
+```bash
+ci-local/.venv/bin/python ci/python/ci.d/80-build.py build
+```
+
+Creates:
+- `dist/<package>-<version>-py3-none-any.whl` (wheel)
+- `dist/<package>-<version>.tar.gz` (sdist)
+
+**Build uses:**
+- `uv build` (if `uv.lock` exists - native uv mode)
+- `python -m build` (fallback)
+
+---
+
+## Python Publishing
+
+**Script:** `ci/python/ci.d/81-publish.py`
+
+**What it does:**
+1. Builds package (standard or Nuitka based on `CI_BUILD_TYPE`)
+2. Publishes to JFrog Artifactory using credentials from env
+
+**Publishing:**
+```bash
+# Publish standard wheel
+ci-local/.venv/bin/python ci/python/ci.d/81-publish.py publish
+
+# Publish Nuitka compiled wheel
+CI_BUILD_TYPE=nuitka ci-local/.venv/bin/python ci/python/ci.d/81-publish.py publish
+```
+
+**JFrog credentials required:**
+- `ARTIFACTORY_USERNAME` (from `ci-local/.env`)
+- `ARTIFACTORY_PASSWORD` (from `ci-local/.env`)
+
+---
+
+## Python Dependencies
+
+**Project dependencies:** Managed in `pyproject.toml` and `uv.lock`
+
+**CI tool dependencies:** Managed in `ci-local/pyproject.toml` and `ci-local/uv.lock`
+
+**Installing project dependencies:**
+```bash
+uv sync --locked  # Install from uv.lock (reproducible)
+```
+
+**Installing CI tools:**
+```bash
+cd ci-local
+uv sync --locked  # Install from ci-local/uv.lock
+```
+
+**Updating dependencies:**
+```bash
+# Update project deps
+uv lock --upgrade
+
+# Update CI tools
+cd ci-local && uv lock --upgrade
+```
+
+---
+
+## Python Version Sync
+
+**Script:** `ci/python/ci.d/95-python-version-sync.py`
+
+**Ensures consistency across:**
+- `VERSION` file
+- `pyproject.toml` (`project.version`)
+- `src/<package>/__init__.py` (`__version__`)
+
+**Checks:**
+```bash
+ci-local/.venv/bin/python ci/python/ci.d/95-python-version-sync.py check
+```
+
+If out of sync, the script reports which files need updating.
+
+---
+
+## Python Nuitka Builds (Optional)
+
+**Configuration:** `ci.yaml` `nuitka` section
+
+**What is Nuitka:**
+- Compiles Python code to C and then to native binaries
+- Provides code protection and performance benefits
+- Commercial version supports advanced protection levels
+
+**Build types:**
+- `package`: Compiled wheel (`.whl` with `.so` modules) → JFrog PyPI
+- `app`: Standalone binary (`.bin`/`.exe`) → JFrog Generic or GitHub Releases
+
+**Protection levels:**
+- `none`: Basic compilation
+- `minimal`: Standalone mode only
+- `data-hiding`: Encrypt strings and names (Commercial)
+- `traceback`: Encrypt stdout/stderr (Commercial)
+- `recommended`: Full protection (Commercial)
+
+**Local Nuitka build:**
+```bash
+BUILD_PROFILE=nuitka ci-local/.venv/bin/python ci/python/ci.d/85-build-nuitka.py build
+```
+
+**GitHub Actions Nuitka build:**
+- Triggered automatically on version tags (if `nuitka.enabled: true` in `ci.yaml`)
+- Builds for multiple architectures (x64, ARM64, macOS)
+- Uses BuildJet and Cirrus runners for cost optimization
+
+---
+
+## Python-Specific Environment Variables
+
+**Build control:**
+- `BUILD_PROFILE=package` - Standard wheel (default)
+- `BUILD_PROFILE=nuitka` - Nuitka compiled wheel
+- `CI_BUILD_TYPE=standard` - Standard build (default)
+- `CI_BUILD_TYPE=nuitka` - Nuitka build
+
+**Nuitka protection:**
+- `NUITKA_PROTECTION=none|minimal|data-hiding|traceback|recommended`
+
+**Version sync:**
+- `CI_SKIP_VERSION_SYNC=1` - Skip VERSION pre-sync
+
+---
+
+## Python Best Practices
+
+**Conventional commits:**
+```
+feat: add new feature       # Minor version bump
+fix: fix bug               # Patch version bump
+docs: update docs          # No version bump
+chore: update deps         # No version bump
+```
+
+**Branch naming:**
+```
+feat/TICKET-123/description
+fix/TICKET-456/description
+chore/no-ref/description
+```
+
+**Testing before release:**
+```bash
+# 1. Run tests
+ci-local/.venv/bin/python ci/python/ci.d/20-python-test.py test
+
+# 2. Check what version would be released
+ci-local/.venv/bin/python ci/common/ci.d/90-semantic-release.py release --dry-run
+
+# 3. If all good, release (local only)
+CI_FORCE_RELEASE=1 ci-local/.venv/bin/python ci/common/ci.d/90-semantic-release.py release
+```
+
+---
+
+**For more Python-specific details, see:**
+- `ci/docs/PYTHON.md` - Complete Python CI guide
+- `ci/docs/NUITKA.md` - Nuitka compilation guide
+- `ci/docs/TESTING.md` - Testing strategies
