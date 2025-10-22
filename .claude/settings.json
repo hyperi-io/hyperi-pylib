@@ -1,0 +1,199 @@
+{
+  "env": {
+    "CLAUDE_CODE_MAX_OUTPUT_TOKENS": "12288",
+    "MAX_THINKING_TOKENS": "12000",
+    "CLAUDE_CODE_CONTEXT_WINDOW_TOKENS": "160000",
+    "CLAUDE_CODE_AGGRESSIVE_CONTEXT_MANAGEMENT": "1",
+    "CLAUDE_CODE_CONTEXT_MANAGEMENT_THRESHOLD": "0.7",
+    "CLAUDE_BASH_MAINTAIN_PROJECT_WORKING_DIR": "1",
+    "USE_BUILTIN_RIPGREP": "1",
+    "CLAUDE_CODE_ENABLE_PARALLEL_TOOLS": "1",
+    "CLAUDE_CODE_MAX_PARALLEL_TOOLS": "3",
+    "BASH_MAX_OUTPUT_LENGTH": "40000",
+    "BASH_DEFAULT_TIMEOUT_MS": "45000",
+    "BASH_MAX_TIMEOUT_MS": "180000",
+    "MAX_MCP_OUTPUT_TOKENS": "20000",
+    "CLAUDE_CODE_AUTO_SUMMARIZE_LARGE_FILES": "1",
+    "CLAUDE_CODE_LARGE_FILE_THRESHOLD": "5000"
+  },
+  "enabledPlugins": {
+    "docker": true
+  },
+  "mcpServers": {
+    "sequential-thinking": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-sequential-thinking"
+      ]
+    },
+    "memory": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "mcp-knowledge-graph",
+        "--memory-path",
+        "/projects/hyperlib/.claude/claude-memory"
+      ]
+    }
+  },
+  "permissions": {
+    "allow": [
+      "WebSearch",
+      "WebFetch",
+      "Read(**)",
+      "Write(**)",
+      "Edit(**)",
+      "Glob",
+      "Grep",
+      "LS",
+      "Search",
+      "Find",
+      "Bash(.tmp/*)",
+      "Bash(mkdir .tmp *)",
+      "Bash(rm .tmp/*)",
+      "Bash(rm -rf .tmp/*)",
+      "Bash(chmod +x .tmp/*)",
+      "Bash(sh .tmp/*)",
+      "Bash(bash .tmp/*)",
+      "Bash(python .tmp/*)",
+      "Bash(ls *)",
+      "Bash(pwd)",
+      "Bash(echo *)",
+      "Bash(cat *)",
+      "Bash(head *)",
+      "Bash(tail *)",
+      "Bash(grep *)",
+      "Bash(find *)",
+      "Bash(which *)",
+      "Bash(whoami)",
+      "Bash(env)",
+      "Bash(printenv *)",
+      "Bash(jq *)",
+      "Bash(sed *)",
+      "Bash(awk *)",
+      "Bash(sort *)",
+      "Bash(uniq *)",
+      "Bash(wc *)",
+      "Bash(zip *)",
+      "Bash(unzip *)",
+      "Bash(tar *)",
+      "Bash(gzip *)",
+      "Bash(gunzip *)",
+      "Bash(bzip2 *)",
+      "Bash(bunzip2 *)",
+      "Bash(xz *)",
+      "Bash(unxz *)",
+      "Bash(docker *)",
+      "Bash(docker-compose *)",
+      "Bash(kubectl *)",
+      "Bash(git *)",
+      "Bash(jf *)",
+      "Bash(gh *)",
+      "Bash(cd *)",
+      "Bash(export *)",
+      "Bash(source *)",
+      "Bash(date *)",
+      "Bash(./ci/bootstrap *)",
+      "Bash(./ci/run *)",
+      "Bash(./ci/ai *)",
+      "Bash(./ci/gitci *)",
+      "Bash(ci/bootstrap *)",
+      "Bash(ci/run *)",
+      "Bash(ci/ai *)",
+      "Bash(ci/gitci *)",
+      "Bash(uv *)",
+      "Bash(pytest *)",
+      "Bash(python *)",
+      "Bash(python3 *)",
+      "Bash(python -m *)",
+      "Bash(pip *)",
+      "Bash(ruff *)",
+      "Bash(black *)",
+      "Bash(mypy *)",
+      "Bash(coverage *)",
+      "Bash(tox *)",
+      "Bash(node *)",
+      "Bash(npm *)",
+      "Bash(npx *)",
+      "Bash(yarn *)",
+      "Bash(pnpm *)",
+      "Bash(make *)",
+      "Bash(cmake *)",
+      "Bash(cargo *)",
+      "Bash(go *)",
+      "Bash(diff *)",
+      "Bash(patch *)",
+      "Bash(tree *)",
+      "Bash(file *)",
+      "Bash(stat *)",
+      "Bash(du *)",
+      "Bash(df *)",
+      "Bash(ps *)",
+      "Bash(cut *)",
+      "Bash(tr *)",
+      "Bash(xargs *)",
+      "Bash([A-Z_]*=* *)",
+      "Bash(export [A-Z_]*)",
+      "Bash(.venv-ci/*)",
+      "Bash(.venv/*)",
+      "Bash(ci-local/.venv/*)",
+      "Bash(pip3 *)",
+      "Bash(poetry *)",
+      "Bash(flake8 *)",
+      "Bash(isort *)"
+    ],
+    "deny": [],
+    "ask": [
+      "Bash(sudo *)",
+      "Bash(su *)",
+      "Bash(chmod 777 *)",
+      "Bash(dd *)",
+      "Bash(mkfs *)",
+      "Bash(:|:*)",
+      "Bash(curl * | sh *)",
+      "Bash(curl * | bash *)",
+      "Bash(wget * | sh *)",
+      "Bash(wget * | bash *)",
+      "Write(ci/**)",
+      "Edit(ci/**)",
+      "Bash(* && *)",
+      "Bash(* || *)",
+      "Bash(* ; *)",
+      "Bash(curl *)",
+      "Bash(wget *)",
+      "Bash(rm *)",
+      "Bash(rm -rf *)",
+      "Bash(mv *)",
+      "Bash(kill *)"
+    ]
+  },
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash -c 'echo \"Today: $(date +%Y-%m-%d)\"; echo \"\"; echo \"=== CONTEXT DETECTION ===\"; if [ -f ci-local/ci.yaml ] || [ -f ci.yaml ]; then echo \"Context: PROJECT (has ci.yaml)\"; echo \"\"; if [ -f STATE.md ]; then head -n 100 STATE.md; echo \"...(truncated for context, full file available via Read tool)\"; elif [ -f CLAUDE.md ]; then head -n 100 CLAUDE.md; echo \"...(truncated)\"; fi; elif [ -f ci/STATE.md ] && [ ! -f ci.yaml ]; then echo \"Context: HYPERCI REPOSITORY (ci infrastructure)\"; echo \"\"; head -n 100 ci/STATE.md; echo \"...(truncated)\"; elif [ -f STATE.md ]; then head -n 100 STATE.md; echo \"...(truncated)\"; elif [ -f CLAUDE.md ]; then head -n 100 CLAUDE.md; echo \"...(truncated)\"; fi; echo \"\"; if [ -f TODO.md ]; then cat TODO.md; fi; echo \"\"; echo \"=== PROJECT STANDARDS AVAILABLE ===\"; if [ -d docs/standards ]; then ls docs/standards/ | head -10; fi'"
+          },
+          {
+            "type": "prompt",
+            "prompt": "Session initialized (Pro Max Profile - Complex Project Mode).\n\nYou are working on a LARGE, COMPLEX, MULTI-LAYER project. This requires:\n\n1. **Complete Context Awareness**: Query memory MCP for existing knowledge (use mcp__memory__search_nodes)\n2. **Strategic Context Usage**: Large files were truncated in SessionStart - use Read tool deliberately\n3. **Standards Compliance**: docs/standards/ files loaded - reference them throughout\n4. **Multi-Repo Navigation**: Be aware of nested structures (ci/ submodule, ci-local/, etc.)\n5. **Sequential Thinking**: Use sequential-thinking MCP for complex planning/analysis\n\nBefore responding:\n- Query memory MCP for project knowledge\n- Briefly summarize what you found (or note if fresh start)\n- Prepare to use memory and sequential-thinking MCPs throughout session\n\nDo NOT greet with pleasantries. Report memory findings and wait for first task.\n\nIf user's first message contains a task/question, handle it AND execute memory query in your first response."
+          }
+        ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash -c 'echo \"Today: $(date +%Y-%m-%d)\"; echo \"\"; echo \"=== CONTEXT DETECTION ===\"; if [ -f ci-local/ci.yaml ] || [ -f ci.yaml ]; then echo \"Context: PROJECT (has ci.yaml)\"; echo \"\"; if [ -f STATE.md ]; then head -n 100 STATE.md; echo \"...(truncated for context, full file available via Read tool)\"; elif [ -f CLAUDE.md ]; then head -n 100 CLAUDE.md; echo \"...(truncated)\"; fi; elif [ -f ci/STATE.md ] && [ ! -f ci.yaml ]; then echo \"Context: HYPERCI REPOSITORY (ci infrastructure)\"; echo \"\"; head -n 100 ci/STATE.md; echo \"...(truncated)\"; elif [ -f STATE.md ]; then head -n 100 STATE.md; echo \"...(truncated)\"; elif [ -f CLAUDE.md ]; then head -n 100 CLAUDE.md; echo \"...(truncated)\"; fi; echo \"\"; if [ -f TODO.md ]; then cat TODO.md; fi; echo \"\"; echo \"=== PROJECT STANDARDS AVAILABLE ===\"; if [ -d docs/standards ]; then ls docs/standards/ | head -10; fi'"
+          },
+          {
+            "type": "prompt",
+            "prompt": "Session initialized (Pro Max Profile - Complex Project Mode).\n\nYou are working on a LARGE, COMPLEX, MULTI-LAYER project. This requires:\n\n1. **Complete Context Awareness**: Query memory MCP for existing knowledge (use mcp__memory__search_nodes)\n2. **Strategic Context Usage**: Large files were truncated in SessionStart - use Read tool deliberately\n3. **Standards Compliance**: docs/standards/ files loaded - reference them throughout\n4. **Multi-Repo Navigation**: Be aware of nested structures (ci/ submodule, ci-local/, etc.)\n5. **Sequential Thinking**: Use sequential-thinking MCP for complex planning/analysis\n\nBefore responding:\n- Query memory MCP for project knowledge\n- Briefly summarize what you found (or note if fresh start)\n- Prepare to use memory and sequential-thinking MCPs throughout session\n\nDo NOT greet with pleasantries. Report memory findings and wait for first task.\n\nIf user's first message contains a task/question, handle it AND execute memory query in your first response."
+          }
+        ]
+      }
+    ]
+  }
+}
