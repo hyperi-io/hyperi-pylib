@@ -181,18 +181,6 @@
             "prompt": "Session initialized (Pro Max Profile - Complex Project Mode).\n\nYou are working on a LARGE, COMPLEX, MULTI-LAYER project. This requires:\n\n1. **Complete Context Awareness**: Query memory MCP for existing knowledge (use mcp__memory__search_nodes)\n2. **Strategic Context Usage**: Large files were truncated in SessionStart - use Read tool deliberately\n3. **Standards Compliance**: docs/standards/ files loaded - reference them throughout\n4. **Multi-Repo Navigation**: Be aware of nested structures (ci/ submodule, ci-local/, etc.)\n5. **Sequential Thinking**: Use sequential-thinking MCP for complex planning/analysis\n\nBefore responding:\n- Query memory MCP for project knowledge\n- Briefly summarize what you found (or note if fresh start)\n- Prepare to use memory and sequential-thinking MCPs throughout session\n\nDo NOT greet with pleasantries. Report memory findings and wait for first task.\n\nIf user's first message contains a task/question, handle it AND execute memory query in your first response."
           }
         ]
-      },
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bash -c 'echo \"Today: $(date +%Y-%m-%d)\"; echo \"\"; echo \"=== CONTEXT DETECTION ===\"; if [ -f ci-local/ci.yaml ] || [ -f ci.yaml ]; then echo \"Context: PROJECT (has ci.yaml)\"; echo \"\"; if [ -f STATE.md ]; then head -n 100 STATE.md; echo \"...(truncated for context, full file available via Read tool)\"; elif [ -f CLAUDE.md ]; then head -n 100 CLAUDE.md; echo \"...(truncated)\"; fi; elif [ -f ci/STATE.md ] && [ ! -f ci.yaml ]; then echo \"Context: HYPERCI REPOSITORY (ci infrastructure)\"; echo \"\"; head -n 100 ci/STATE.md; echo \"...(truncated)\"; elif [ -f STATE.md ]; then head -n 100 STATE.md; echo \"...(truncated)\"; elif [ -f CLAUDE.md ]; then head -n 100 CLAUDE.md; echo \"...(truncated)\"; fi; echo \"\"; if [ -f TODO.md ]; then cat TODO.md; fi; echo \"\"; echo \"=== PROJECT STANDARDS AVAILABLE ===\"; if [ -d docs/standards ]; then ls docs/standards/ | head -10; fi'"
-          },
-          {
-            "type": "prompt",
-            "prompt": "Session initialized (Pro Max Profile - Complex Project Mode).\n\nYou are working on a LARGE, COMPLEX, MULTI-LAYER project. This requires:\n\n1. **Complete Context Awareness**: Query memory MCP for existing knowledge (use mcp__memory__search_nodes)\n2. **Strategic Context Usage**: Large files were truncated in SessionStart - use Read tool deliberately\n3. **Standards Compliance**: docs/standards/ files loaded - reference them throughout\n4. **Multi-Repo Navigation**: Be aware of nested structures (ci/ submodule, ci-local/, etc.)\n5. **Sequential Thinking**: Use sequential-thinking MCP for complex planning/analysis\n\nBefore responding:\n- Query memory MCP for project knowledge\n- Briefly summarize what you found (or note if fresh start)\n- Prepare to use memory and sequential-thinking MCPs throughout session\n\nDo NOT greet with pleasantries. Report memory findings and wait for first task.\n\nIf user's first message contains a task/question, handle it AND execute memory query in your first response."
-          }
-        ]
       }
     ]
   }
