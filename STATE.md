@@ -570,8 +570,39 @@ python -c "import sys; print(sys.prefix)"  # Check Python location
 
 ## Universal Policies
 
-### Temporary Files
-Use `./.tmp/` only (not `/tmp`, `~/tmp`, `/var/tmp`)
+### Temporary Files and Test Directories
+
+**CRITICAL: ALWAYS use `./.tmp/` for ALL temporary operations**
+
+**Applies to:**
+- ✅ Temporary files (logs, cache, intermediate build artifacts)
+- ✅ Test project directories (NOT `/tmp/test-*`)
+- ✅ Scratch workspaces for testing
+- ✅ ANY temporary content created during development, testing, or CI
+
+**Forbidden:**
+- ❌ `/tmp` (system temp - NOT project-scoped)
+- ❌ `~/tmp` (user temp - NOT project-scoped)
+- ❌ `/var/tmp` (system temp - NOT project-scoped)
+
+**Reason:** Project-scoped cleanup, gitignored, consistent across environments
+
+**Examples:**
+```bash
+# ✅ CORRECT - Test project in ./.tmp
+mkdir -p ./.tmp/test-hyperci
+cd ./.tmp/test-hyperci
+git init
+
+# ❌ WRONG - Test project in /tmp
+mkdir /tmp/test-hyperci  # NEVER DO THIS
+
+# ✅ CORRECT - Temporary build artifacts
+python build.py > ./.tmp/build.log
+
+# ❌ WRONG - System temp
+python build.py > /tmp/build.log  # NEVER DO THIS
+```
 
 ### TODO
 `TODO.md` is single source of truth (lightweight Markdown, updated directly by LLM)
