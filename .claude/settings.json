@@ -1,18 +1,18 @@
 {
   "env": {
-    "CLAUDE_CODE_MAX_OUTPUT_TOKENS": "12288",
-    "MAX_THINKING_TOKENS": "12000",
-    "CLAUDE_CODE_CONTEXT_WINDOW_TOKENS": "160000",
+    "CLAUDE_CODE_MAX_OUTPUT_TOKENS": "4096",
+    "MAX_THINKING_TOKENS": "4000",
+    "CLAUDE_CODE_CONTEXT_WINDOW_TOKENS": "50000",
     "CLAUDE_CODE_AGGRESSIVE_CONTEXT_MANAGEMENT": "1",
     "CLAUDE_CODE_CONTEXT_MANAGEMENT_THRESHOLD": "0.7",
     "CLAUDE_BASH_MAINTAIN_PROJECT_WORKING_DIR": "1",
     "USE_BUILTIN_RIPGREP": "1",
-    "CLAUDE_CODE_ENABLE_PARALLEL_TOOLS": "1",
+    "CLAUDE_CODE_ENABLE_PARALLEL_TOOLS": "0",
     "CLAUDE_CODE_MAX_PARALLEL_TOOLS": "3",
-    "BASH_MAX_OUTPUT_LENGTH": "40000",
-    "BASH_DEFAULT_TIMEOUT_MS": "45000",
-    "BASH_MAX_TIMEOUT_MS": "180000",
-    "MAX_MCP_OUTPUT_TOKENS": "20000",
+    "BASH_MAX_OUTPUT_LENGTH": "15000",
+    "BASH_DEFAULT_TIMEOUT_MS": "15000",
+    "BASH_MAX_TIMEOUT_MS": "60000",
+    "MAX_MCP_OUTPUT_TOKENS": "5000",
     "CLAUDE_CODE_AUTO_SUMMARIZE_LARGE_FILES": "1",
     "CLAUDE_CODE_LARGE_FILE_THRESHOLD": "5000"
   },
@@ -185,6 +185,66 @@
           {
             "type": "prompt",
             "prompt": "Session initialized (Pro Max Profile - Complex Project Mode).\n\nYou are working on a LARGE, COMPLEX, MULTI-LAYER project. This requires:\n\n1. **Complete Context Awareness**: Query memory MCP for existing knowledge (use mcp__memory__search_nodes)\n2. **Strategic Context Usage**: Large files were truncated in SessionStart - use Read tool deliberately\n3. **Standards Compliance**: docs/standards/ files loaded - reference them throughout\n4. **Multi-Repo Navigation**: Be aware of nested structures (ci/ submodule, ci-local/, etc.)\n5. **Sequential Thinking**: Use sequential-thinking MCP for complex planning/analysis\n\nBefore responding:\n- Query memory MCP for project knowledge\n- Briefly summarize what you found (or note if fresh start)\n- Prepare to use memory and sequential-thinking MCPs throughout session\n\nDo NOT greet with pleasantries. Report memory findings and wait for first task.\n\nIf user's first message contains a task/question, handle it AND execute memory query in your first response."
+          }
+        ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash -c 'echo \"Today: $(date +%Y-%m-%d)\"; echo \"\"; echo \"=== CONTEXT DETECTION ===\"; if [ -f ci.yaml ] && [ -f STATE.md ]; then echo \"Context: PROJECT (has ci.yaml)\"; echo \"\"; cat STATE.md; elif [ -f ci/STATE.md ] && [ ! -f ci.yaml ]; then echo \"Context: HYPERCI REPOSITORY (ci infrastructure)\"; echo \"\"; cat ci/STATE.md; elif [ -f STATE.md ]; then cat STATE.md; elif [ -f CLAUDE.md ]; then cat CLAUDE.md; fi; echo \"\"; if [ -f TODO.md ]; then cat TODO.md; fi; echo \"\"; if [ -d docs/standards ]; then for std in docs/standards/*.md; do [ -f \"$std\" ] && cat \"$std\" && echo \"\"; done; fi'"
+          },
+          {
+            "type": "prompt",
+            "prompt": "Session initialized (Pro Profile). Before responding to the user:\n\n1. Query the memory MCP for existing project knowledge (use mcp__memory__search_nodes with query about this project)\n2. Briefly summarize what you found in memory (or note if this is a fresh start)\n3. Silently prepare to use memory MCP throughout this session as needed\n\nDo NOT greet the user with pleasantries. Simply report what you found in memory and wait for their first task.\n\nNote: Sequential-thinking MCP is NOT available in Pro profile (Pro Max only).\n\nIf the user asks a question or gives a task in their first message, handle that task AND execute the memory query - do both in your first response."
+          }
+        ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash -c 'echo \"Today: $(date +%Y-%m-%d)\"; echo \"\"; echo \"=== CONTEXT DETECTION ===\"; if [ -f ci.yaml ] && [ -f STATE.md ]; then echo \"Context: PROJECT (has ci.yaml)\"; echo \"\"; cat STATE.md; elif [ -f ci/STATE.md ] && [ ! -f ci.yaml ]; then echo \"Context: HYPERCI REPOSITORY (ci infrastructure)\"; echo \"\"; cat ci/STATE.md; elif [ -f STATE.md ]; then cat STATE.md; elif [ -f CLAUDE.md ]; then cat CLAUDE.md; fi; echo \"\"; if [ -f TODO.md ]; then cat TODO.md; fi; echo \"\"; if [ -d docs/standards ]; then for std in docs/standards/*.md; do [ -f \"$std\" ] && cat \"$std\" && echo \"\"; done; fi'"
+          },
+          {
+            "type": "prompt",
+            "prompt": "Session initialized (Pro Profile). Before responding to the user:\n\n1. Query the memory MCP for existing project knowledge (use mcp__memory__search_nodes with query about this project)\n2. Briefly summarize what you found in memory (or note if this is a fresh start)\n3. Silently prepare to use memory MCP throughout this session as needed\n\nDo NOT greet the user with pleasantries. Simply report what you found in memory and wait for their first task.\n\nNote: Sequential-thinking MCP is NOT available in Pro profile (Pro Max only).\n\nIf the user asks a question or gives a task in their first message, handle that task AND execute the memory query - do both in your first response."
+          }
+        ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash -c 'echo \"Today: $(date +%Y-%m-%d)\"; echo \"\"; echo \"=== CONTEXT DETECTION ===\"; if [ -f ci.yaml ] && [ -f STATE.md ]; then echo \"Context: PROJECT (has ci.yaml)\"; echo \"\"; cat STATE.md; elif [ -f ci/STATE.md ] && [ ! -f ci.yaml ]; then echo \"Context: HYPERCI REPOSITORY (ci infrastructure)\"; echo \"\"; cat ci/STATE.md; elif [ -f STATE.md ]; then cat STATE.md; elif [ -f CLAUDE.md ]; then cat CLAUDE.md; fi; echo \"\"; if [ -f TODO.md ]; then cat TODO.md; fi; echo \"\"; if [ -d docs/standards ]; then for std in docs/standards/*.md; do [ -f \"$std\" ] && cat \"$std\" && echo \"\"; done; fi'"
+          },
+          {
+            "type": "prompt",
+            "prompt": "Session initialized (Pro Profile). Before responding to the user:\n\n1. Query the memory MCP for existing project knowledge (use mcp__memory__search_nodes with query about this project)\n2. Briefly summarize what you found in memory (or note if this is a fresh start)\n3. Silently prepare to use memory MCP throughout this session as needed\n\nDo NOT greet the user with pleasantries. Simply report what you found in memory and wait for their first task.\n\nNote: Sequential-thinking MCP is NOT available in Pro profile (Pro Max only).\n\nIf the user asks a question or gives a task in their first message, handle that task AND execute the memory query - do both in your first response."
+          }
+        ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash -c 'echo \"Today: $(date +%Y-%m-%d)\"; echo \"\"; echo \"=== CONTEXT DETECTION ===\"; if [ -f ci.yaml ] && [ -f STATE.md ]; then echo \"Context: PROJECT (has ci.yaml)\"; echo \"\"; cat STATE.md; elif [ -f ci/STATE.md ] && [ ! -f ci.yaml ]; then echo \"Context: HYPERCI REPOSITORY (ci infrastructure)\"; echo \"\"; cat ci/STATE.md; elif [ -f STATE.md ]; then cat STATE.md; elif [ -f CLAUDE.md ]; then cat CLAUDE.md; fi; echo \"\"; if [ -f TODO.md ]; then cat TODO.md; fi; echo \"\"; if [ -d docs/standards ]; then for std in docs/standards/*.md; do [ -f \"$std\" ] && cat \"$std\" && echo \"\"; done; fi'"
+          },
+          {
+            "type": "prompt",
+            "prompt": "Session initialized (Pro Profile). Before responding to the user:\n\n1. Query the memory MCP for existing project knowledge (use mcp__memory__search_nodes with query about this project)\n2. Briefly summarize what you found in memory (or note if this is a fresh start)\n3. Silently prepare to use memory MCP throughout this session as needed\n\nDo NOT greet the user with pleasantries. Simply report what you found in memory and wait for their first task.\n\nNote: Sequential-thinking MCP is NOT available in Pro profile (Pro Max only).\n\nIf the user asks a question or gives a task in their first message, handle that task AND execute the memory query - do both in your first response."
+          }
+        ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash -c 'echo \"Today: $(date +%Y-%m-%d)\"; echo \"\"; echo \"=== CONTEXT DETECTION ===\"; if [ -f ci.yaml ] && [ -f STATE.md ]; then echo \"Context: PROJECT (has ci.yaml)\"; echo \"\"; cat STATE.md; elif [ -f ci/STATE.md ] && [ ! -f ci.yaml ]; then echo \"Context: HYPERCI REPOSITORY (ci infrastructure)\"; echo \"\"; cat ci/STATE.md; elif [ -f STATE.md ]; then cat STATE.md; elif [ -f CLAUDE.md ]; then cat CLAUDE.md; fi; echo \"\"; if [ -f TODO.md ]; then cat TODO.md; fi; echo \"\"; if [ -d docs/standards ]; then for std in docs/standards/*.md; do [ -f \"$std\" ] && cat \"$std\" && echo \"\"; done; fi'"
+          },
+          {
+            "type": "prompt",
+            "prompt": "Session initialized (Pro Profile). Before responding to the user:\n\n1. Query the memory MCP for existing project knowledge (use mcp__memory__search_nodes with query about this project)\n2. Briefly summarize what you found in memory (or note if this is a fresh start)\n3. Silently prepare to use memory MCP throughout this session as needed\n\nDo NOT greet the user with pleasantries. Simply report what you found in memory and wait for their first task.\n\nNote: Sequential-thinking MCP is NOT available in Pro profile (Pro Max only).\n\nIf the user asks a question or gives a task in their first message, handle that task AND execute the memory query - do both in your first response."
           }
         ]
       }
