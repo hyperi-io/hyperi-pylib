@@ -1,6 +1,6 @@
 # TODO
 
-**Last Updated:** 2025-10-27
+**Last Updated:** 2025-10-28
 
 ## Active ⭐
 
@@ -8,18 +8,27 @@
 
 ## Planned
 
-**Tomorrow (Priority 1):**
-- [ ] Back up files in hyperlib that new ci bootstrap will merge/overwrite, then delete them (except STATE.md)
-  - Files to backup: .gitignore, .gitattributes, ci-local/.env.sample, etc.
-  - Keep STATE.md (already has marker for appending)
-- [ ] Run new bootstrap against hyperlib project root to test template merges
-  - Test: `./ci/bootstrap --install`
-  - Verify: File merges work correctly, git hooks installed, venvs created
-
 **Future:**
 - [ ] Finish hyperlib package development (fix failing tests, improve coverage)
+- [ ] Consider adding CI-LOCAL.md to bootstrap.d merge list (currently only in ai setup)
 
 ## Done ✓
+
+**Phase 4 Complete (2025-10-28):**
+- [x] Bootstrap Testing & File Management
+  - Backed up files that bootstrap modifies (./backup/ directory)
+  - Tested bootstrap template merge system (idempotent, marker-based)
+  - Verified file merge strategies (gitignore, gitattributes, .env.sample, git hooks)
+  - Documented parent project file modifications in ci/README.md
+- [x] Bootstrap Fixes (HyperCI)
+  - Fixed gitci/ai action names (setup -> install)
+  - Added path setup boilerplate to ai.d/15-merge-files.py
+  - All bootstrap tests pass with no errors (GitCI + AI setup complete)
+- [x] Documentation Updates
+  - Added comprehensive file modification tables to ci/README.md
+  - Documented merge strategies and bootstrap modes
+  - Created backup/README.md with restore instructions
+  - Created bootstrap-test-results.md (detailed analysis)
 
 **Phase 3 Complete (2025-10-27):**
 - [x] Modular .d pattern implementation across all 4 tools (bootstrap, run, ai, gitci)
