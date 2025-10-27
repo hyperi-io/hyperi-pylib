@@ -316,3 +316,123 @@ Hyperlib's bootstrap installs hyperlib from JFrog, not from local source. This e
 ---
 
 <!-- HYPERCI_STATE_MD: ci/modules/common/templates/STATE.md -->
+
+
+---
+
+<!-- HYPERCI_STATE_MD: HYPERCI_STATE_MD: ci/modules/python/templates/STATE.md -->
+# HyperCI - Python CI/CD Documentation
+
+**Auto-appended to project STATE.md during AI setup**
+
+## Python CI Workflow (Quick Reference)
+
+### Available Commands
+
+**Testing:**
+```bash
+./ci/run check           # All checks (test + lint + type-check)
+./ci/run test            # Tests only (pytest with coverage)
+./ci/run dependency-update  # Update Python dependencies (uv lock)
+```
+
+**Building:**
+```bash
+./ci/run build           # Standard wheel + sdist (via uv build)
+BUILD_PROFILE=nuitka ./ci/run build    # Nuitka compiled binary
+```
+
+**Releasing:**
+```bash
+./ci/run release --dry-run      # Preview next version
+CI_PUSH=1 ./ci/run release      # Create release + push tag
+```
+
+**Publishing:**
+```bash
+./ci/run publish         # Build + publish to JFrog (manual, discouraged)
+./ci/run verify-publish  # Verify package exists in JFrog
+```
+
+### Python-Specific Environment Variables
+
+**Build Control:**
+- `BUILD_PROFILE=package` - Standard wheel (default)
+- `BUILD_PROFILE=nuitka` - Nuitka compiled binary
+- `CI_BUILD_TYPE=standard` - Standard build (default)
+- `CI_BUILD_TYPE=nuitka` - Nuitka build (alternative to BUILD_PROFILE)
+
+**Nuitka Protection Levels:**
+- `NUITKA_PROTECTION=none` - Basic compilation
+- `NUITKA_PROTECTION=minimal` - Standalone mode only
+- `NUITKA_PROTECTION=data-hiding` - Encrypt strings/names (Commercial)
+- `NUITKA_PROTECTION=traceback` - Encrypt stdout/stderr (Commercial)
+- `NUITKA_PROTECTION=recommended` - Full protection (default for Commercial)
+
+**Testing:**
+- `CI_COVERAGE_SOURCE` - Override coverage source directory
+- `CI_VERIFY_PUBLISH=1` - Enable post-publish verification
+
+**Release:**
+- `CI_PUSH=1` - Push release commit and tag to remote
+- `FORCE_RELEASE=1` - Force release even if not on release branch
+
+### Python Module Scripts
+
+**Bootstrap Scripts** (`ci/modules/python/bootstrap.d/`):
+- `30-python-project.py` - Validate Python project structure
+- `31-python-structure.py` - Create src/ layout if needed
+- `32-jfrog.py` - Configure JFrog credentials
+- `33-nuitka.py` - Check Nuitka requirements (if enabled)
+
+**Runtime Scripts** (`ci/modules/python/run.d/`):
+- `30-python-test.py` - Run pytest with coverage + ruff + mypy
+- `31-python-dependency-update.py` - Update uv.lock dependencies
+- `49-check-version-sync.py` - Check VERSION sync before release
+- `50-build.py` - Build standard wheel/sdist
+- `51-publish.py` - Publish to JFrog Artifactory
+- `52-verify-publish.py` - Verify package exists in JFrog
+- `55-build-nuitka.py` - Build Nuitka compiled binary
+- `59-python-version-sync.py` - Sync VERSION across all files
+
+### Dependencies
+
+**Project deps:** `pyproject.toml` + `uv.lock` (project root)
+**CI tool deps:** `ci-local/pyproject.toml` + `ci-local/uv.lock`
+
+**Install:**
+```bash
+uv sync --locked                    # Install project deps
+cd ci-local && uv sync --locked     # Install CI tools
+```
+
+**Update:**
+```bash
+./ci/run dependency-update          # Update project deps (uv lock)
+cd ci-local && uv lock --upgrade    # Update CI tools
+```
+
+### Version Management
+
+**VERSION file is auto-synced** by pre-commit hook (prevents corruption):
+- Prevents `{version}` template corruption during semantic-release
+- Dual protection: pre-commit hook + CI script (89-version-pre-sync.py)
+- Synced across: VERSION, pyproject.toml, src/<package>/__init__.py
+
+**Check sync:**
+```bash
+./ci/run check-version-sync
+```
+
+### GitHub Actions Integration
+
+**Automatic builds** on version tag push (`v*`):
+- Standard Python wheel published to JFrog
+- Nuitka multi-arch builds (if `nuitka.enabled: true` in ci.yaml)
+- Cost-optimized runners (BuildJet, Cirrus)
+
+**Workflow:** `.github/workflows/jfrog-publish.yml`
+
+---
+
+**See also:** `ci/docs/PYTHON.md`, `ci/docs/NUITKA.md`, `ci/docs/TESTING.md`
