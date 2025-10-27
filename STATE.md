@@ -86,12 +86,11 @@ git push origin main
 AI AGENTS: Read these files BEFORE starting work:
 1. STATE.md (or CLAUDE.md symlink) - THIS FILE
 2. TODO.md - Current priorities and pending work
-3. HyperCI section below - ci/ is git submodule from hypersec-io/hyperci
-4. ci/docs/SESSION-SUMMARY.md - What was accomplished this session
+3. ci/docs/standards/CODE-ASSISTANT.md - AI assistant coding standards (CRITICAL)
+4. ci/docs/standards/CHARS-POLICY.md - Character restrictions (ASCII logs, limited emoji)
 5. ci/docs/README.md - HyperCI complete guide
 6. ci/docs/SUBMODULE-USAGE.md - Git submodule operations
-7. docs/CHARS-POLICY.md - Character restrictions (ASCII logs, limited emoji)
-8. ci/docs/JFROG.md - JFrog publishing
+7. docs/standards/* - Project-specific standards (if present, overrides ci/ standards)
 -->
 
 ## Project Overview
@@ -693,7 +692,7 @@ pip install <package> --no-index --index-url <jfrog_url>  # WRONG - --no-index o
 
 ### Character Policy
 
-**MUST follow `CHARS-POLICY.md`**:
+**MUST follow `ci/docs/standards/CHARS-POLICY.md`**:
 1. Only approved emojis/ASCII
 2. No other Unicode symbols
 3. **Logs**: strict ASCII-only (no emojis)
@@ -1268,7 +1267,7 @@ jf rt search "hypersec-pypi-local/hyperlib/1.6.0/*.whl" --count
 
 ---
 
-<!-- HYPERCI_STATE_MD: ci/modules/common/ai/STATE.md -->
+<!-- HYPERCI_STATE_MD: ci/modules/common/templates/STATE.md -->
 # HyperCI - Common CI/CD Documentation
 
 **THIS SECTION IS AUTO-APPENDED FROM `ci/common/claude/STATE.md`**
@@ -1634,7 +1633,7 @@ git commit -m "chore: pin ci to v1.2.0"
 
 ---
 
-<!-- HYPERCI_STATE_MD: ci/modules/python/ai/STATE.md -->
+<!-- HYPERCI_STATE_MD: ci/modules/python/templates/STATE.md -->
 # HyperCI - Python CI/CD Documentation
 
 **THIS SECTION IS AUTO-APPENDED FROM `ci/python/claude/STATE.md`**
