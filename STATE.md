@@ -9,7 +9,15 @@
 
 ## ⚠️ CRITICAL: Git Commit Rules
 
+**⚠️ CRITICAL: TWO SEPARATE GIT REPOSITORIES**
+
 **Hyperlib uses HyperCI as a git submodule at `/ci/`.**
+
+This means there are **TWO completely separate git repositories**:
+1. **Hyperlib repository** - `/projects/hyperlib/.git/` (main project)
+2. **HyperCI repository** - `/projects/hyperlib/ci/.git/` (submodule)
+
+**DO NOT CONFUSE THEM!**
 
 ### Commit to HyperCI Submodule (ci/ directory):
 
@@ -31,6 +39,11 @@ git push origin main
 
 **Files under `/ci/` go to:** https://github.com/hypersec-io/hyperci.git
 
+**Important:**
+- When you `cd ci`, you are in the HyperCI repository
+- Git commands in ci/ affect the HyperCI repository ONLY
+- Always `cd ..` back to hyperlib root before committing submodule reference
+
 ### Commit to Hyperlib (everything else):
 
 **All other files** (src/, tests/, pyproject.toml, README.md, etc.) go to the hyperlib repository:
@@ -49,6 +62,7 @@ git push origin main
 - ✅ `/ci/` → commit to hyperci submodule first, then update hyperlib
 - ✅ Everything else → commit to hyperlib
 - ❌ NEVER commit `/ci/` changes directly to hyperlib (they go to hyperci!)
+- ⚠️ **TWO SEPARATE GIT REPOSITORIES** - do not confuse them!
 
 ---
 
