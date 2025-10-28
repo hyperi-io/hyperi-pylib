@@ -2,29 +2,39 @@
 
 ## Active ⭐
 
-### Helm Test Failures - Container Registry Authentication
+### Helm Test Failures - Image Pull Timeouts
 
-**Status:** IN PROGRESS (blocked on imagePullSecret configuration)
+**Status:** PARTIALLY RESOLVED (imagePullSecrets added, still timing out)
+
+**Latest build:** 133 passed, 4 failed, 51 skipped (Exit code: 0, artifacts built)
 
 **Problem:**
-- 4 Helm tests failing with "context deadline exceeded"
-- Artifactory login fails with "Bad Credentials" inside tests
-- imagePullSecrets created but pods not using them
-- Manual `docker login hypersec.jfrog.io` works fine
+- 4 Helm tests still failing with "context deadline exceeded"
+- imagePullSecrets NOW in templates (fixed today)
+- .env loading working (conftest.py)
+- Pods still can't pull images in time (60s timeout)
 
-**Investigation needed tomorrow:**
-1. Check if imagePullSecrets specified in Helm chart pod templates
-2. Verify secret name matches ("registry-secret")
-3. Test if pods can pull from Artifactory with secret
-4. Alternative: Skip Helm tests or use public images only
+**Root cause investigation needed:**
+1. Check actual pod events for image pull errors (`kubectl get events`)
+2. Verify Minikube can pull from Artifactory (test manually)
+3. Check if image paths need Artifactory prefix
+4. Verify Minikube Docker daemon has credentials
+
+**Options:**
+1. Use public images only (no Artifactory auth needed)
+2. Pre-pull images into Minikube before tests
+3. Skip Helm tests entirely (not core hyperlib functionality)
+4. Increase Helm timeout from 60s to 120s
 
 **Files:**
-- tests/integration/test_container_deployment.py (test fixtures)
+- tests/integration/fixtures/*.txt (7 templates - NOW have imagePullSecrets)
+- tests/integration/test_container_deployment.py
 - src/hyperlib/harness.py (container_registry_login)
-- tests/conftest.py (.env loading)
-- .env (ARTIFACTORY_CONTAINER_URL config)
 
-**Last test result:** 132 passed, 4 failed (Helm tests), 52 skipped
+**Today's fixes:**
+- ✅ Added imagePullSecrets to all 7 pod/deployment templates
+- ✅ Fixed import test (removed sampling)
+- ✅ .env loading in conftest.py
 
 ---
 
