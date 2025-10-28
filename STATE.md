@@ -325,7 +325,41 @@ Hyperlib's bootstrap installs hyperlib from JFrog, not from local source. This e
 
 ---
 
-**Last Updated:** 2025-10-27
+**Last Updated:** 2025-10-28
+
+---
+
+## Claude Code Permissions and Bash Usage
+
+### Permission System Notes
+
+**Permissions are session-scoped** - Claude Code does not persist approved permissions across sessions for security reasons. Each new session requires fresh approvals.
+
+**To minimize approval prompts:**
+1. **Pre-approve broad patterns** in `.claude/settings.json` permissions.allow list (already configured)
+2. **Avoid compound bash commands** (`&&`, `||`, `;`) - they require separate approval even when components are allowed
+3. Use separate Bash tool calls instead of compound commands
+
+**See:** [ci/docs/standards/CODE-ASSISTANT.md](ci/docs/standards/CODE-ASSISTANT.md) section "Bash Tool Usage: Avoid Compound Commands"
+
+### Critical: Avoid Bash Compound Commands
+
+**Using `&&`, `||`, or `;` in Bash commands breaks the permission model:**
+
+❌ **Wrong** (requires approval even if components allowed):
+```bash
+git add . && git commit -m "message"
+cd ci; git status
+```
+
+✅ **Correct** (uses pre-approved permissions):
+```bash
+# Separate Bash calls - components already in allow list
+git add .
+git commit -m "message"
+```
+
+**Why this matters:** Compound commands create new permission patterns that aren't in the allow list, triggering approval prompts even when individual commands are pre-approved.
 
 ---
 
