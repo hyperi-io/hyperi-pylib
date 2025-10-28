@@ -331,25 +331,49 @@ Hyperlib's bootstrap installs hyperlib from JFrog, not from local source. This e
 
 ## Claude Code Permissions and Bash Usage
 
-### Permission System Notes
+### Permission System: What You Can't Change
 
-**Permissions are session-scoped** - Claude Code does not persist approved permissions across sessions for security reasons. Each new session requires fresh approvals.
+**Permissions are session-scoped by design** - Claude Code intentionally does not persist approved permissions across sessions for security reasons.
 
-**To minimize approval prompts:**
-1. **Pre-approve broad patterns** in `.claude/settings.json` permissions.allow list (already configured)
-2. **Avoid compound bash commands** (`&&`, `||`, `;`) - they require separate approval even when components are allowed
-3. Use separate Bash tool calls instead of compound commands
+**What this means:**
+- Every new Claude Code session requires fresh approvals
+- Permissions in `.claude/settings.json` are "pre-approved patterns" but still require first-use confirmation
+- **You cannot disable this** - it's a security feature, not a bug
+
+**Example:** Even though `Bash(jq *)` is in your allow list, you'll be prompted for approval when first using jq in each new session. After approving once, it stays approved for that session only.
+
+### What You CAN Control: Avoid Compound Commands and Pipes
+
+**The REAL problem:** Compound commands and pipes create NEW permission patterns that bypass your allow list.
+
+**Why you get repeated prompts:**
+1. **Compound commands** - `&&`, `||`, `;` create new patterns
+2. **Pipes** - `|` creates new patterns
+3. **Each pattern needs separate approval** even if components are allowed
+
+**Example of the problem:**
+```
+✅ Approved: Bash(jq *)
+❌ Still prompts: Bash(jq '.foo' file | grep bar)  # pipe creates new pattern
+```
+
+**Solution:**
+1. **Pre-approve broad patterns** in `.claude/settings.json` (already configured)
+2. **Avoid compound bash commands and pipes** - use separate Bash tool calls
+3. **Accept one prompt per session** for each tool - unavoidable, by design
 
 **See:** [ci/docs/standards/CODE-ASSISTANT.md](ci/docs/standards/CODE-ASSISTANT.md) section "Bash Tool Usage: Avoid Compound Commands"
 
-### Critical: Avoid Bash Compound Commands
+### Critical: Avoid Bash Compound Commands and Pipes
 
-**Using `&&`, `||`, or `;` in Bash commands breaks the permission model:**
+**Using `&&`, `||`, `;`, or `|` (pipes) in Bash commands breaks the permission model:**
 
 ❌ **Wrong** (requires approval even if components allowed):
 ```bash
-git add . && git commit -m "message"
-cd ci; git status
+git add . && git commit -m "message"    # && requires approval
+cd ci; git status                        # ; requires approval
+jq '.foo' file.json | grep bar          # | requires approval
+ls -la | wc -l                          # | requires approval
 ```
 
 ✅ **Correct** (uses pre-approved permissions):
@@ -357,9 +381,15 @@ cd ci; git status
 # Separate Bash calls - components already in allow list
 git add .
 git commit -m "message"
+
+# For pipes, either:
+# 1. Accept the prompt (pipes are sometimes necessary)
+# 2. Use intermediate files:
+jq '.foo' file.json > .tmp/output.json
+grep bar .tmp/output.json
 ```
 
-**Why this matters:** Compound commands create new permission patterns that aren't in the allow list, triggering approval prompts even when individual commands are pre-approved.
+**Why this matters:** Compound commands and pipes create new permission patterns that aren't in the allow list, triggering approval prompts even when individual commands are pre-approved.
 
 ---
 
