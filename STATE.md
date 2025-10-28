@@ -66,6 +66,70 @@ git push origin main
 
 ---
 
+## 🤖 AI Assistant: Hyperlib-Specific Override
+
+**CRITICAL: This project (hyperlib) is the OFFICIAL HyperCI development host.**
+
+**You MUST override the standard CODE-ASSISTANT.md directive about ci/ being read-only.**
+
+### Standard CODE-ASSISTANT.md Says:
+
+> ❌ DO NOT scan or review files in ci/
+> ❌ DO NOT read ci/ files
+> ❌ DO NOT use Glob/Grep on ci/
+
+### Hyperlib Override (THIS PROJECT ONLY):
+
+✅ **DO scan and review files in ci/** - This is a dual-repository project
+✅ **DO read ci/ files** - You can work in both hyperlib and ci/ simultaneously
+✅ **DO use Glob/Grep on ci/** - ci/ is part of your work scope here
+✅ **DO suggest changes to ci/** - This is the official CI development project
+
+### How To Work With Both Repositories:
+
+**When working in hyperlib (parent project):**
+```bash
+# Work in hyperlib root
+git status                           # Shows hyperlib changes
+git add src/ tests/ docs/
+git commit -m "feat: add feature"
+git push origin main
+```
+
+**When working in ci/ (submodule):**
+```bash
+cd ci                                # Enter HyperCI repository
+git status                           # Shows ci/ changes ONLY
+git add modules/ tests/ docs/
+git commit -m "fix: improve CI"
+git push origin main
+
+# Return to hyperlib and update submodule pointer
+cd ..
+git add ci
+git commit -m "chore: update ci submodule to <hash>"
+git push origin main
+```
+
+### Key Points for AI Assistants:
+
+1. **Two separate repositories** - Understand which one you're working in
+2. **ci/ is READ-WRITE here** - Unlike other projects using HyperCI
+3. **Dual commit workflow** - Changes in ci/ require TWO commits (ci repo, then hyperlib)
+4. **Don't confuse the two** - Always know if you're in `/projects/hyperlib/` or `/projects/hyperlib/ci/`
+5. **Full access to ci/** - You can read, modify, and review ci/ source code here
+
+### Token Efficiency for Hyperlib:
+
+- **When asked about CI**: Read ci/ source files directly
+- **When asked about hyperlib**: Focus on src/hyperlib/, tests/, docs/
+- **When debugging CI**: Full access to both codebases
+- **When implementing features**: Usually hyperlib only (unless CI changes needed)
+
+**This override applies ONLY to hyperlib. All other projects follow standard CODE-ASSISTANT.md.**
+
+---
+
 ## Quick Start
 
 ```bash
@@ -456,3 +520,184 @@ cd ci-local && uv lock --upgrade    # Update CI tools
 ---
 
 **See also:** `ci/docs/PYTHON.md`, `ci/docs/NUITKA.md`, `ci/docs/TESTING.md`
+
+
+---
+
+<!-- HYPERCI_STATE_MD: HYPERCI_STATE_MD: ci/modules/common/templates/STATE.md -->
+# HyperCI - Common CI/CD Documentation
+
+**Auto-appended to project STATE.md during AI setup**
+
+## Critical Policies for AI Assistants
+
+**ALWAYS READ ON SESSION START:**
+1. This STATE.md file (you're reading it now)
+2. `TODO.md` (current tasks and priorities)
+3. `ci-local/CODE-ASSISTANT.md` - AI assistant guidance (REQUIRED)
+4. **ALL files in `ci/docs/standards/`** (critical standards and policies)
+   - `GIT-WORKFLOW.md` - Git conventions (REQUIRED)
+   - `CHARS-POLICY.md` - Character restrictions
+   - Any other standards files present
+
+**Do not skip reading the standards files. They contain critical project-specific requirements.**
+
+### 1. Commit Message Type Selection (UNDERSTATE, NOT OVERSTATE)
+
+**AI assistants frequently overstate importance. Always err on understatement.**
+
+**Default to `fix:` when uncertain:**
+- ✅ `fix:` is almost always correct for bug fixes, improvements, refactors
+- ❌ Don't use `feat:` unless it's truly a **NEW VERY SIGNIFICANT and BROAD** feature
+- ❌ Don't use `BREAKING CHANGE:` unless it breaks backward compatibility
+
+**Valid commit types:**
+- `feat:` - **NEW VERY SIGNIFICANT and BROAD user-facing feature** (minor version bump) - RARELY USE
+- `fix:` - **Bug fix, improvement, refactor, cleanup** (patch bump) - DEFAULT CHOICE
+- `perf:` - Performance optimization only (patch bump)
+- `chore:` - Maintenance, deps, config (no bump)
+- `docs:` - Documentation only (no bump)
+- `test:` - Tests only (no bump)
+- `ci:` - CI configuration (no bump)
+
+**Format:** `<type>: <description>` or `<type>(<scope>): <description>`
+
+**Examples of correct usage:**
+```
+fix: update CI structure documentation          # NOT feat: (just docs)
+fix: add commit message validation              # NOT feat: (internal tool)
+fix: improve test coverage                      # NOT feat: (tests)
+chore: update ci submodule                      # NOT feat: or fix:
+feat: add OAuth authentication for users        # OK - NEW user feature
+```
+
+**Why this matters:**
+- Semantic versioning depends on correct types
+- Over-using `feat:` causes unnecessary minor version bumps
+- Projects accumulate false "features" in changelogs
+- `fix:` is safer and more accurate for most changes
+
+**Validation:** commit-msg hook enforces format (auto-installed by bootstrap)
+
+### 2. Directory Structure
+
+**Read-only ci/ (git submodule):**
+- `ci/` - HyperCI scripts (NEVER modify directly)
+- `ci/modules/` - Modular CI scripts organized by language
+- `ci/docs/` - Documentation
+
+**Writable ci-local/ (project-specific):**
+- `ci-local/.venv/` - CI tools only (pytest, ruff, etc.)
+- `ci-local/.env` - Credentials (gitignored)
+- `ci-local/pyproject.toml` - CI tool dependencies
+
+**Project workspace:**
+- `.venv/` - Project dependencies (development)
+- `.tmp/` - Temporary files (ALWAYS use this, not /tmp)
+
+### 3. Virtual Environments
+
+**Two separate venvs - NEVER mix:**
+- `ci-local/.venv` - CI tools (for CI scripts ONLY)
+- `.venv` - Project dependencies (for development)
+
+**CI scripts must use ci-local/.venv:**
+```python
+if "ci-local/.venv" not in sys.prefix:
+    sys.exit("ERROR: Must run in ci-local/.venv")
+```
+
+### 4. Bootstrap & Workflow
+
+**Bootstrap (first-time setup):**
+```bash
+./ci/bootstrap --install
+```
+
+Creates both venvs, installs dependencies, installs git hooks.
+
+**Run CI checks:**
+```bash
+./ci/run check       # All checks (tests, lint, type-check)
+./ci/run test        # Tests only
+./ci/run build       # Build package
+```
+
+**Git hooks (auto-installed by bootstrap):**
+- `commit-msg` - Validates branch name, message format, removes AI attribution
+- Blocks commits if invalid, warns about formatting issues
+
+### 5. CI Script Locations
+
+**New modular structure:**
+```
+ci/modules/
+├── common/
+│   ├── bootstrap.d/     # Bootstrap scripts (run during setup)
+│   ├── run.d/           # Runtime checks (branch name, etc.)
+│   ├── gitci.d/         # Git operations (hooks, etc.)
+│   └── templates/       # File templates (.gitignore, etc.)
+└── python/
+    ├── bootstrap.d/     # Python bootstrap scripts
+    └── run.d/           # Python CI checks (test, build, etc.)
+```
+
+**Execution:** All CI scripts run via bash wrappers using `.d` pattern
+- `ci/bootstrap` orchestrates `bootstrap.d/*.py` scripts
+- `ci/run` orchestrates `run.d/*.py` scripts
+- `ci/gitci` orchestrates `gitci.d/*.py` scripts
+
+### 6. TODO Management
+
+**Use TODO.md ONLY:**
+- ✅ Add todos to `TODO.md` (project root)
+- ❌ NEVER use `# TODO:` in code comments
+- ❌ NEVER put TODOs in commit messages
+
+### 7. Temporary Files
+
+**Always use `./.tmp/`:**
+- ✅ `./.tmp/` (project root, gitignored)
+- ❌ NOT `/tmp`, `~/tmp`, or `/var/tmp`
+
+### 8. Bash Command Execution
+
+**See `ci-local/CODE-ASSISTANT.md` for complete bash usage guidance to minimize permission prompts.**
+
+Quick summary:
+- ❌ Avoid: `&&`, `||`, `;`, `|` (triggers permission prompts)
+- ✅ Use: Separate Bash calls, `.tmp/` intermediate files, output redirection (`>`)
+
+## Configuration Cascade
+
+**Environment variables > .env > ci.yaml > defaults.yaml**
+
+**Common env vars:**
+- `CI_SKIP_HOOKS=true` - Skip git hook installation
+- `CI=true` - Running in CI environment
+- `BOOTSTRAP_INSTALL=1` - Enable bootstrap installation
+
+## Quick Reference
+
+**Update ci/ submodule:**
+```bash
+cd ci && git pull origin main && cd ..
+git add ci && git commit -m "chore: update ci submodule"
+```
+
+**Contribute to HyperCI:**
+1. Work in `ci/` directory (changes tracked in hyperci repo)
+2. Commit to `hypersec-io/hyperci` repository
+3. Update project's ci/ submodule reference
+
+**Troubleshooting:**
+- Bootstrap fails: Check `ci-local/.env` has credentials
+- Wrong venv: CI scripts enforce ci-local/.venv (will error)
+- Submodule issues: `git submodule update --init --force`
+
+---
+
+**See also:**
+- `ci-local/CODE-ASSISTANT.md` - AI assistant guidance (common + language-specific)
+- `ci/docs/README.md` - Complete documentation
+- `ci/docs/standards/GIT-WORKFLOW.md` - Git conventions
