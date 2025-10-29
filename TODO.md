@@ -95,15 +95,20 @@
 
 ## Backlog
 
-### CI Bootstrap Issues (from .tmp/CI_BOOTSTRAP_ANALYSIS.md)
+### CI Bootstrap Issues
 
-**Issue:** Bootstrap fails at validation, doesn't run AI setup
-- Add better error messages when bootstrap.d scripts fail
-- Add `--new-project` flag to skip validation
-- Decouple AI setup from bootstrap.d failures
+**FIXED:**
+- ✅ Decoupled AI setup from validation failures (bootstrap.py)
+  - Validation failures now WARN (not fatal)
+  - Git + AI setup runs even with validation errors
+  - New projects get working immediately
+
+**Remaining (nice-to-have):**
+- Add `--new-project` flag to skip validation explicitly
+- Add better contextual error messages
 - Add interactive prompts for structure creation
 
-**File to update:** ci/modules/python/bootstrap.py, 31-python-structure.py
+**Files:** ci/modules/python/bootstrap.py, 31-python-structure.py
 
 ### Remaining Ruff Issues
 
