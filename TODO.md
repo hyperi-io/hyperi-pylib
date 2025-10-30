@@ -2,121 +2,107 @@
 
 ## Active ⭐
 
-### 🎉 ALL TESTS PASSING - COMPLETE SUCCESS! 🎉
+### Publish v2.3.5 to JFrog
 
-**Status:** ✅ **136 tests PASSED, 0 FAILED** (3min 9sec)
+**Status:** Build created, not published (linting blocks)
 
-**Test Results:**
-```
-================= 136 passed, 52 skipped in 189.38s (0:03:09) ==================
-```
+**Version:** 2.3.5
+**Artifacts:** dist/hyperlib-2.3.5-py3-none-any.whl (48K)
+**Includes:** Application.mcp() + security fixes
 
-**Helm tests:** ✅ **ALL 4 PASSING**
-- test_helm_pod_deployment
-- test_helm_prometheus_metrics
-- test_helm_api_deployment_with_service
-- test_helm_chart_deployment
+**Blocking issues:**
+- pytest: Some tests may be timing out (Minikube?)
+- bandit: 13 remaining (Low severity, non-B108)
 
-**Cleanup verification:** ✅ **PERFECT**
-- 0 hung processes (was 23+)
-- 0 test namespaces left
-- Docker cache preserved (busybox, python:3.11-slim)
-- Minikube running and ready
-
-**CI build:** ⚠️ Fails on ruff/bandit (non-blocking code quality)
-- NOT test failures
-- Ruff: 8 code quality suggestions (ARG004, SIM102, etc.)
-- Bandit: hardcoded /tmp paths (non-critical)
-
-**Next:** Address CI bootstrap issues (see .tmp/CI_BOOTSTRAP_ANALYSIS.md)
-
----
-
-## Done ✓
-
-### 2025-10-29 Morning - Helm Tests COMPLETELY FIXED! 🎉
-
-**Helm Test Victory:**
-- ✅ **3/3 Helm tests PASSED** (verified: 106 seconds)
-- test_helm_pod_deployment ✅
-- test_helm_prometheus_metrics ✅
-- test_helm_api_deployment_with_service ✅
-- 1 more test needs same fix (TestHelmDeployment::test_helm_chart_deployment)
-
-**Root causes found and fixed:**
-1. ✅ Minikube networking (recreated Minikube - fresh instance works)
-2. ✅ Python f-string syntax error (backslash in f-string)
-3. ✅ ConfigMap name mismatch (use release_name not test_id)
-4. ✅ Helm --wait incompatible (removed - pods go to Succeeded not Ready)
-5. ✅ wget missing (replaced with python urllib)
-
-**Hung process prevention:**
-- ✅ Added cleanup_hung_processes() to conftest.py
-- ✅ Session-level auto-cleanup before/after tests
-- ✅ HYPERLIB_TEST_* labels on all commands
-- ✅ Won't interfere with other projects
-
-**Code quality:**
-- ✅ Ruff auto-fixes applied (9 issues fixed)
-- ⏳ 8 ruff issues remain (ARG004, SIM102, etc. - code quality suggestions)
-
-**Commits today:** 35+ commits
-- hyperci: 10 commits
-- hyperlib: 25+ commits
-
-**Documentation:**
-- .tmp/HELM-TESTS-FIXED.md - Complete Helm investigation
-- .tmp/SOE-minikube-setup.sh - Minikube configuration script
-- .tmp/SOE-docker-setup.sh - Docker daemon configuration
-- .tmp/SOE-README.md - SOE scripts documentation
-
----
-
-### 2025-10-28 Session
-
-**CI Infrastructure (9 commits to hyperci):**
-- ✓ CODE-ASSISTANT.md recovered (787 lines) and restructured with ci/ exclusion
-- ✓ Commit tag standards (21 tags with validation)
-- ✓ CLAUDE.md consolidation into STATE.md
-- ✓ CI mode detection (readonly/development/standalone)
-- ✓ CI infrastructure bug fixes (run.py paths, CI_DIR, get_ci_setting)
-- ✓ File logging (ci-local/logs/ci.log with rotation)
-
-**Hyperlib Features (16 commits):**
-- ✓ STATE.md AI assistant override for dual-repo access
-- ✓ Import test fix (removed sampling module)
-- ✓ Container registry throttling detection
-- ✓ Artifactory container registry authentication
-- ✓ Minikube test improvements (JSON parsing fix, KISS approach)
-- ✓ .env loading in pytest conftest
-- ✓ .env/.env.sample cleanup (app vs CI separation)
+**Next steps:**
+1. Fix pytest failures (check Minikube)
+2. Address remaining bandit warnings
+3. Run: `./ci/run build` → publish to JFrog
+4. Verify MCP in package with jf cli
 
 ---
 
 ## Backlog
 
-### CI Bootstrap Issues
+### ONE .venv Migration (MAJOR REFACTOR)
 
-**FIXED:**
-- ✅ Decoupled AI setup from validation failures (bootstrap.py)
-  - Validation failures now WARN (not fatal)
-  - Git + AI setup runs even with validation errors
-  - New projects get working Claude Code immediately
+**Priority:** HIGH (eliminates LLM confusion)
 
-**Remaining (nice-to-have):**
-- Add `--new-project` flag to skip validation explicitly
-- Add better contextual error messages
-- Add interactive prompts for structure creation
+**See:** `.tmp/SESSION-HANDOFF-2025-10-31.md` for complete plan
 
-**Files:** ci/modules/python/bootstrap.py, 31-python-structure.py
+**Summary:**
+- Merge ci-local/.venv into .venv
+- Use pyproject.toml optional-dependencies dev group
+- Update all CI scripts (.venv/bin/* not ci-local/.venv/bin/*)
+- Delete ci-local/.venv, ci-local/pyproject.toml
 
-### Remaining Ruff Issues
+**Benefits:** No venv confusion, standard Python pattern, LLM-friendly
 
-Minor code quality suggestions (8 issues):
-- ARG004: Unused ctx argument (Click callback)
-- SIM102, SIM103, SIM108, SIM117: Code simplification
-- UP035: typing.Dict → dict
+**Effort:** 20-30 commits, 2-3 hours, thorough testing
 
 ---
 
-**Last Updated:** 2025-10-29
+### Expand PYTHON-STANDARDS.md
+
+**Location:** `ci/docs/standards/PYTHON-STANDARDS.md`
+
+**Current:** Temp file policy only
+
+**Add from project experience:**
+- Virtual env patterns, config cascade, logging
+- Testing, security, build, release workflows
+- Container/Helm deployment patterns
+- Application factory pattern
+
+**Add industry best practices:**
+- DevOps, DataOps, DevSecOps patterns
+- Modern Python (PEPs 517/518/621/751, type hints)
+- Async, database, API, observability
+
+**Goal:** Comprehensive Python guide for all HyperSec projects
+
+---
+
+## Done ✓
+
+### 2025-10-31 Session
+
+**Application.mcp() - 5th Deployment Type:**
+- ✓ MCPApplication factory implemented
+- ✓ Tool/resource/prompt decorators
+- ✓ stdio and HTTP transports
+- ✓ Pre-wired with hyperlib logger + config
+- ✓ Included in v2.3.5
+
+**Security Hardening:**
+- ✓ ALL /tmp replaced with tempfile.gettempdir()
+- ✓ B108 warnings: 0 (was 21)
+- ✓ Temp file policy documented (research-based)
+- ✓ PYTHON-STANDARDS.md created
+
+**HyperCI v0.3.2:**
+- ✓ Dynamic MCP detection (.mcp.json)
+- ✓ TOML merge support (tomllib + tomli-w)
+- ✓ Temp file policy in CODE-ASSISTANT templates
+
+**Total:** 140 commits (76 hyperlib + 64 CI)
+
+---
+
+### 2025-10-29 Morning - Helm Tests COMPLETELY FIXED
+
+**All 136 tests passing:**
+- ✓ All 4 Helm tests passing
+- ✓ Hung process cleanup working
+- ✓ Minikube networking fixed
+
+**Fixes:**
+- ✓ ConfigMap name mismatch
+- ✓ Helm --wait removed
+- ✓ Python f-string syntax
+- ✓ wget → python urllib
+- ✓ Pod Ready wait added
+
+---
+
+**Last Updated:** 2025-10-31
