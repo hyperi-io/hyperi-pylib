@@ -42,6 +42,62 @@
 
 ---
 
+### Refactor Application.mcp() to Use FastMCP
+
+**Priority:** MEDIUM
+
+**Current:** Custom MCP implementation (JSON-RPC over stdio/HTTP)
+**Target:** Use FastMCP library for better standards compliance
+
+**FastMCP benefits:**
+- Official MCP SDK with full protocol support
+- Better error handling and validation
+- Automatic capability negotiation
+- Type-safe tool/resource/prompt definitions
+- Active maintenance and updates
+
+**Migration:**
+- Replace custom JSON-RPC handling with FastMCP
+- Keep same decorator API (@app.tool, @app.resource, @app.prompt)
+- Maintain hyperlib logger + config integration
+- Test stdio and HTTP transports
+
+**File:** `src/hyperlib/application/mcp.py`
+
+---
+
+### Add Config Merge to Hyperlib
+
+**Priority:** MEDIUM
+
+**Current:** CI has sophisticated merge functions in ci_lib.py
+**Target:** Port clean merge capability to hyperlib.config
+
+**What to port from ci_lib.py:**
+- `deep_merge_json()` - Deep merge dicts/JSON
+- `merge_file()` - Auto-detect and merge JSON/YAML/TOML
+- TOML merge support (tomllib + tomli-w)
+
+**Use cases in hyperlib:**
+- Merge config files (base.yaml + override.yaml)
+- Merge secrets from multiple sources
+- Merge deployment configs (dev.yaml + prod.yaml)
+
+**Benefits:**
+- Reusable config merge logic
+- Consistent with CI patterns
+- Type-safe, well-tested
+
+**Implementation:**
+- Create `src/hyperlib/config/merge.py`
+- Port functions from ci/modules/common/ci_lib.py
+- Add to hyperlib.config exports
+- Document in PYTHON-STANDARDS.md
+
+**Dependencies:** Add tomli-w to hyperlib runtime deps (not just dev)
+
+---
+
 ### Expand PYTHON-STANDARDS.md
 
 **Location:** `ci/docs/standards/PYTHON-STANDARDS.md`
