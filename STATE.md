@@ -167,7 +167,7 @@ CI_PUSH=1 ./ci/run release
 - Test (full): `CI_PYTEST_ARGS="" ./ci/run check` (all 136 tests in 3min)
 - Build: `./ci/run build` (wheel + sdist)
 - Release: `FORCE_RELEASE=1 CI_PUSH=1 ./ci/run release` (semantic versioning)
-- AI setup: `CI_AI_MERGE_MODE=merge ./ci/ai install` (Claude Code config)
+- AI setup: `./ci/ai install` (Claude Code config - MCP disabled)
 
 ---
 
