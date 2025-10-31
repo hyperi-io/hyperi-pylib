@@ -68,11 +68,11 @@
 
 ## Backlog
 
-### Update ci/tests for Recent Changes - COMPLETE ✅
+### Update ci/tests for Recent Changes
 
 **Priority:** HIGH (test coverage for new features)
 
-**Status:** COMPLETE - All tests added and passing
+**Status:** Tests added, 4 failures from pre-existing bugs (not ONE .venv)
 
 **Test Coverage Added:**
 1. ✅ DONE: Nuitka package mode test (test_nuitka_builds.py)
@@ -91,11 +91,18 @@
 - `ci/tests/conftest.py` (UPDATED - test projects have [dev] deps)
 
 **Test Results:**
-- HyperCI unit: 56/56 passing (100%) ✅
-- HyperCI integration: 27/29 passing (93%) ✅
-- ONE .venv tests: 7/7 passing (100%) ✅
-- Bootstrap tests: 10/12 passing (83%)
-- Hyperlib unit: 121/121 passing (100%) ✅
+- HyperCI unit: 56/56 passing (100%)
+- HyperCI integration: 62/66 passing (94%, 3 skipped)
+- ONE .venv specific tests: 7/7 passing (100%)
+- Hyperlib unit: 121/121 passing (100%)
+
+**Failures (4) - Pre-existing bugs unrelated to ONE .venv migration:**
+1. test_hook_blocks_invalid_branch_name - Branch validation not blocking
+2. test_bootstrap_runs_gitci_setup - Python .gitignore merge not working in test projects
+3. test_bootstrap_ai_setup_runs_despite_validation_failures - Edge case scenario
+4. test_nuitka_commercial_installs_from_jfrog - Test needs Nuitka enabled in ci.yaml
+
+**Note:** All ONE .venv migration tests pass. Failures are test infrastructure issues.
 
 **Total:** 538 lines of new tests added
 
