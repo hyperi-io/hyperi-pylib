@@ -2,23 +2,53 @@
 
 ## Active ⭐
 
-### Publish v2.3.5 to JFrog
+### Security Fixes Published - v2.3.6 ✅
 
-**Status:** Build created, not published (linting blocks)
+**Status:** COMPLETE - Published and verified in JFrog
 
-**Version:** 2.3.5
-**Artifacts:** dist/hyperlib-2.3.5-py3-none-any.whl (48K)
-**Includes:** Application.mcp() + security fixes
+**Version:** 2.3.6
+**Published:** 2025-10-31
+**Artifacts:**
+- hyperlib-2.3.6-py3-none-any.whl (48.6 KB)
+- hyperlib-2.3.6.tar.gz (47.1 KB)
 
-**Blocking issues:**
-- pytest: Some tests may be timing out (Minikube?)
-- bandit: 13 remaining (Low severity, non-B108)
+**Security improvements:**
+- ✅ All Medium severity issues resolved (B104, B108)
+- ✅ Low severity documented with nosec comments
+- ✅ Added tempfile import to runtime.py
+- ✅ Removed unused imports
+- ✅ All 136 tests passing
 
-**Next steps:**
-1. Fix pytest failures (check Minikube)
-2. Address remaining bandit warnings
-3. Run: `./ci/run build` → publish to JFrog
-4. Verify MCP in package with jf cli
+**Verified:**
+- ✅ Published to JFrog PyPI (hypersec-pypi-local)
+- ✅ Installable from JFrog: `pip install hyperlib==2.3.6`
+- ✅ Import working: `import hyperlib; hyperlib.__version__`
+
+### Fast Test Mode Implemented - v2.4.0-v2.4.2
+
+**Status:** Implemented in v2.4.0, not yet in JFrog
+
+**Configuration:** [ci-local/ci.yaml:15](ci-local/ci.yaml:15)
+```yaml
+tests:
+  pytest_args: "-m 'not integration'"
+```
+
+**Environment override:**
+```bash
+CI_PYTEST_ARGS="" ./ci/run check  # Run all tests
+```
+
+**Performance:**
+- Fast mode: 121 tests in ~2s (skips 15 integration tests)
+- Full mode: 136 tests in ~3min (all tests)
+
+**Versions:**
+- v2.4.0: Fast test mode added
+- v2.4.1: GitHub Actions workflow fixes
+- v2.4.2: CI script path fixes
+
+**Next:** Publish v2.4.3+ to JFrog via GitHub Actions (currently blocked on debugging)
 
 ---
 
