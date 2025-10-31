@@ -3,7 +3,8 @@
 **Repository**: https://github.com/hypersec-io/hyperlib
 **Type**: Python package (shared library)
 **Purpose**: Enterprise infrastructure for all HyperSec Python projects
-**Version**: 2.2.0 (see VERSION file)
+**Version**: 2.3.6 (see VERSION file)
+**Latest Published**: 2.3.6 (JFrog, 2025-10-31)
 
 ---
 
@@ -162,9 +163,11 @@ CI_PUSH=1 ./ci/run release
 **Quick reference:**
 - Bootstrap: `./ci/bootstrap --install` (creates venvs, installs hooks)
 - Test: `./ci/run check` (test + lint + type-check)
+- Test (fast): Runs 121 tests in 2s (skips integration tests) - default in ci.yaml
+- Test (full): `CI_PYTEST_ARGS="" ./ci/run check` (all 136 tests in 3min)
 - Build: `./ci/run build` (wheel + sdist)
-- Release: `CI_PUSH=1 ./ci/run release` (semantic versioning)
-- AI setup: `CI_AI_MERGE_MODE=merge ./ci/ai setup` (Claude Code config)
+- Release: `FORCE_RELEASE=1 CI_PUSH=1 ./ci/run release` (semantic versioning)
+- AI setup: `CI_AI_MERGE_MODE=merge ./ci/ai install` (Claude Code config)
 
 ---
 
