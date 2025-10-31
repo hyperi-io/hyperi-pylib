@@ -317,7 +317,14 @@ See [ci/docs/NUITKA.md](ci/docs/NUITKA.md) for details.
 
 ## Publishing to JFrog
 
-**⚠️ CRITICAL: Publishing is handled EXCLUSIVELY by GitHub Actions**
+**⚠️ CRITICAL: ALWAYS use `./ci/run publish` - NEVER manual twine/pip commands**
+
+**AI Assistants - READ THIS:**
+- ❌ NEVER run `twine upload` directly
+- ❌ NEVER run `pip install` to publish
+- ❌ NEVER bypass the CI scripts
+- ✅ ALWAYS use `./ci/run publish`
+- ✅ ALWAYS let CI handle the workflow
 
 **Production workflow:**
 
@@ -325,24 +332,31 @@ See [ci/docs/NUITKA.md](ci/docs/NUITKA.md) for details.
    ```bash
    git add .
    git commit -m "feat: add new feature"
-   FORCE_RELEASE=1 CI_PUSH=1 ./ci/run release  # Creates tag, pushes
+   FORCE_RELEASE=1 CI_PUSH=1 ./ci/run release  # Creates tag, pushes to GitHub
    ```
 
 2. **GitHub Actions**: Automatically triggered by version tag push
    - Workflow: `.github/workflows/jfrog-publish.yml`
    - Builds package fresh from source
    - Publishes to JFrog using GitHub Secrets
+   - Handles multi-arch builds
 
-**Why GitHub Actions only?**
+**Local publish (discouraged):**
+```bash
+FORCE_PUBLISH=1 ./ci/run publish  # Single-arch only, use for testing
+```
+
+**Why use `./ci/run` scripts?**
+- **Consistency**: Same workflow for all operations
+- **Validation**: Pre-flight checks before operations
+- **Auditability**: All operations logged through CI
+- **Safety**: Prevents manual mistakes
+
+**Why GitHub Actions for production?**
 - **Security**: JFrog credentials only in GitHub Secrets
+- **Multi-arch**: Builds x64 + ARM64 (local is single-arch)
 - **Auditability**: All publishes tracked in GitHub Actions logs
-- **Consistency**: Same build process for everyone
 - **Clean environment**: Fresh build every time
-
-**JFrog authentication** (bootstrap only):
-- Used ONLY for installing dependencies during bootstrap
-- Credentials in `ci-local/.env` (gitignored)
-- Variables: `ARTIFACTORY_USERNAME`, `ARTIFACTORY_PASSWORD`
 
 ---
 
