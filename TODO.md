@@ -56,17 +56,40 @@
   - `hyperlib-X.Y.Z-cp3XX-cp3XX-linux_aarch64.whl` (arm64)
 - ✅ Both wheels + tar.gz published automatically (no manual intervention)
 
-**Next Steps:**
-1. ✅ FIXED: Nuitka-commercial installation (use token auth)
-2. Test locally: BUILD_PROFILE=nuitka ./ci/run build
-3. Verify .so files in dist/ wheel
-4. Commit and push fixes
-5. Test in GitHub Actions: nuitka-x64, nuitka-arm64 builds
-6. Verify both architecture wheels in JFrog with .so files
+**Results (v2.4.4 Published):**
+1. ✅ FIXED: Nuitka-commercial installation (token auth)
+2. ✅ TESTED: Local BUILD_PROFILE=nuitka ./ci/run build
+3. ✅ VERIFIED: .so files in wheel (1.3 MB .so, 0 .py source)
+4. ✅ COMMITTED: All fixes pushed to HyperCI + hyperlib
+5. ✅ TESTED: GitHub Actions nuitka-x64 + nuitka-arm64 builds
+6. ✅ VERIFIED: Both wheels in JFrog with .so files (685 KB x64, 644 KB arm64)
 
 ---
 
 ## Backlog
+
+### Update ci/tests for Recent Changes
+
+**Priority:** HIGH (test coverage for new features)
+
+**Missing Test Coverage:**
+1. ✅ ADDED: Nuitka package mode test (test_nuitka_builds.py)
+2. ✅ ADDED: Nuitka app mode test (test_nuitka_builds.py)
+3. ✅ ADDED: Nuitka-commercial installation test
+4. ❌ TODO: ONE .venv migration test (verify single venv created)
+5. ❌ TODO: Unified .env test (verify .env at project root, not ci-local)
+6. ❌ TODO: Config reading test (verify get_ci_config reads ci-local/ci.yaml)
+7. ❌ TODO: build_type() BUILD_PROFILE fallback test
+8. ❌ TODO: run.py --script mode test (verify original_action preservation)
+
+**Test Files:**
+- `ci/tests/integration/test_nuitka_builds.py` (NEW - created)
+- `ci/tests/integration/test_integration_bootstrap.py` (UPDATE - verify ONE .venv)
+- `ci/tests/unit/test_unit_ci_lib.py` (UPDATE - test config functions)
+
+**Effort:** 2-3 hours, add ~10 new tests
+
+---
 
 ### Clean Up ci_lib.py (REFACTOR)
 
