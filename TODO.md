@@ -2,6 +2,24 @@
 
 ## Active ⭐
 
+### VERSION Sync & Env Var Standardization - COMPLETE ✅
+
+**Status:** COMPLETE - Deployed to production (v2.6.2)
+
+**Achievements:**
+- ✅ VERSION file sync working (plain format, atomic with git tag)
+- ✅ All env vars use CI_ prefix matching flag names
+- ✅ Removed 647 lines of complexity
+- ✅ Added --nuitka-only release mode
+- ✅ Build/publish properly separated
+- ✅ All documentation updated and aligned
+- ✅ E2E tests run by default (removed RUN_E2E gating)
+- ✅ Project root cleaned up
+
+**Commits:** 18 in hyperlib, 14 in hyperci submodule
+
+---
+
 ### ONE .venv Migration - COMPLETE ✅
 
 **Status:** COMPLETE - Deployed to production (v2.4.4)
