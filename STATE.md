@@ -41,7 +41,7 @@ curl -LsSf https://astral.sh/uv/install.sh | sh
 ./ci/run build
 
 # Nuitka
-BUILD_PROFILE=nuitka ./ci/run build
+./ci/run build --nuitka
 ```
 
 ## Next: Clean Up ci_lib.py

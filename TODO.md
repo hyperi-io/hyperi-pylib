@@ -41,7 +41,7 @@
 
 **Acceptance Criteria:**
 
-**Local Nuitka Build (`BUILD_PROFILE=nuitka ./ci/run build`):**
+**Local Nuitka Build (`./ci/run build --nuitka`):**
 - ✅ Must create .whl with .so files (compiled for local CPU arch only)
 - ✅ Must NOT contain .py source files
 - ✅ Wheel naming: `hyperlib-X.Y.Z-cp3XX-cp3XX-linux_x86_64.whl` (platform-specific)
