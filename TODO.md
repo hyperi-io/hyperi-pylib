@@ -190,19 +190,47 @@
 
 ---
 
-### Add Config Merge to Hyperlib
+### Replace ci_lib with Hyperlib (Strategic Goal)
 
-**Priority:** MEDIUM
+**Priority:** LOW (long-term architecture)
 
-**Current:** CI has sophisticated merge functions in ci_lib.py
-**Target:** Port clean merge capability to hyperlib.config
+**Vision:** Reduce duplication by making hyperci depend on hyperlib for shared utilities
 
-**What to port from ci_lib.py:**
-- `deep_merge_json()` - Deep merge dicts/JSON
-- `merge_file()` - Auto-detect and merge JSON/YAML/TOML
-- TOML merge support (tomllib + tomli-w)
+**Current State:**
+- ci_lib.py duplicates functionality that exists in hyperlib
+- Both have configuration cascade, logging, path utilities
+- Maintenance burden (keep both in sync)
 
-**Dependencies:** Add tomli-w to hyperlib runtime deps
+**Blocker:**
+- Circular dependency risk (hyperlib needs hyperci for CI, hyperci would need hyperlib)
+- hyperlib must be production-stable and published to JFrog first
+- hyperci would pip install hyperlib from JFrog (NOT direct code dependency)
+
+**Phase 1: Foundation (✅ COMPLETE)**
+- ✅ hyperlib.config has full 7-layer cascade
+- ✅ hyperlib.config.get_config() for multi-file support
+- ✅ hyperlib.logger production-ready
+- ✅ Comprehensive self-documenting docstrings
+
+**Phase 2: Port Utilities (FUTURE)**
+- Port deep_merge_json() to hyperlib.config
+- Port merge_file() (JSON/YAML/TOML auto-detect)
+- Add tomli-w dependency for TOML write support
+- Port common path utilities
+
+**Phase 3: Integration (FUTURE)**
+- Add hyperlib to hyperci's ci-local/pyproject.toml (pip install from JFrog)
+- Update hyperci to import from installed hyperlib package
+- Make ci_lib.py thin wrapper: `from hyperlib.config import get_config`
+- Remove duplicate code from ci_lib.py
+- Reduce hyperci maintenance burden
+
+**End Goal:**
+- hyperci pip installs hyperlib from JFrog (published package)
+- hyperci imports: `from hyperlib.config import get_config`
+- ci_lib.py becomes minimal shim (just HyperCI-specific helpers)
+- Single source of truth for configuration/logging
+- No direct code dependency (published package dependency only)
 
 ---
 
