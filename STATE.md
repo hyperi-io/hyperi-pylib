@@ -252,13 +252,14 @@ git add ci && git commit -m "chore: update ci submodule"
 **Building:**
 ```bash
 ./ci/run build           # Standard wheel + sdist (via uv build)
-BUILD_PROFILE=nuitka ./ci/run build    # Nuitka compiled binary
+./ci/run build --nuitka  # Nuitka compiled binary
 ```
 
 **Releasing:**
 ```bash
-./ci/run release --dry-run      # Preview next version
-CI_PUSH=1 ./ci/run release      # Create release + push tag
+./ci/run release --dry-run   # Preview next version
+./ci/run release             # Create release + push tag (default)
+./ci/run release --no-push   # Create release locally (don't push)
 ```
 
 **Publishing:**
@@ -270,10 +271,8 @@ CI_PUSH=1 ./ci/run release      # Create release + push tag
 ### Python-Specific Environment Variables
 
 **Build Control:**
-- `BUILD_PROFILE=package` - Standard wheel (default)
-- `BUILD_PROFILE=nuitka` - Nuitka compiled binary
-- `CI_BUILD_TYPE=standard` - Standard build (default)
-- `CI_BUILD_TYPE=nuitka` - Nuitka build (alternative to BUILD_PROFILE)
+- `CI_NUITKA=1` - Enable Nuitka build (set by --nuitka flag)
+- `CI_NUITKA_ONLY=1` - Publish only Nuitka wheels, skip standard (set by --nuitka-only)
 
 **Nuitka Protection Levels:**
 - `NUITKA_PROTECTION=none` - Basic compilation
@@ -287,8 +286,9 @@ CI_PUSH=1 ./ci/run release      # Create release + push tag
 - `CI_VERIFY_PUBLISH=1` - Enable post-publish verification
 
 **Release:**
-- `CI_PUSH=1` - Push release commit and tag to remote
-- `FORCE_RELEASE=1` - Force release even if not on release branch
+- Use `./ci/run release` (push is default)
+- Use `--no-push` flag to keep local (sets CI_NO_PUSH=1)
+- Use `--force` flag to bypass checks (sets CI_FORCE=1)
 
 ### Python Module Scripts
 
