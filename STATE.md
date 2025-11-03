@@ -61,10 +61,38 @@ curl -LsSf https://astral.sh/uv/install.sh | sh
 ./ci/run build --nuitka
 ```
 
-## Next: Clean Up ci_lib.py
-- Inconsistent naming (some have get_ prefix, some don't)
-- Remaining .venv/bin/uv references
-- Documentation updates
+## Strategic Goal: Replace ci_lib with Hyperlib
+
+**Long-term architecture goal** (when hyperlib is stable):
+
+Replace ci_lib.py functions with hyperlib equivalents to reduce duplication:
+- Configuration: ci_lib.get_config_value() → hyperlib.config.get_config()
+- Logging: ci_lib logger → hyperlib.logger
+- Utilities: Port shared functions to hyperlib
+
+**Current Blocker:**
+- Circular dependency risk (hyperlib needs hyperci for CI, hyperci needs hyperlib for utils)
+- hyperlib must be stable first
+
+**Strategy:**
+1. Stabilize hyperlib (production-ready, well-tested)
+2. Port ci_lib functions to hyperlib gradually
+3. Update hyperci to import from hyperlib
+4. Remove duplicate code from ci_lib.py
+5. ci_lib becomes thin wrapper around hyperlib
+
+**When Ready:**
+- hyperlib config.py has full 7-layer cascade (✅ DONE - Session 2025-11-04)
+- hyperlib.config.get_config() supports additional files (✅ DONE - Session 2025-11-04)
+- hyperlib logger.py is production-ready (✅ DONE)
+- hyperci pip installs hyperlib from JFrog (published package)
+- hyperci imports from hyperlib: `from hyperlib.config import get_config`
+- ci_lib becomes thin wrapper (80% reduction possible)
+
+## Next Tasks
+- Clean up ci_lib.py naming (get_ prefix inconsistency)
+- Test coverage for configuration cascade
+- Documentation alignment
 
 
 ---
