@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(./ci/run release --force:*)",
+      "Bash(xargs basename:*)",
+      "Bash(git -C /projects/hyperlib submodule status)"
+    ],
+    "deny": [],
+    "ask": []
+  },
+  "model": "claude-sonnet-4-5-20250929[1m]"
+}
