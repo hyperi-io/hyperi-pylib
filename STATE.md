@@ -3,8 +3,6 @@
 **Repository**: https://github.com/hypersec-io/hyperlib
 **Type**: Python package (shared library)
 **Purpose**: Enterprise infrastructure for all HyperSec Python projects
-**Version**: 2.4.4
-**Latest Published**: 2.4.4 (JFrog, 2025-10-31)
 
 ## Session 2025-10-31 Completed
 
