@@ -369,47 +369,83 @@ hyperlib/config/
 
 ---
 
-### Replace ci_lib with Hyperlib (Strategic Goal)
+### ~~Replace ci_lib with Hyperlib~~ - DECIDED NOT TO MIGRATE
 
-**Priority:** LOW (long-term architecture)
+**Status:** ANALYZED AND REJECTED (Session 2025-11-04)
 
-**Vision:** Reduce duplication by making hyperci depend on hyperlib for shared utilities
+**Decision:** Keep ci_lib and hyperlib as **separate, complementary libraries**
 
-**Current State:**
-- ci_lib.py duplicates functionality that exists in hyperlib
-- Both have configuration cascade, logging, path utilities
-- Maintenance burden (keep both in sync)
+**Analysis Summary:**
+- Reviewed all 48 functions in ci_lib.py
+- Only 10 functions (21%) have hyperlib equivalents
+- 38 functions (79%) are CI-specific and must stay
+- Migration would be counterproductive
 
-**Blocker:**
-- Circular dependency risk (hyperlib needs hyperci for CI, hyperci would need hyperlib)
-- hyperlib must be production-stable and published to JFrog first
-- hyperci would pip install hyperlib from JFrog (NOT direct code dependency)
+**Why NOT to Migrate:**
 
-**Phase 1: Foundation (✅ COMPLETE)**
-- ✅ hyperlib.config has full 7-layer cascade
-- ✅ hyperlib.config.get_config() for multi-file support
-- ✅ hyperlib.logger production-ready
-- ✅ Comprehensive self-documenting docstrings
+**1. Different Purposes (Architectural)**
+- **ci_lib:** CI infrastructure (git operations, submodule management, .d scripts, language modules)
+- **hyperlib:** Application runtime (app config, logging, database, metrics, container deployment)
+- Clear separation is GOOD, not redundant
 
-**Phase 2: Port Utilities (FUTURE)**
-- Port deep_merge_json() to hyperlib.config
-- Port merge_file() (JSON/YAML/TOML auto-detect)
-- Add tomli-w dependency for TOML write support
-- Port common path utilities
+**2. Circular Dependency Risk**
+- Bootstrap runs BEFORE hyperlib is installed
+- Can't use hyperlib in bootstrap.d/ scripts
+- Would need to vendor hyperlib into ci/ (defeats purpose)
 
-**Phase 3: Integration (FUTURE)**
-- Add hyperlib to hyperci's ci-local/pyproject.toml (pip install from JFrog)
-- Update hyperci to import from installed hyperlib package
-- Make ci_lib.py thin wrapper: `from hyperlib.config import get_config`
-- Remove duplicate code from ci_lib.py
-- Reduce hyperci maintenance burden
+**3. Configuration Incompatibility**
+- ci_lib reads: `ci-local/ci.yaml`, `ci/modules/*/defaults.yaml` (CI config)
+- hyperlib reads: `config/settings.yaml`, `~/.config/app/` (app config)
+- Different file locations for different purposes
 
-**End Goal:**
-- hyperci pip installs hyperlib from JFrog (published package)
-- hyperci imports: `from hyperlib.config import get_config`
-- ci_lib.py becomes minimal shim (just HyperCI-specific helpers)
-- Single source of truth for configuration/logging
-- No direct code dependency (published package dependency only)
+**4. API Mismatches**
+- ci_lib: Returns `(changed, message)` tuples for tracking
+- hyperlib: Returns `None` or raises exceptions
+- Would need wrapper functions anyway (no net benefit)
+
+**5. Minimal Code Reduction**
+- Only ~200 lines could be saved
+- Introduces complexity and fragility
+- Not worth the risk
+
+**Correct Architecture (KEEP THIS):**
+
+```
+ci_lib.py (CI Infrastructure)
+├── Git operations (branches, commits, tags)
+├── Submodule management (ci/ is submodule)
+├── Language modules (python, future: rust, go)
+├── .d script execution
+├── CI-specific config (ci.yaml, BUILD_PROFILE, etc.)
+└── UV/package management
+
+hyperlib (Application Runtime)
+├── Configuration (settings.yaml, 7-layer cascade)
+├── Logging (structured, RFC 3339)
+├── Config file merging (JSON/YAML/TOML)
+├── Database utilities
+├── Metrics (Prometheus)
+├── Runtime paths (container-aware)
+└── Application framework
+```
+
+**Benefits of Separation:**
+- ✅ No circular dependencies
+- ✅ Clear ownership (CI vs app concerns)
+- ✅ Hyperlib truly reusable (no CI coupling)
+- ✅ ci_lib focused on CI infrastructure
+- ✅ Both can evolve independently
+
+**What WAS Accomplished:**
+- ✅ Phase 1 COMPLETE: hyperlib has all foundation features
+- ✅ hyperlib.config has 7-layer cascade (better than ci_lib)
+- ✅ hyperlib.config.merge has comprehensive file merging
+- ✅ hyperlib published to JFrog (v2.7.2)
+- ✅ Self-documenting code throughout
+
+**Future:** Both libraries coexist happily, serving different needs!
+
+---
 
 ---
 
