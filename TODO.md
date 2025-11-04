@@ -179,6 +179,61 @@
 
 ---
 
+### Reorganize src/hyperlib/ to Subdirectory Structure
+
+**Priority:** HIGH (code organization)
+
+**Current:** Single-file modules (config.py, logger.py, runtime.py, etc.)
+**Target:** Subdirectory modules matching application/ pattern
+
+**Proposed Structure:**
+```
+src/hyperlib/
+├── __init__.py           # Main exports (no changes to public API)
+├── application/          # ✓ Already organized
+├── config/
+│   ├── __init__.py       # Re-export everything from config.py
+│   └── config.py         # Main implementation (moved)
+├── logger/
+│   ├── __init__.py       # Re-export from logger.py
+│   └── logger.py         # Main implementation (moved)
+├── runtime/
+│   ├── __init__.py       # Re-export from runtime.py
+│   └── runtime.py        # Main implementation (moved)
+├── database/             # Rename dbconn → database (clearer)
+│   ├── __init__.py       # Re-export from connection.py
+│   └── connection.py     # Main implementation (was dbconn.py)
+├── metrics/              # Rename prometheus → metrics (clearer)
+│   ├── __init__.py       # Re-export from prometheus.py
+│   └── prometheus.py     # Main implementation (moved)
+└── harness/
+    ├── __init__.py       # Re-export from harness.py
+    └── harness.py        # Main implementation (moved)
+```
+
+**Benefits:**
+- Consistent structure (all modules in subdirs)
+- Room for growth (add helper files later)
+- Clearer naming (database, metrics)
+- Matches application/ pattern
+- Better IDE navigation
+
+**Backward Compatibility:**
+- All imports still work (re-exported from submodule __init__.py)
+- No breaking changes
+- Internal reorganization only
+- Tests should pass without modification
+
+**Implementation Plan:**
+1. Create subdirectories
+2. Move files with git mv (preserves history)
+3. Create __init__.py files with re-exports
+4. Update internal imports
+5. Run full test suite
+6. Verify no breaking changes
+
+---
+
 ### Refactor Application.mcp() to Use FastMCP
 
 **Priority:** MEDIUM
