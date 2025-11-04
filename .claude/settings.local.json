@@ -1,10 +1,19 @@
 {
   "permissions": {
     "allow": [
-      "Bash(./ci/run release --force:*)",
-      "Bash(xargs basename:*)",
-      "Bash(git -C /projects/hyperlib submodule status)",
-      "Bash(python3:*)"
+      "Bash(.venv/bin/python -m pytest:*)",
+      "Bash(.venv/bin/python:*)",
+      "Bash(git mv:*)",
+      "Bash(git restore:*)",
+      "Bash(test:*)",
+      "Bash(.venv/bin/pip install:*)",
+      "Bash(git -C ci status:*)",
+      "Bash(git -C ci commit -m \"chore(release): 1.0.0 - General Availability\n\nHyperCI v1.0.0 - Production ready, general availability release.\n\nThis is a BREAKING CHANGE marking the official 1.0 GA release.\n\nMajor improvements in this release:\n- Removed MCP server dependencies (simpler setup)\n- Removed redundant gitci tool (consolidated to bootstrap)\n- Added ci.version semver pinning\n- Comprehensive configuration cascade documentation\n- Test log consolidation\n- Explicit TOML merge error handling\n- 15 new integration tests\n\nBreaking changes:\n- MCP servers no longer auto-configured\n- gitci tool removed (use bootstrap for git hooks)\n- Node.js/npx no longer required\n\nMigration:\n- Update submodule: git submodule update --init --recursive\n- Run bootstrap: ./ci/bootstrap --install\n- No MCP setup needed\n\nThis release represents production-ready CI infrastructure.\")",
+      "Bash(git -C ci tag -a v1.0.0 -m \"HyperCI v1.0.0 - General Availability\n\nProduction-ready CI infrastructure for Python projects.\n\nMajor features:\n- Modular architecture (common + language-specific)\n- Configuration cascade (7 layers)\n- Semver version pinning (ci.version)\n- Test coverage (71 integration tests)\n- Zero Node.js dependencies\n\nBreaking changes from v0.3.2:\n- MCP servers removed\n- gitci tool removed\")",
+      "Bash(git -C ci push origin main)",
+      "Bash(git -C ci push origin v1.0.0)",
+      "Bash(.venv/bin/black src/hyperlib/config/merge.py src/hyperlib/config/config.py tests/unit/test_config_merge.py)",
+      "Bash(.venv/bin/isort:*)"
     ],
     "deny": [],
     "ask": []
