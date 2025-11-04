@@ -13,7 +13,13 @@
       "Bash(git -C ci push origin main)",
       "Bash(git -C ci push origin v1.0.0)",
       "Bash(.venv/bin/black src/hyperlib/config/merge.py src/hyperlib/config/config.py tests/unit/test_config_merge.py)",
-      "Bash(.venv/bin/isort:*)"
+      "Bash(.venv/bin/isort:*)",
+      "Bash(cat:*)",
+      "Bash(unzip:*)",
+      "Bash(./ci/run:*)",
+      "Bash(tee:*)",
+      "Bash(gh run list:*)",
+      "Bash(gh run watch:*)"
     ],
     "deny": [],
     "ask": []
