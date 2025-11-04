@@ -245,6 +245,130 @@ src/hyperlib/
 
 ---
 
+### Add Config File Merge to Hyperlib
+
+**Priority:** HIGH (foundation for ci_lib replacement)
+
+**Goal:** Comprehensive config file merge module with auto-detection and multiple strategies
+
+**Research Complete (Session 2025-11-04):**
+- ✅ Dynaconf already supports merging (we use it)
+- ✅ mergedeep in dev deps (for dict merging)
+- ✅ filetype/puremagic for content detection (researched)
+- ✅ File categories identified via web search
+
+**Dependencies to Add:**
+```python
+# Move to runtime dependencies:
+dependencies = [
+    "mergedeep>=1.3.4",  # Deep dict merging
+    "tomli-w>=1.0.0",    # TOML writing
+]
+# Optional (for content detection):
+optional-dependencies.enhanced = [
+    "puremagic>=1.21",   # Content-based file type detection
+]
+```
+
+**File Type Categories (from research):**
+
+**1. Structured Data (deep merge):**
+- JSON (.json) - Deep merge dicts, preserve structure
+- YAML (.yaml, .yml) - Deep merge with PyYAML
+- TOML (.toml) - Deep merge with tomllib + tomli-w
+
+**2. Flat Key-Value (update strategy):**
+- INI (.ini, .cfg) - Section-based merge, update keys
+- ENV (.env) - Line-based append/update
+- Properties (.properties) - Java-style key=value
+
+**3. Line-Based Lists (append + deduplicate):**
+- .gitignore - Append unique patterns
+- .dockerignore - Append unique patterns
+- requirements.txt - Append unique packages
+- .gitattributes - Append unique rules
+
+**4. Auto-Detection Logic:**
+- Extension first (.json → JSON)
+- Content patterns if unknown:
+  - JSON: starts with `{` or `[`
+  - YAML: starts with `---` or has `: ` patterns
+  - TOML: starts with `[section]`
+  - INI: has `[section]` + `key=value`
+- Use puremagic for binary/unknown formats
+
+**API Design:**
+
+```python
+from hyperlib.config import merge_files
+
+# Auto-detect and merge
+merge_files("source.yaml", "target.yaml")
+
+# Explicit strategy
+merge_files("a.json", "b.json", strategy="deep")
+merge_files(".gitignore.tmpl", ".gitignore", strategy="append")
+
+# Batch merge multiple sources
+merge_files(
+    sources=["base.yaml", "env.yaml", "local.yaml"],
+    target="merged.yaml",
+    strategy="deep"
+)
+
+# Dry-run (return merged content, don't write)
+content = merge_files("a.yaml", "b.yaml", dry_run=True)
+```
+
+**Module Structure:**
+
+```python
+hyperlib/config/
+├── __init__.py          # Re-exports
+├── config.py            # Existing config
+└── merge.py             # NEW - merge functionality
+```
+
+**Tests (tests/unit/test_config_merge.py):**
+
+**Valid Data Tests:**
+- test_merge_json_deep() - Nested dicts, arrays
+- test_merge_yaml_deep() - Complex YAML structures
+- test_merge_toml_deep() - Tables and arrays
+- test_merge_ini_sections() - Multi-section INI
+- test_merge_env_append() - ENV file with duplicates
+- test_merge_gitignore_dedup() - Pattern deduplication
+- test_auto_detect_json_by_content() - Content detection
+- test_auto_detect_yaml_by_content() - Content detection
+- test_batch_merge_multiple_files() - Multi-source merge
+
+**Invalid Data/Error Tests:**
+- test_invalid_json_syntax() - Malformed JSON
+- test_invalid_yaml_syntax() - Invalid YAML
+- test_invalid_toml_syntax() - Bad TOML
+- test_unsupported_file_type() - .exe, .bin
+- test_missing_source_file() - FileNotFoundError
+- test_permission_denied() - PermissionError
+- test_merge_incompatible_types() - JSON + TOML
+- test_tomli_w_missing() - TOML merge without tomli-w
+- test_circular_reference_yaml() - YAML anchors gone wrong
+
+**Port from ci_lib.py:**
+- `deep_merge_json()` - Line 887 (keep and enhance)
+- `merge_gitignore_file()` - Line 1001 (generalize to line-based)
+- `merge_file()` - Line 1411 (simplify, make non-CI-specific)
+
+**Documentation:**
+- Comprehensive module docstring (100+ lines)
+- Quick Start examples
+- All supported file types documented
+- Merge strategies explained
+- Error handling documented
+
+**Estimated Effort:** 4-6 hours (new module + comprehensive tests)
+
+---
+
 ### Replace ci_lib with Hyperlib (Strategic Goal)
 
 **Priority:** LOW (long-term architecture)
