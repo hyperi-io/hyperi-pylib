@@ -4,6 +4,24 @@
 **Type**: Python package (shared library)
 **Purpose**: Enterprise infrastructure for all HyperSec Python projects
 
+## Session 2025-11-07 Completed
+
+### Python Standards Documentation - Complete
+- Added comprehensive "No Mocks or Mock Code Policy" to PYTHON-STANDARDS.md
+  - Policy: Production code must be complete, no placeholders/TODOs
+  - Examples: Bad (mock) vs Good (real) implementations
+  - AI assistant warning signs and enforcement checklist
+  - Migration path for existing mock code
+- Added "Hyperlib Infrastructure Standards" to PYTHON-STANDARDS.md
+  - Concise "What to Use When" reference table
+  - Module standards for logging, config, runtime, database, metrics, CLI
+  - Quick start examples (Application framework vs individual components)
+  - Replaced verbose documentation with "use this for that" approach
+- Separated hyperci-specific guidance from general project standards
+  - Moved ci_lib logging instructions to STATE.md (hyperci development only)
+  - PYTHON-STANDARDS.md now covers all projects using hyperlib
+  - Clear distinction: ci_lib (internal) vs hyperlib (standard)
+
 ## Session 2025-11-03 Completed
 
 ### VERSION Sync & Environment Variable Standardization - Complete
@@ -88,6 +106,26 @@ Replace ci_lib.py functions with hyperlib equivalents to reduce duplication:
 - hyperci pip installs hyperlib from JFrog (published package)
 - hyperci imports from hyperlib: `from hyperlib.config import get_config`
 - ci_lib becomes thin wrapper (80% reduction possible)
+
+## HyperCI Development Guidelines
+
+### Logging in CI Scripts (hyperci development only)
+
+**When developing CI scripts for hyperci, use ci_lib logger:**
+```python
+from ci_lib import logger
+
+logger.info("Starting build...")
+logger.warning("Tests skipped")
+logger.error("Build failed")
+```
+
+**Features:**
+- Consistent formatting across all CI scripts
+- Color output for terminal readability
+- Appropriate severity levels (info, warning, error)
+
+**Note:** This is ONLY for hyperci CI script development. Normal projects should use hyperlib.logger instead.
 
 ## Next Tasks
 - Clean up ci_lib.py naming (get_ prefix inconsistency)
