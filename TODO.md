@@ -86,6 +86,38 @@
 
 ## Backlog
 
+### Add Gitleaks Secret Scanning to HyperCI
+
+**Priority:** HIGH (security - prevent secrets in commits)
+
+**Status:** Design complete (`.tmp/hyperci-secret-scanning-design.md`)
+
+**Goal:** Pre-commit secret scanning with Gitleaks to detect passwords, API keys, tokens before git push
+
+**Implementation:**
+1. Create `ci/modules/common/gitci.d/10-pre-commit-secrets-scan.py`
+2. Update pre-commit hook to call secrets scan
+3. Add bootstrap check for Gitleaks installation
+4. Create `.gitleaks.toml` config template
+5. Add GitHub Actions workflow for PR checks
+
+**Tool:** Gitleaks (not Presidio - different domain)
+- **Gitleaks:** Pre-commit secret scanning (fast, Git-aware)
+- **Presidio:** Runtime PII detection (ML-based, for logs/data)
+
+**Features:**
+- Scans staged files only (fast)
+- JSON report with file:line locations
+- Custom patterns via `.gitleaks.toml`
+- CI_SKIP_SECRETS_SCAN=1 emergency override
+- Multi-layer: pre-commit → pre-receive → CI/CD → periodic
+
+**Estimated Effort:** 3-4 hours
+
+**Dependencies:** Hyperlib must be stable first (in progress - Presidio integration)
+
+---
+
 ### Update ci/tests for Recent Changes
 
 **Priority:** HIGH (test coverage for new features)
