@@ -30,7 +30,20 @@
       "Bash(.venv-test/bin/pip install:*)",
       "Bash(.venv-test/bin/pytest tests/e2e/test_external_projects.py -v --tb=short)",
       "Bash(git pull:*)",
-      "Bash(git stash:*)"
+      "Bash(git stash:*)",
+      "Bash(tree:*)",
+      "Bash(.venv/bin/pytest tests/unit/test_database.py -v)",
+      "Bash(.venv/bin/pytest tests/unit/test_logger_filters.py -v)",
+      "Bash(.venv/bin/pytest tests/unit/test_logger_filters.py::TestSensitiveDataFilter::test_mask_password_json -xvs)",
+      "Bash(.venv/bin/pytest tests/unit/test_logger_filters.py::TestSensitiveDataFilter::test_mask_form_encoded_data -xvs)",
+      "Bash(.venv/bin/pytest:*)",
+      "Bash(.venv/bin/python3:*)",
+      "Bash(uv pip install:*)",
+      "Bash(.venv/bin/python:*)",
+      "Bash(git -C /projects/hyperlib status --short)",
+      "Bash(git mv:*)",
+      "Bash(git -C ci diff modules/common/hooks/pre-commit)",
+      "Bash(sudo dnf install:*)"
     ],
     "deny": [],
     "ask": []
