@@ -6,6 +6,47 @@
 
 **Communication Style**: See [.claude/DEREK.md](.claude/DEREK.md) for Derek's preferred style (professional but relaxed Australian, no LLM fluff)
 
+## Session 2025-11-07 Continued (Part 4)
+
+### Metrics Backend Abstraction - Complete ✅
+- Added backend-agnostic metrics API
+  - Unified interface for Prometheus and OpenTelemetry backends
+  - Config-based backend switching: `metrics.backend: prometheus` or `opentelemetry`
+  - Zero breaking changes (Prometheus remains default)
+  - Automatic fallback to Prometheus if backend unavailable
+- **Architecture:**
+  - `MetricsManager` - Unified API for all backends
+  - `MetricsBackend` - Abstract base class
+  - `PrometheusBackend` - Wraps existing PrometheusMetrics
+  - `OpenTelemetryBackend` - New OTel implementation
+- **OpenTelemetry support:**
+  - OTLP mode: Push metrics to collector (default)
+  - Prometheus mode: Expose metrics for scraping
+  - Optional dependency: `pip install hyperlib[opentelemetry]`
+  - Dependencies: opentelemetry-api, opentelemetry-sdk, opentelemetry-exporter-otlp, opentelemetry-exporter-prometheus
+- **Lifecycle management:**
+  - Prometheus: Background thread for process/container metrics collection
+  - OpenTelemetry: Periodic exporter pushes metrics automatically
+  - Both handle start/stop/update lifecycle
+- **Testing:**
+  - 18 comprehensive tests (17 passing, 1 skipped without OTel)
+  - Tests cover: backend switching, fallback behavior, unified API, lifecycle
+- **Usage:**
+  ```python
+  from hyperlib.metrics import create_metrics
+
+  # Default (Prometheus)
+  metrics = create_metrics("myapp")
+
+  # OpenTelemetry
+  metrics = create_metrics("myapp", backend="opentelemetry")
+
+  # Same API regardless of backend
+  metrics.counter("requests", "Total requests").inc()
+  metrics.gauge("queue_size", "Queue depth").set(42)
+  metrics.histogram("latency", "Latency").observe(0.123)
+  ```
+
 ## Session 2025-11-07 Continued (Part 3)
 
 ### Two-Tier Sensitive Data Anonymization - Complete ✅
