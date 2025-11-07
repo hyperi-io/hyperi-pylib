@@ -8,6 +8,27 @@
 
 ## Session 2025-11-07 Continued (Part 4)
 
+### Gitleaks Secret Scanning (HyperCI) - Complete ✅
+- Added Gitleaks integration to HyperCI pre-commit hooks
+  - Scans staged files for secrets (API keys, passwords, tokens) before commit
+  - Blocks commits if secrets detected
+  - Gracefully skips if Gitleaks not installed (no errors)
+  - ENV: `CI_SKIP_SECRETS_SCAN=1` to disable scanning
+- **Implementation:**
+  - Pre-commit hook: Section 3 (secrets scanning)
+  - Bootstrap (90-git-hooks.py): Checks Gitleaks, suggests installation, installs .gitleaks.toml
+  - Template: `.gitleaks.toml` with HyperSec/JFrog rules, test allowlists
+- **Behavior:**
+  - Not installed: Warning shown on each commit (install instructions provided)
+  - Installed: Scans every commit
+  - Secrets found: Blocks commit with clear error + instructions
+  - Bypass: `git commit --no-verify` (not recommended)
+- **Design:**
+  - No .d scripts (inline bash in pre-commit hook)
+  - Default config from hyperci (ci/modules/common/templates/.gitleaks.toml)
+  - Project overrides in project root (.gitleaks.toml)
+  - Future projects get Gitleaks automatically via `./ci/bootstrap --install`
+
 ### Metrics Backend Abstraction - Complete ✅
 - Added backend-agnostic metrics API
   - Unified interface for Prometheus and OpenTelemetry backends
