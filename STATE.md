@@ -4,6 +4,40 @@
 **Type**: Python package (shared library)
 **Purpose**: Enterprise infrastructure for all HyperSec Python projects
 
+**Communication Style**: See [.claude/DEREK.md](.claude/DEREK.md) for Derek's preferred style (professional but relaxed Australian, no LLM fluff)
+
+## Session 2025-11-07 Continued (Part 3)
+
+### Two-Tier Sensitive Data Anonymization - Complete ✅
+- Integrated Presidio with logger filters (two-tier approach)
+  - **Tier 1 (default):** Regex-based `SensitiveDataFilter` (fast, zero deps)
+  - **Tier 2 (opt-in):** `PresidioSensitiveDataFilter` (ML-based, better accuracy)
+  - Configuration: `logging.masking_level: "simple"` (default) or `"advanced"`
+  - Automatic fallback: If Presidio not installed, falls back to regex with warning
+- Custom recognizers for cybersecurity patterns (50+ patterns)
+  - Research from detect-secrets (Yelp), secrets-patterns-db (mazen160), secret-regex-list (h33tlit)
+  - Patterns: AWS (AKIA...), Stripe (sk_live_...), GitHub (ghp_..., github_pat_...), OpenAI (sk-..., sk-proj-...),
+    Slack (xoxp-...), JWT, SendGrid, Mailchimp, Twilio, Bearer tokens, database URLs, private keys
+  - 3 custom recognizers: PasswordRecognizer, ApiKeyRecognizer, SecretKeyRecognizer
+- Comprehensive tests with real-world edge cases
+  - 42 anonymizer tests: Config files (.env, YAML, JSON), DFE data exports, streaming, false positives
+  - Test data from DLPTest.com, Nightfall datasets (realistic SSNs, credit cards, complex patterns)
+  - All 42 tests passing (100%)
+- Updated dependencies
+  - Added `presidio` extra: `pip install hyperlib[presidio]`
+  - Standardized on psycopg3: `psycopg[binary]>=3.1.0` (note: hyperlib doesn't use it directly, just lists for users)
+- Architecture clarification
+  - **Logger filters:** Runtime log masking (for dfe-cli-core, dfe-ui-backend)
+  - **Anonymizer module:** Structured data, config files, streaming (separate concern)
+  - **Gitleaks:** Pre-commit Git scanning (separate tool, for hyperci not hyperlib)
+
+### Test Status (Updated)
+- Hyperlib unit: 165/165 (100%)
+  - Anonymizer: 42/42 (config files, streaming, edge cases)
+  - Logger filters: 22/22 (regex + Presidio integration)
+  - Database: 11/11 (ClickHouse + regression)
+  - Others: 90/90 (config, runtime, logger, etc.)
+
 ## Session 2025-11-07 Continued (Part 2)
 
 ### ClickHouse Database Support - Complete ✅
