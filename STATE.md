@@ -6,6 +6,62 @@
 
 **Communication Style**: See [.claude/DEREK.md](.claude/DEREK.md) for Derek's preferred style (professional but relaxed Australian, no LLM fluff)
 
+## Session 2025-11-07 Continued (Part 5)
+
+### Container-Native Application Patterns - Design Complete ✅
+**Status:** Design approved, implementation plan in TODO.md, ready to start Phase 1
+
+**Context:**
+- Analyzed 3 DFE projects (dfe-ui-backend, dfe-hunt-runner, dfe-cli-core) for containerization patterns
+- Identified critical issues: Hunt Runner orphaning bug, inconsistent health checks, no metrics
+- Design documents: `~/hyperlib/containerization_analysis.md`, `~/hyperlib/ANALYSIS_SUMMARY.md`
+
+**Key Design Decisions:**
+1. **Three Profiles:** dev (local), docker (CI/CD), prod (k8s+HELM+ArgoCD+KEDA)
+   - No kubernetes profile (prod = k8s deployment)
+   - Profile-based feature enablement (health checks, metrics, logging format)
+2. **Mixin-Based Composition:**
+   - ProfileMixin, SignalHandlerMixin, CLIExecutableMixin, HealthCheckMixin, MetricsMixin
+   - Reusable across all application types
+   - Single responsibility, test independently
+3. **Metrics Strategy:** Prometheus-first with auto-OTEL conversion
+   - Default: Prometheus naming (`http_requests_total`, `task_execution_duration_seconds`)
+   - Auto-convert to OTEL semantic conventions when `METRICS_BACKEND=opentelemetry`
+   - Zero code changes to switch backends, KEDA-compatible
+4. **CLI-First Pattern:** All apps executed as CLI commands in containers
+   - Every app type gets Typer CLI (serve, start, run, health-check, version, config)
+   - Container CMD: `python -m myapp serve --profile prod`
+5. **Opinionated Defaults:** Production-ready out of the box
+   - `Application.api(profile="prod")` → health checks, metrics, graceful shutdown
+   - `Application.daemon(profile="prod")` → health HTTP server, task metrics, fixes orphaning bug
+
+**Object Inheritance Hierarchy:**
+```
+APIApplication(CLIExecutableMixin, SignalHandlerMixin, ProfileMixin, HealthCheckMixin, MetricsMixin)
+DaemonApplication(CLIExecutableMixin, SignalHandlerMixin, ProfileMixin, MetricsMixin)
+MCPApplication(CLIExecutableMixin, SignalHandlerMixin, ProfileMixin, MetricsMixin)
+OneshotApplication(CLIExecutableMixin, SignalHandlerMixin, ProfileMixin)
+CLIApplication(SignalHandlerMixin, ProfileMixin)
+```
+
+**Migration Assessment (DFE Apps):**
+- **dfe-cli-core** (CLI): 3-4 hours - Click→Typer migration, type hints, config
+- **dfe-ui-backend** (API): 2-3 hours - Replace custom setup with hyperlib framework
+- **dfe-hunt-runner** (Daemon): 4-6 hours - **Fixes critical orphaning bug**, subprocess tracking
+- **Total effort:** 10-13 hours (1-2 days)
+
+**Implementation Plan (4 Phases, ~3 weeks):**
+- **Phase 1 (Week 1):** Profile system, base mixins, metrics integration with Prometheus→OTEL conversion
+- **Phase 2 (Week 2):** Update all 5 application types (API, Daemon, MCP, Oneshot, CLI)
+- **Phase 3 (Week 3):** HealthCheckMixin with dependency checks, k8s probe timings
+- **Phase 4 (Week 4):** Documentation, examples, HELM chart templates
+
+**Next Actions:**
+1. Review TODO.md implementation plan
+2. Create feature branch: `feat/container-native-patterns`
+3. Start Phase 1: Profile system + base mixins
+4. Iterate with tests after each phase
+
 ## Session 2025-11-07 Continued (Part 4)
 
 ### Gitleaks Secret Scanning (HyperCI) - Complete ✅

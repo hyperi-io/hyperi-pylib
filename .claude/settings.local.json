@@ -43,7 +43,10 @@
       "Bash(git -C /projects/hyperlib status --short)",
       "Bash(git mv:*)",
       "Bash(git -C ci diff modules/common/hooks/pre-commit)",
-      "Bash(sudo dnf install:*)"
+      "Bash(sudo dnf install:*)",
+      "Bash(ls:*)",
+      "Bash(git restore:*)",
+      "Bash(mkdir:*)"
     ],
     "deny": [],
     "ask": []
