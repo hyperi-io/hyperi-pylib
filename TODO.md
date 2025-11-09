@@ -2,533 +2,706 @@
 
 ## Active
 
-### VERSION Sync & Env Var Standardization - COMPLETE
+### Container-Native Application Patterns - APPROVED DESIGN
 
-**Status:** COMPLETE - Deployed to production (v2.6.2)
+**Priority:** HIGH (critical for production deployments)
 
-**Achievements:**
-- VERSION file sync working (plain format, atomic with git tag)
-- All env vars use CI_ prefix matching flag names
-- Removed 647 lines of complexity
-- Added --nuitka-only release mode
-- Build/publish properly separated
-- All documentation updated and aligned
-- E2E tests run by default (removed RUN_E2E gating)
-- Project root cleaned up
+**Status:** Design approved, ready to implement
 
-**Commits:** 18 in hyperlib, 14 in hyperci submodule
+**Analysis Documents:** `~/hyperlib/` (containerization_analysis.md, ANALYSIS_SUMMARY.md)
 
 ---
 
-### ONE .venv Migration - COMPLETE
+## Implementation Plan
 
-**Status:** COMPLETE - Deployed to production (v2.4.4)
+### Design Decisions (APPROVED)
 
-**Achievements:**
-- Unified .venv at project root (runtime + CI tools)
-- Unified .env at project root (project + CI secrets)
-- Removed ci-local/.venv, ci-local/pyproject.toml, ci-local/uv.lock
-- Updated 35+ files in HyperCI submodule
-- Standard builds work in GitHub Actions
-- Published hyperlib-2.4.4 to JFrog (standard wheel)
+1. **Three Profiles:** `dev`, `docker`, `prod` (no kubernetes profile)
+   - `dev`: Local development (console logs, no metrics, hot reload)
+   - `docker`: Integration testing, CI/CD (JSON logs, metrics, health checks)
+   - `prod`: Production = k8s + HELM + ArgoCD + KEDA (all features enabled)
 
-**HyperCI commits:** 4 commits (feat, 3 fixes)
-**Hyperlib commits:** 3 commits (fix, 2 chore updates)
+2. **Architecture:** Mixin-based composition
+   - `CLIExecutableMixin` - Typer CLI for all app types
+   - `SignalHandlerMixin` - Graceful shutdown (SIGTERM/SIGINT)
+   - `ProfileMixin` - Profile loading and application
+   - `HealthCheckMixin` - Health/readiness endpoints
+   - `MetricsMixin` - Auto-instrumentation
+
+3. **Metrics Strategy:** Prometheus-first with auto-OTEL conversion
+   - Default: Prometheus naming conventions (`http_requests_total`, `task_execution_duration_seconds`)
+   - Backend auto-converts to OTEL semantic conventions when `METRICS_BACKEND=opentelemetry`
+   - Zero code changes for developers to switch backends
+   - KEDA-compatible by default (Prometheus format)
+
+4. **CLI-First Pattern:** All apps executed as CLI commands
+   - Every app type gets Typer CLI with standard commands
+   - Standard commands: `version`, `config`, `validate`, `health-check`
+   - App-specific commands: `serve` (API), `start` (Daemon), etc.
+
+5. **Opinionated Defaults:** Production-ready out of the box
+   - `Application.api()` with `profile="prod"` → health checks, metrics, graceful shutdown
+   - `Application.daemon()` with `profile="prod"` → process management, health HTTP server
+   - Developer just adds their business logic
 
 ---
 
-### Fix Nuitka Builds - COMPLETE
+## Object Inheritance Hierarchy
 
-**Priority:** HIGH (Nuitka builds completely broken)
+### Mixin Composition Pattern
 
-**Status:** COMPLETE - All issues resolved
+**Base Mixins** (single responsibility):
+```
+ProfileMixin           - Profile loading and application
+SignalHandlerMixin     - SIGTERM/SIGINT handling with timeout
+CLIExecutableMixin     - Typer CLI commands (version, config, validate)
+HealthCheckMixin       - /health and /ready endpoints
+MetricsMixin           - Auto-instrumentation based on app type
+```
 
-**Issues Found:**
-1. FIXED: Missing `nuitka_protection()` function in ci_lib
-2. FIXED: `get_build_config()` reads wrong location (deleted function)
-3. FIXED: `build_type()` doesn't check BUILD_PROFILE (added fallback)
-4. FIXED: `--script` mode passes wrong action (run.py bug)
-5. FIXED: Nuitka-commercial installation fails (pip can't find package)
-6. FIXED: Nuitka builds return success but don't run (silent skip)
-7. FIXED: Need explicit --index-url for Nuitka install (uv doesn't use pip.conf)
+**Application Types** (multiple inheritance):
+```
+APIApplication(
+    CLIExecutableMixin,
+    SignalHandlerMixin,
+    ProfileMixin,
+    HealthCheckMixin,
+    MetricsMixin
+)
+├── Typer commands: serve, health-check, validate, version, config
+├── HTTP metrics: http_requests_total, http_request_duration_seconds
+├── Health endpoints: /health, /ready
+└── Graceful shutdown on SIGTERM/SIGINT
 
-**Current Blocker:**
-- `pip install nuitka-commercial` fails even though package exists in JFrog
-- Reason: pip.conf not being used by uv-created venv
-- Solution: Use explicit `--index-url` in install command
+DaemonApplication(
+    CLIExecutableMixin,
+    SignalHandlerMixin,
+    ProfileMixin,
+    MetricsMixin
+)
+├── Typer commands: start, status, stop, version, config
+├── Task metrics: task_execution_total, task_execution_duration_seconds
+├── Health HTTP server (separate thread on port 8080)
+└── Fixes process orphaning bug
 
-**Acceptance Criteria:**
+MCPApplication(
+    CLIExecutableMixin,
+    SignalHandlerMixin,
+    ProfileMixin,
+    MetricsMixin
+)
+├── Typer commands: serve, validate, version, config
+├── MCP metrics: mcp_requests_total, mcp_request_duration_seconds
+├── Health check in MCP protocol
+└── Graceful shutdown
 
-**Local Nuitka Build (`./ci/run build --nuitka`):**
-- Must create .whl with .so files (compiled for local CPU arch only)
-- Must NOT contain .py source files
-- Wheel naming: `hyperlib-X.Y.Z-cp3XX-cp3XX-linux_x86_64.whl` (platform-specific)
-- Contents: `hyperlib/*.so` files (compiled modules)
+OneshotApplication(
+    CLIExecutableMixin,
+    SignalHandlerMixin,
+    ProfileMixin
+)
+├── Typer commands: run, validate, version, config
+├── Job metrics: job_execution_total, job_execution_duration_seconds
+├── No health checks (one-shot execution)
+└── Graceful shutdown if interrupted
 
-**GitHub Actions Nuitka Release:**
-- Must create wheels for BOTH x64 AND arm64 architectures
-- Each wheel contains .so files for its specific architecture
-- Must NOT contain .py source files
-- Published to JFrog with both:
-  - `hyperlib-X.Y.Z-cp3XX-cp3XX-linux_x86_64.whl` (x64)
-  - `hyperlib-X.Y.Z-cp3XX-cp3XX-linux_aarch64.whl` (arm64)
-- Both wheels + tar.gz published automatically (no manual intervention)
+CLIApplication(
+    SignalHandlerMixin,
+    ProfileMixin
+)
+├── Full Typer CLI (user-defined commands)
+├── No metrics by default (CLI tools)
+├── No health checks
+└── Profile-based logging only
+```
 
-**Results (v2.4.4 Published):**
-1. FIXED: Nuitka-commercial installation (token auth)
-2. TESTED: Local BUILD_PROFILE=nuitka ./ci/run build
-3. VERIFIED: .so files in wheel (1.3 MB .so, 0 .py source)
-4. COMMITTED: All fixes pushed to HyperCI + hyperlib
-5. TESTED: GitHub Actions nuitka-x64 + nuitka-arm64 builds
-6. VERIFIED: Both wheels in JFrog with .so files (685 KB x64, 644 KB arm64)
+**Method Resolution Order (MRO)**:
+- Python C3 linearization ensures predictable method lookup
+- Mixins ordered left-to-right by initialization priority
+- Profile loading happens first, then signal handlers, then features
+
+**Rationale**:
+- **Composition over inheritance**: Mixins allow à la carte feature selection
+- **Single responsibility**: Each mixin does ONE thing well
+- **Reusability**: Same mixins across all application types
+- **Testability**: Test mixins independently, then composed apps
+- **Flexibility**: Easy to add new mixins or application types
+
+---
+
+## Migration Assessment - DFE Apps
+
+### 1. dfe-ui-backend (FastAPI REST API)
+
+**Current Architecture** ([src/app.py](file:///projects/dfe-ui-backend/src/app.py)):
+- Custom Pydantic BaseSettings for config
+- Uvicorn server startup
+- File-based logging (logs/)
+- No health checks (missing /health, /ready)
+- No metrics instrumentation
+- No graceful shutdown handling
+
+**Changes Needed**:
+```python
+# BEFORE (custom setup)
+from fastapi import FastAPI
+from .config import Settings
+
+settings = Settings()
+app = FastAPI()
+
+if __name__ == "__main__":
+    uvicorn.run(app, host="0.0.0.0", port=8000)
+
+# AFTER (hyperlib framework)
+from hyperlib import Application
+
+app = Application.api(
+    name="dfe-ui-backend",
+    version="1.0.0",
+    profile="prod"  # Auto: health checks, metrics, graceful shutdown
+)
+
+@app.endpoint("/users")
+async def list_users():
+    return {"users": [...]}
+
+# CLI execution (replaces uvicorn.run)
+if __name__ == "__main__":
+    app.run()  # Or: python -m dfe_ui_backend serve --profile prod
+```
+
+**Migration Effort**:
+- **Lines to change**: ~30-50 (config setup, server startup, main block)
+- **Config migration**: Replace Pydantic Settings with hyperlib.config (7-layer cascade)
+- **Dockerfile CMD**: Change to `python -m dfe_ui_backend serve --profile prod`
+- **Testing**: Add health endpoint tests, metrics collection tests
+- **Estimated time**: 2-3 hours
+
+**Benefits Gained**:
+- ✅ Health endpoints (/health, /ready) - fixes k8s probe gaps
+- ✅ Automatic HTTP metrics (requests_total, duration_seconds)
+- ✅ Graceful shutdown (prevents in-flight request loss)
+- ✅ JSON logging (production-ready)
+- ✅ KEDA-compatible metrics for autoscaling
+
+---
+
+### 2. dfe-hunt-runner (Background Daemon Worker)
+
+**Current Architecture** ([src/daemon.py](file:///projects/dfe-hunt-runner/src/daemon.py)):
+- Custom signal handling (SIGTERM/SIGINT)
+- Subprocess management for hunt execution
+- **Critical bug**: Process orphaning in daemon mode
+- YAML config loading
+- File-based logging
+- No health checks (missing HTTP server for k8s)
+- No metrics instrumentation
+
+**Changes Needed**:
+```python
+# BEFORE (custom daemon)
+import signal
+import subprocess
+
+class HuntDaemon:
+    def __init__(self):
+        signal.signal(signal.SIGTERM, self.handle_signal)
+        self.running = True
+
+    def run(self):
+        while self.running:
+            self.process_hunt()  # subprocess.Popen()
+
+# AFTER (hyperlib framework)
+from hyperlib import Application
+
+app = Application.daemon(
+    name="dfe-hunt-runner",
+    version="1.0.0",
+    profile="prod"  # Auto: health HTTP server, metrics, signal handling
+)
+
+@app.task(interval=60)
+async def process_hunt():
+    """Process hunts from queue."""
+    # Task execution logic
+    pass
+
+# CLI execution
+if __name__ == "__main__":
+    app.run()  # Or: python -m dfe_hunt_runner start --profile prod
+```
+
+**Migration Effort**:
+- **Lines to change**: ~80-120 (signal handling, subprocess mgmt, main loop)
+- **Config migration**: Replace YAML loading with hyperlib.config
+- **Subprocess tracking**: Leverage SignalHandlerMixin to fix orphaning bug
+- **Health server**: Automatic (separate thread on port 8080)
+- **Dockerfile CMD**: Change to `python -m dfe_hunt_runner start --profile prod`
+- **Testing**: Critical - test no orphaned processes, health server, metrics
+- **Estimated time**: 4-6 hours (complex due to subprocess management)
+
+**Benefits Gained**:
+- ✅ **Fixes orphaned process bug** (proper subprocess tracking)
+- ✅ Health HTTP server (k8s liveness/readiness probes)
+- ✅ Automatic task metrics (execution_total, duration_seconds, queue_depth)
+- ✅ Graceful shutdown (waits for tasks to complete, 30s timeout)
+- ✅ JSON logging (production-ready)
+- ✅ KEDA-compatible metrics for autoscaling
+
+---
+
+### 3. dfe-cli-core (CLI Tools)
+
+**Current Architecture** ([src/cli.py](file:///projects/dfe-cli-core/src/cli.py)):
+- Click-based CLI (legacy)
+- Custom config loader
+- File-based logging
+- No metrics (CLI tools don't typically need metrics)
+
+**Changes Needed**:
+```python
+# BEFORE (Click-based)
+import click
+
+@click.group()
+def cli():
+    """DFE CLI tools."""
+    pass
+
+@cli.command()
+@click.option("--verbose", is_flag=True)
+def sync(verbose):
+    """Sync data."""
+    print("Syncing...")
+
+# AFTER (hyperlib Typer-based)
+from hyperlib import Application
+
+app = Application.cli(
+    name="dfe-cli-core",
+    version="1.0.0"
+)
+
+@app.command()
+def sync(verbose: bool = False):
+    """Sync data."""
+    print("Syncing...")
+
+# CLI execution
+if __name__ == "__main__":
+    app.run()
+```
+
+**Migration Effort**:
+- **Lines to change**: ~40-60 (Click → Typer migration)
+- **Config migration**: Replace custom config with hyperlib.config
+- **Type hints**: Add type hints to all command parameters (Typer requirement)
+- **Testing**: Update CLI tests to use Typer's CliRunner
+- **Estimated time**: 3-4 hours
+
+**Benefits Gained**:
+- ✅ Type-driven CLI (better IDE support, autocomplete)
+- ✅ Automatic help generation from type hints
+- ✅ Better error messages (type validation)
+- ✅ Rich terminal output (colors, tables, progress bars)
+- ✅ Consistent CLI standard across all HyperSec projects
+
+---
+
+### Migration Summary
+
+| App | Type | Effort | Critical Bug Fix | Key Benefits |
+|-----|------|--------|-----------------|--------------|
+| dfe-ui-backend | API | 2-3 hrs | No | Health checks, metrics, graceful shutdown |
+| dfe-hunt-runner | Daemon | 4-6 hrs | **Yes** (orphaning) | Fixes orphaning, health server, metrics |
+| dfe-cli-core | CLI | 3-4 hrs | No | Type-driven CLI, better UX |
+
+**Total Effort**: ~10-13 hours (1-2 days)
+
+**Recommended Order**:
+1. **dfe-cli-core** (simplest, validates Typer migration pattern)
+2. **dfe-ui-backend** (moderate, validates API framework)
+3. **dfe-hunt-runner** (complex, highest value - fixes critical bug)
+
+---
+
+## Phase 1: Foundation (Week 1)
+
+### 1.1 Profile System
+**File:** `src/hyperlib/application/profiles.py`
+
+```python
+PROFILES = {
+    "dev": {
+        "logging": {"format": "console", "level": "DEBUG", "colors": True},
+        "health_check": False,
+        "metrics": False,
+        "graceful_shutdown": True,
+        "reload": True,
+    },
+    "docker": {
+        "logging": {"format": "json", "level": "INFO", "colors": False},
+        "health_check": True,
+        "health_check_port": 8080,
+        "metrics": True,
+        "metrics_port": 9090,
+        "graceful_shutdown": True,
+        "shutdown_timeout": 30,
+        "reload": False,
+    },
+    "prod": {
+        # k8s + HELM + ArgoCD + KEDA
+        "logging": {"format": "json", "level": "INFO", "colors": False},
+        "health_check": True,
+        "health_check_port": 8080,
+        "readiness_initial_delay": 5,
+        "liveness_initial_delay": 30,
+        "startup_initial_delay": 0,
+        "metrics": True,
+        "metrics_port": 9090,
+        "graceful_shutdown": True,
+        "shutdown_timeout": 30,
+        "reload": False,
+    },
+}
+```
+
+**Tests:** Profile loading, merging with overrides
+
+---
+
+### 1.2 Base Mixins
+**File:** `src/hyperlib/application/mixins/__init__.py`
+
+#### CLIExecutableMixin
+- Typer CLI setup for all app types
+- Standard commands: `version`, `config`, `validate`
+- Health check command (if health_check enabled)
+
+#### SignalHandlerMixin
+- SIGTERM/SIGINT handler registration
+- Graceful shutdown with timeout
+- Calls `on_shutdown` hooks
+- Prevents orphaned processes (fixes Hunt Runner bug)
+
+#### ProfileMixin
+- Load profile configuration
+- Merge with user overrides
+- Apply to application features
+
+**Tests:** Mixin composition, signal handling, shutdown timeout
+
+---
+
+### 1.3 Metrics Integration
+**File:** `src/hyperlib/application/mixins/metrics.py`
+
+#### MetricsMixin
+- Uses existing `hyperlib.metrics` module
+- Starts metrics server on `metrics_port`
+- Auto-instruments based on app type
+- Prometheus naming by default
+
+#### Prometheus → OTEL Auto-Conversion
+**File:** `src/hyperlib/metrics/backends/opentelemetry.py`
+
+```python
+PROMETHEUS_TO_OTEL = {
+    "http_requests_total": "http.server.request.count",
+    "http_request_duration_seconds": "http.server.request.duration",
+    "task_execution_total": "task.execution.count",
+    "task_queue_depth": "task.queue.depth",
+}
+
+LABEL_MAP = {
+    "method": "http.method",
+    "endpoint": "http.route",
+    "status": "http.status_code",
+}
+```
+
+**Tests:** Prometheus naming, OTEL conversion, label mapping
+
+---
+
+## Phase 2: Application Types (Week 2)
+
+### 2.1 Update APIApplication
+**File:** `src/hyperlib/application/api/application.py`
+
+**Changes:**
+- Inherit mixins: `CLIExecutableMixin`, `SignalHandlerMixin`, `ProfileMixin`, `HealthCheckMixin`, `MetricsMixin`
+- Auto-instrument HTTP metrics (Prometheus format):
+  - `http_requests_total{method,endpoint,status}`
+  - `http_request_duration_seconds{method,endpoint}`
+  - `http_requests_in_progress{method,endpoint}`
+- Add health endpoints: `/health`, `/ready`
+- Add Typer CLI commands: `serve`, `health-check`, `validate`
+- Apply profile settings
+
+**Auto-Instrumentation:**
+```python
+@app.fastapi.middleware("http")
+async def metrics_middleware(request, call_next):
+    track_counter("http_requests_total", labels={...})
+    track_histogram("http_request_duration_seconds", duration, labels={...})
+```
+
+**Tests:** Profile application, metrics collection, health endpoints, CLI commands
+
+---
+
+### 2.2 Update DaemonApplication
+**File:** `src/hyperlib/application/daemon/application.py`
+
+**Changes:**
+- Inherit mixins: `CLIExecutableMixin`, `SignalHandlerMixin`, `ProfileMixin`, `MetricsMixin`
+- Auto-instrument task metrics:
+  - `task_execution_total{task,status}`
+  - `task_execution_duration_seconds{task}`
+  - `task_queue_depth{queue}`
+  - `worker_pool_busy{pool}`
+- Add health HTTP server (separate thread, port 8080)
+- Add Typer CLI commands: `start`, `status`, `stop`
+- Fix process orphaning bug (proper child process tracking)
+- Apply profile settings
+
+**Tests:** Task metrics, health server, signal handling, no orphaned processes
+
+---
+
+### 2.3 Update MCPApplication
+**File:** `src/hyperlib/application/mcp/application.py`
+
+**Changes:**
+- Inherit mixins: `CLIExecutableMixin`, `SignalHandlerMixin`, `ProfileMixin`, `MetricsMixin`
+- Auto-instrument MCP metrics:
+  - `mcp_requests_total{method,transport}`
+  - `mcp_request_duration_seconds{method}`
+- Add health check to MCP protocol
+- Add Typer CLI commands: `serve`, `validate`
+- Apply profile settings
+
+**Tests:** MCP metrics, health protocol, CLI commands
+
+---
+
+### 2.4 Update OneshotApplication
+**File:** `src/hyperlib/application/oneshot/application.py`
+
+**Changes:**
+- Inherit mixins: `CLIExecutableMixin`, `SignalHandlerMixin`, `ProfileMixin`
+- Auto-instrument job metrics:
+  - `job_execution_total{job,status}`
+  - `job_execution_duration_seconds{job}`
+  - `job_last_success_timestamp{job}`
+- Add Typer CLI commands: `run`, `validate`
+- Apply profile settings (minimal - oneshot doesn't need health checks)
+
+**Tests:** Job metrics, CLI commands
+
+---
+
+### 2.5 Update CLIApplication (Already Typer-based)
+**File:** `src/hyperlib/application/cli/application.py`
+
+**Changes:**
+- Inherit mixins: `SignalHandlerMixin`, `ProfileMixin`
+- No metrics by default (CLI tools don't need metrics)
+- Apply profile settings (logging only)
+
+**Tests:** Profile application, logging format
+
+---
+
+## Phase 3: Health Checks (Week 3)
+
+### 3.1 HealthCheckMixin
+**File:** `src/hyperlib/application/mixins/health.py`
+
+**Features:**
+- Add `/health` endpoint (liveness - always 200 if running)
+- Add `/ready` endpoint (readiness - checks dependencies)
+- Support dependency checks (database, cache, etc.)
+- Configurable initial delays (k8s probe timings)
+
+**API for Developers:**
+```python
+app = Application.api(name="my-api", profile="prod")
+
+@app.health_check
+def check_database():
+    """Check database connection."""
+    return db.ping()  # Return True/False
+
+@app.health_check
+def check_cache():
+    """Check Redis."""
+    return redis.ping()
+```
+
+**k8s Integration:**
+```yaml
+livenessProbe:
+  httpGet:
+    path: /health
+    port: 8080
+  initialDelaySeconds: 30
+
+readinessProbe:
+  httpGet:
+    path: /ready
+    port: 8080
+  initialDelaySeconds: 5
+```
+
+**Tests:** Health endpoints, dependency checks, k8s probe timings
+
+---
+
+## Phase 4: Documentation & Examples (Week 4)
+
+### 4.1 Documentation
+**Files:**
+- `docs/CONTAINER_DEPLOYMENT.md` - Container deployment guide
+- `docs/KUBERNETES.md` - k8s + HELM + ArgoCD + KEDA guide
+- `docs/PROFILES.md` - Profile reference
+- Update `README.md` with container examples
+
+### 4.2 Example Projects
+- `examples/api-container/` - Containerized API with HELM chart
+- `examples/daemon-container/` - Containerized daemon with KEDA scaling
+- Update existing examples to use profiles
+
+### 4.3 HELM Chart Templates
+**Files:** `templates/helm/`
+- `deployment.yaml` - Pod spec with health probes
+- `service.yaml` - Service with metrics port
+- `servicemonitor.yaml` - Prometheus ServiceMonitor
+- `scaledobject.yaml` - KEDA ScaledObject
+- `values.yaml` - Default values
+
+---
+
+## Success Criteria
+
+1. **Developer Experience:**
+   ```python
+   app = Application.api(name="my-api", profile="prod")
+   # Gets: health checks, metrics, graceful shutdown - zero config
+   ```
+
+2. **Container Deployment:**
+   ```dockerfile
+   CMD ["python", "-m", "my_api", "serve", "--profile", "prod"]
+   # Just works in k8s with HELM
+   ```
+
+3. **KEDA Scaling:**
+   ```yaml
+   # HELM chart includes KEDA ScaledObject
+   # Metrics auto-exposed in Prometheus format
+   # No code changes needed
+   ```
+
+4. **Backend Flexibility:**
+   ```bash
+   export METRICS_BACKEND=opentelemetry
+   # Auto-converts Prometheus → OTEL semantic conventions
+   ```
+
+5. **Tests:** All application types tested with profiles, metrics, health checks
+
+---
+
+## Estimated Effort
+
+- **Phase 1 (Foundation):** 3-4 days
+- **Phase 2 (Application Types):** 4-5 days
+- **Phase 3 (Health Checks):** 2-3 days
+- **Phase 4 (Documentation):** 2-3 days
+
+**Total:** ~3 weeks
+
+---
+
+## Risks & Mitigation
+
+1. **Risk:** Backward compatibility with existing apps
+   - **Mitigation:** Default profile is `dev` (minimal changes), opt-in for `prod` features
+
+2. **Risk:** Metrics backend switching complexity
+   - **Mitigation:** Prometheus-first approach, OTEL conversion is additive
+
+3. **Risk:** KEDA integration edge cases
+   - **Mitigation:** Follow Prometheus naming conventions strictly, test with real KEDA
+
+4. **Risk:** Health check dependency detection
+   - **Mitigation:** Start simple (manual registration), expand later if needed
+
+---
+
+## Next Actions
+
+1. Review and approve this plan
+2. Create feature branch: `feat/container-native-patterns`
+3. Start Phase 1: Profile system + base mixins
+4. Iterate with tests after each phase
 
 ---
 
 ## Backlog
 
 ### Add Gitleaks Secret Scanning to HyperCI
-
-**Priority:** HIGH (security - prevent secrets in commits)
-
-**Status:** Design complete (`.tmp/hyperci-secret-scanning-design.md`)
-
-**Goal:** Pre-commit secret scanning with Gitleaks to detect passwords, API keys, tokens before git push
-
-**Implementation:**
-1. Create `ci/modules/common/gitci.d/10-pre-commit-secrets-scan.py`
-2. Update pre-commit hook to call secrets scan
-3. Add bootstrap check for Gitleaks installation
-4. Create `.gitleaks.toml` config template
-5. Add GitHub Actions workflow for PR checks
-
-**Tool:** Gitleaks (not Presidio - different domain)
-- **Gitleaks:** Pre-commit secret scanning (fast, Git-aware)
-- **Presidio:** Runtime PII detection (ML-based, for logs/data)
-
-**Features:**
-- Scans staged files only (fast)
-- JSON report with file:line locations
-- Custom patterns via `.gitleaks.toml`
-- CI_SKIP_SECRETS_SCAN=1 emergency override
-- Multi-layer: pre-commit → pre-receive → CI/CD → periodic
-
-**Estimated Effort:** 3-4 hours
-
-**Dependencies:** Hyperlib must be stable first (in progress - Presidio integration)
-
----
-
-### Update ci/tests for Recent Changes
-
-**Priority:** HIGH (test coverage for new features)
-
-**Status:** Tests added, 4 failures from pre-existing bugs (not ONE .venv)
-
-**Test Coverage Added:**
-1. DONE: Nuitka package mode test (test_nuitka_builds.py)
-2. DONE: Nuitka app mode test (test_nuitka_builds.py)
-3. DONE: Nuitka-commercial installation test
-4. DONE: ONE .venv migration test (test_one_venv_migration.py)
-5. DONE: Unified .env test (test_one_venv_migration.py)
-6. DONE: Config reading test (test_one_venv_migration.py)
-7. DONE: build_type() BUILD_PROFILE test (test_one_venv_migration.py)
-8. DONE: run.py --script mode test (test_one_venv_migration.py)
-
-**Test Files:**
-- `ci/tests/integration/test_nuitka_builds.py` (NEW - 211 lines)
-- `ci/tests/integration/test_one_venv_migration.py` (NEW - 327 lines)
-- `ci/tests/integration/test_integration_bootstrap.py` (UPDATED - ONE .venv pattern)
-- `ci/tests/conftest.py` (UPDATED - test projects have [dev] deps)
-
-**Test Results:**
-- HyperCI unit: 56/56 passing (100%)
-- HyperCI integration: 62/66 passing (94%, 3 skipped)
-- ONE .venv specific tests: 7/7 passing (100%)
-- Hyperlib unit: 121/121 passing (100%)
-
-**Failures (4) - Pre-existing bugs unrelated to ONE .venv migration:**
-1. test_hook_blocks_invalid_branch_name - Branch validation not blocking
-2. test_bootstrap_runs_gitci_setup - Python .gitignore merge not working in test projects
-3. test_bootstrap_ai_setup_runs_despite_validation_failures - Edge case scenario
-4. test_nuitka_commercial_installs_from_jfrog - Test needs Nuitka enabled in ci.yaml
-
-**Note:** All ONE .venv migration tests pass. Failures are test infrastructure issues.
-
-**Total:** 538 lines of new tests added
-
----
-
-### Clean Up ci_lib.py (REFACTOR)
-
-**Priority:** MEDIUM (technical debt)
-
-**Issues:**
-1. Inconsistent naming: Some functions have `get_` prefix, others don't
-   - `get_project_root()` - has prefix
-   - `artifactory_username()` - missing prefix
-   - `github_repo_full()` - missing prefix
-   - `package_name()` - missing prefix
-
-2. Duplicate/deprecated code removed:
-   - `get_build_config()` - DELETED (broken, replaced by get_ci_config)
-
-**Proposed:**
-- Rename accessor functions for consistency:
-  - `artifactory_username()` → `get_artifactory_username()`
-  - `artifactory_password()` → `get_artifactory_password()`
-  - `package_name()` → `get_package_name()`
-  - etc.
-- Keep old names as deprecated aliases temporarily
-- Update all call sites across HyperCI
-- Document naming convention
-
-**Effort:** 20-30 files, 1-2 hours
-
----
-
-### Test Nuitka with App vs Package Builds
-
-**Priority:** HIGH (after Nuitka fixes)
-
-**Challenge:** Hyperlib is a package (library), not an app
-- Package mode: Creates .whl with .so files
-- App mode: Creates standalone binary
-
-**Testing Strategy:**
-1. **Package mode (hyperlib):** Test in hyperlib directly
-   - Current project type, don't break it
-   - Should create .whl with .so files
-
-2. **App mode:** Create separate test project
-   - Option A: Create minimal test app in `.tmp/test-app/`
-   - Option B: Use existing app project (if available)
-   - Should create standalone .bin file
-
-**Requirements:**
-- Don't modify hyperlib's build type (keep as package)
-- Test both modes end-to-end
-- Verify artifacts are correct (.so vs .bin)
-
----
+**Status:** Design complete, ready to implement
+**Effort:** 3-4 hours
 
 ### Reorganize src/hyperlib/ to Subdirectory Structure
-
-**Priority:** HIGH (code organization)
-
-**Current:** Single-file modules (config.py, logger.py, runtime.py, etc.)
-**Target:** Subdirectory modules matching application/ pattern
-
-**Proposed Structure:**
-```
-src/hyperlib/
-├── __init__.py           # Main exports (no changes to public API)
-├── application/          # Already organized
-├── config/
-│   ├── __init__.py       # Re-export everything from config.py
-│   └── config.py         # Main implementation (moved)
-├── logger/
-│   ├── __init__.py       # Re-export from logger.py
-│   └── logger.py         # Main implementation (moved)
-├── runtime/
-│   ├── __init__.py       # Re-export from runtime.py
-│   └── runtime.py        # Main implementation (moved)
-├── database/             # Rename dbconn → database (clearer)
-│   ├── __init__.py       # Re-export from connection.py
-│   └── connection.py     # Main implementation (was dbconn.py)
-├── metrics/              # Rename prometheus → metrics (clearer)
-│   ├── __init__.py       # Re-export from prometheus.py
-│   └── prometheus.py     # Main implementation (moved)
-└── harness/
-    ├── __init__.py       # Re-export from harness.py
-    └── harness.py        # Main implementation (moved)
-```
-
-**Benefits:**
-- Consistent structure (all modules in subdirs)
-- Room for growth (add helper files later)
-- Clearer naming (database, metrics)
-- Matches application/ pattern
-- Better IDE navigation
-
-**Backward Compatibility:**
-- All imports still work (re-exported from submodule __init__.py)
-- No breaking changes
-- Internal reorganization only
-- Tests should pass without modification
-
-**Implementation Plan:**
-1. Create subdirectories
-2. Move files with git mv (preserves history)
-3. Create __init__.py files with re-exports
-4. Update internal imports
-5. Run full test suite
-6. Verify no breaking changes
-
----
+**Status:** Planned - match application/ pattern
+**Effort:** 1-2 hours
 
 ### Refactor Application.mcp() to Use FastMCP
+**Status:** Backlog - use library instead of custom implementation
 
-**Priority:** MEDIUM
-
-**Current:** Custom MCP implementation (JSON-RPC over stdio/HTTP)
-**Target:** Use FastMCP library for better standards compliance
-
-**File:** `src/hyperlib/application/mcp.py`
+### Clean Up ci_lib.py Naming
+**Status:** Backlog - inconsistent `get_` prefixes
 
 ---
 
-### Add Config File Merge to Hyperlib
+## Completed (Recent)
 
-**Priority:** HIGH (foundation for ci_lib replacement)
+### 2025-11-07 - Typer Migration & Application Restructure
+- Migrated CLIApplication from Click to Typer (mandatory CLI standard)
+- Restructured all application types to proper submodule packages
+- Tests: 15/15 passing
 
-**Goal:** Comprehensive config file merge module with auto-detection and multiple strategies
+### 2025-11-04 - Config File Merge Module
+- Added comprehensive config file merge to hyperlib.config
+- Supports JSON, YAML, TOML, INI, .env, .gitignore
+- Auto-detection, deep merge, append strategies
+- Tests: 71/71 passing
 
-**Research Complete (Session 2025-11-04):**
+### 2025-11-04 - Metrics Backend Abstraction
+- Added Prometheus and OpenTelemetry support
+- Backend detection and graceful fallback
+- Tests: 17/18 passing (1 skipped)
 
-- Dynaconf already supports merging (we use it)
-- mergedeep in dev deps (for dict merging)
-- filetype/puremagic for content detection (researched)
-- File categories identified via web search
+### 2025-10-31 - ONE .venv Migration
+- Unified .venv at project root (runtime + CI tools)
+- Published v2.4.4 to JFrog
 
-**Dependencies to Add:**
-```python
-# Move to runtime dependencies:
-dependencies = [
-    "mergedeep>=1.3.4",  # Deep dict merging
-    "tomli-w>=1.0.0",    # TOML writing
-]
-# Optional (for content detection):
-optional-dependencies.enhanced = [
-    "puremagic>=1.21",   # Content-based file type detection
-]
-```
+### 2025-10-31 - Nuitka Builds
+- Fixed all Nuitka build issues
+- Multi-arch support (x64 + ARM64)
+- Package mode (.whl with .so files)
 
-**File Type Categories (from research):**
-
-**1. Structured Data (deep merge):**
-- JSON (.json) - Deep merge dicts, preserve structure
-- YAML (.yaml, .yml) - Deep merge with PyYAML
-- TOML (.toml) - Deep merge with tomllib + tomli-w
-
-**2. Flat Key-Value (update strategy):**
-- INI (.ini, .cfg) - Section-based merge, update keys
-- ENV (.env) - Line-based append/update
-- Properties (.properties) - Java-style key=value
-
-**3. Line-Based Lists (append + deduplicate):**
-- .gitignore - Append unique patterns
-- .dockerignore - Append unique patterns
-- requirements.txt - Append unique packages
-- .gitattributes - Append unique rules
-
-**4. Auto-Detection Logic:**
-- Extension first (.json → JSON)
-- Content patterns if unknown:
-  - JSON: starts with `{` or `[`
-  - YAML: starts with `---` or has `: ` patterns
-  - TOML: starts with `[section]`
-  - INI: has `[section]` + `key=value`
-- Use puremagic for binary/unknown formats
-
-**API Design:**
-
-```python
-from hyperlib.config import merge_files
-
-# Auto-detect and merge
-merge_files("source.yaml", "target.yaml")
-
-# Explicit strategy
-merge_files("a.json", "b.json", strategy="deep")
-merge_files(".gitignore.tmpl", ".gitignore", strategy="append")
-
-# Batch merge multiple sources
-merge_files(
-    sources=["base.yaml", "env.yaml", "local.yaml"],
-    target="merged.yaml",
-    strategy="deep"
-)
-
-# Dry-run (return merged content, don't write)
-content = merge_files("a.yaml", "b.yaml", dry_run=True)
-```
-
-**Module Structure:**
-
-```python
-hyperlib/config/
-├── __init__.py          # Re-exports
-├── config.py            # Existing config
-└── merge.py             # NEW - merge functionality
-```
-
-**Tests (tests/unit/test_config_merge.py):**
-
-**Valid Data Tests:**
-- test_merge_json_deep() - Nested dicts, arrays
-- test_merge_yaml_deep() - Complex YAML structures
-- test_merge_toml_deep() - Tables and arrays
-- test_merge_ini_sections() - Multi-section INI
-- test_merge_env_append() - ENV file with duplicates
-- test_merge_gitignore_dedup() - Pattern deduplication
-- test_auto_detect_json_by_content() - Content detection
-- test_auto_detect_yaml_by_content() - Content detection
-- test_batch_merge_multiple_files() - Multi-source merge
-
-**Invalid Data/Error Tests:**
-- test_invalid_json_syntax() - Malformed JSON
-- test_invalid_yaml_syntax() - Invalid YAML
-- test_invalid_toml_syntax() - Bad TOML
-- test_unsupported_file_type() - .exe, .bin
-- test_missing_source_file() - FileNotFoundError
-- test_permission_denied() - PermissionError
-- test_merge_incompatible_types() - JSON + TOML
-- test_tomli_w_missing() - TOML merge without tomli-w
-- test_circular_reference_yaml() - YAML anchors gone wrong
-
-**Port from ci_lib.py:**
-- `deep_merge_json()` - Line 887 (keep and enhance)
-- `merge_gitignore_file()` - Line 1001 (generalize to line-based)
-- `merge_file()` - Line 1411 (simplify, make non-CI-specific)
-
-**Documentation:**
-- Comprehensive module docstring (100+ lines)
-- Quick Start examples
-- All supported file types documented
-- Merge strategies explained
-- Error handling documented
-
-**Estimated Effort:** 4-6 hours (new module + comprehensive tests)
-
----
-
-### ~~Replace ci_lib with Hyperlib~~ - DECIDED NOT TO MIGRATE
-
-**Status:** ANALYZED AND REJECTED (Session 2025-11-04)
-
-**Decision:** Keep ci_lib and hyperlib as **separate, complementary libraries**
-
-**Analysis Summary:**
-- Reviewed all 48 functions in ci_lib.py
-- Only 10 functions (21%) have hyperlib equivalents
-- 38 functions (79%) are CI-specific and must stay
-- Migration would be counterproductive
-
-**Why NOT to Migrate:**
-
-**1. Different Purposes (Architectural)**
-- **ci_lib:** CI infrastructure (git operations, submodule management, .d scripts, language modules)
-- **hyperlib:** Application runtime (app config, logging, database, metrics, container deployment)
-- Clear separation is GOOD, not redundant
-
-**2. Circular Dependency Risk**
-- Bootstrap runs BEFORE hyperlib is installed
-- Can't use hyperlib in bootstrap.d/ scripts
-- Would need to vendor hyperlib into ci/ (defeats purpose)
-
-**3. Configuration Incompatibility**
-- ci_lib reads: `ci-local/ci.yaml`, `ci/modules/*/defaults.yaml` (CI config)
-- hyperlib reads: `config/settings.yaml`, `~/.config/app/` (app config)
-- Different file locations for different purposes
-
-**4. API Mismatches**
-- ci_lib: Returns `(changed, message)` tuples for tracking
-- hyperlib: Returns `None` or raises exceptions
-- Would need wrapper functions anyway (no net benefit)
-
-**5. Minimal Code Reduction**
-- Only ~200 lines could be saved
-- Introduces complexity and fragility
-- Not worth the risk
-
-**Correct Architecture (KEEP THIS):**
-
-```
-ci_lib.py (CI Infrastructure)
-├── Git operations (branches, commits, tags)
-├── Submodule management (ci/ is submodule)
-├── Language modules (python, future: rust, go)
-├── .d script execution
-├── CI-specific config (ci.yaml, BUILD_PROFILE, etc.)
-└── UV/package management
-
-hyperlib (Application Runtime)
-├── Configuration (settings.yaml, 7-layer cascade)
-├── Logging (structured, RFC 3339)
-├── Config file merging (JSON/YAML/TOML)
-├── Database utilities
-├── Metrics (Prometheus)
-├── Runtime paths (container-aware)
-└── Application framework
-```
-
-**Benefits of Separation:**
-- No circular dependencies
-- Clear ownership (CI vs app concerns)
-- Hyperlib truly reusable (no CI coupling)
-- ci_lib focused on CI infrastructure
-- Both can evolve independently
-
-**What WAS Accomplished:**
-- Phase 1 COMPLETE: hyperlib has all foundation features
-- hyperlib.config has 7-layer cascade (better than ci_lib)
-- hyperlib.config.merge has comprehensive file merging
-- hyperlib published to JFrog (v2.7.2)
-- Self-documenting code throughout
-
-**Future:** Both libraries coexist happily, serving different needs!
-
----
-
----
-
-## Done
-
-### 2025-10-31 Session - ONE .venv Migration
-
-**ONE .venv Migration:**
-
-- Updated 35+ files in HyperCI submodule
-- Migrated hyperlib to unified .venv
-- Tested bootstrap, AI, build - all working
-- Published v2.4.4 to JFrog (standard wheel)
-- GitHub Actions to JFrog workflow verified
-
-**HyperCI Improvements:**
-
-- Removed broken `get_build_config()` function
-- Fixed `build_type()` to check BUILD_PROFILE
-- Fixed `--script` mode bug in run.py
-- Added missing `nuitka_protection()` function
-- Updated all documentation for ONE .venv
-
-**Commits:** 7 total (4 HyperCI, 3 hyperlib)
-
----
-
-### 2025-10-31 Earlier Session
-
-**Application.mcp() - 5th Deployment Type:**
-
-- MCPApplication factory implemented
-- Tool/resource/prompt decorators
+### 2025-10-31 - Application.mcp()
+- 5th deployment type implemented
 - stdio and HTTP transports
-- Pre-wired with hyperlib logger + config
 - Included in v2.3.5
 
-**Security Hardening:**
-
-- ALL /tmp replaced with tempfile.gettempdir()
-- B108 warnings: 0 (was 21)
-- Temp file policy documented (research-based)
-- PYTHON-STANDARDS.md created
-
-**HyperCI v0.3.2:**
-
-- Dynamic MCP detection (.mcp.json)
-- TOML merge support (tomllib + tomli-w)
-- Temp file policy in CODE-ASSISTANT templates
-
 ---
 
-**Last Updated:** 2025-10-31
+**Last Updated:** 2025-11-07
