@@ -70,7 +70,25 @@
 - Dependency checks: Registered via `@app.health_check` decorator
 - Kubernetes ready: /health for liveness, /ready for readiness
 
-**Next: Phase 4** - Documentation, examples, HELM charts
+### Phase 4: Documentation & Examples - In Progress 🔄
+**Status:** Core documentation complete, examples and HELM charts pending
+
+**Commit:** `80da16c` - docs: add Phase 4 container deployment and profiles documentation
+
+**Completed:**
+- ✅ PROFILES.md - Comprehensive profile reference (dev/docker/prod)
+- ✅ CONTAINER_DEPLOYMENT.md - Docker deployment guide
+- ✅ Updated APP-API.md and APP-DAEMON.md with health check decorator
+- ✅ Multi-stage Dockerfile examples
+- ✅ Docker Compose examples
+- ✅ Prometheus integration guide
+
+**Pending:**
+- ❌ KUBERNETES.md - k8s + HELM + ArgoCD + KEDA guide
+- ❌ examples/ directory - Working example projects
+- ❌ templates/helm/ - HELM chart templates
+
+**Next Steps:** Complete k8s documentation, create example projects
 
 ---
 
