@@ -51,7 +51,26 @@
 - Profile-based feature enablement (dev/docker/prod)
 - Graceful shutdown (SIGTERM/SIGINT handling)
 
-**Next: Phase 3** - Enhanced HealthCheckMixin with dependency checks
+### Phase 3: Enhanced Health Checks - Complete ✅
+**Status:** HealthCheckMixin fully implemented with standalone HTTP server
+
+**Commit:** `f0706c6` - fix: implement Phase 3 - enhanced HealthCheckMixin
+
+**Implemented:**
+- ✅ Standalone HTTP server for non-HTTP apps (Daemon, MCP, Oneshot)
+- ✅ /health endpoint (liveness probe - always 200 if running)
+- ✅ /ready endpoint (readiness probe - runs dependency checks)
+- ✅ @app.health_check decorator for custom checks
+- ✅ Automatic shutdown integration (via SignalHandlerMixin)
+- ✅ 9 comprehensive tests (profiles, endpoints, shutdown)
+
+**How it works:**
+- HTTP apps (API): Health endpoints added to FastAPI directly
+- Non-HTTP apps: Standalone HTTP server in daemon thread (port 8080)
+- Dependency checks: Registered via `@app.health_check` decorator
+- Kubernetes ready: /health for liveness, /ready for readiness
+
+**Next: Phase 4** - Documentation, examples, HELM charts
 
 ---
 
