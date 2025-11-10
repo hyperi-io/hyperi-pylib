@@ -68,7 +68,20 @@
       "Bash(git -C /projects/hyperlib commit -m \"chore: update ci submodule (streamlined bootstrap + new project tests)\")",
       "Bash(git -C /projects/hyperlib/ci diff --stat)",
       "Bash(git -C /projects/hyperlib branch:*)",
-      "Bash(git -C /projects/hyperlib add:*)"
+      "Bash(git -C /projects/hyperlib add:*)",
+      "Bash(git -C /projects/hyperlib commit -m \"$(cat <<''EOF''\nfix: comprehensive documentation restructure and application framework updates\n\n**Documentation Restructure:**\n- Created dedicated documentation for each module in docs/\n- Reorganized from monolithic AI-specific docs to user-facing guides\n- New structure: ANONYMIZER.md, LOGGING.md, METRICS.md, APP-*.md, README.md\n- Removed obsolete PROMETHEUS-METRICS.md and CODEX.md\n\n**Application Framework Updates:**\n- Enhanced all application types with improved documentation\n- Updated metrics integration across API, CLI, Daemon, MCP, Oneshot apps\n- Improved logger filters and anonymizer integration\n- Added comprehensive mixin tests (test_application_mixins.py)\n\n**Bug Fixes:**\n- Fixed anonymizer streaming edge cases\n- Improved logger filter handling\n- Enhanced metrics manager reliability\n\n**Related:** Bootstrap streamlining (ci submodule already updated)\nEOF\n)\")",
+      "Bash(git -C /projects/hyperlib remote:*)",
+      "Bash(git -C /projects/hyperlib push origin feat/no-ref/container-native-patterns)",
+      "Bash(./ci/run:*)",
+      "Bash(.venv/bin/black src/ tests/)",
+      "Bash(.venv/bin/isort src/ tests/)",
+      "Bash(.venv/bin/pip-audit)",
+      "Bash(.venv/bin/pip show:*)",
+      "Bash(.venv/bin/pip:*)",
+      "Bash(.venv/bin/interrogate:*)",
+      "Bash(.venv/bin/pip-audit:*)",
+      "Bash(.venv/bin/ruff check:*)",
+      "Bash(.venv/bin/black src/hyperlib/anonymizer/__init__.py src/hyperlib/logger/filters.py)"
     ],
     "deny": [],
     "ask": []
