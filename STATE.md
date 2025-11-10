@@ -78,6 +78,21 @@
 - `bbd1416` (ci) - fix: move slash command templates to root of templates/ directory
 - `4fc0ec5` (ci) - fix: update slash command source paths in defaults.yaml
 - `3eb34a4` (hyperlib) - chore: update ci submodule (flat template structure for slash commands)
+- `026d4fa` (hyperlib) - docs: update slash command architecture (flat template structure)
+
+### Gitleaks Configuration Enhancement - Complete ✅
+**Status:** Enhanced gitleaks allowlist with comprehensive false-positive patterns
+
+**Improvements:**
+- Added `minVersion = "v8.25.0"` requirement
+- Expanded path allowlists: binary files, lock files, vendor directories
+- Added template syntax patterns: `{{variable}}`, `${ENV_VAR}`, `$ENV_VAR`
+- Added test/dummy patterns: `test_key`, `dummy_password`, `fake_token`, `aaaaa`, `xxxxx`
+- Added localhost/example domain patterns
+
+**Commits:**
+- `3d9f0ac` (ci) - fix: enhance gitleaks allowlist with common false positives
+- `ba8615a` (hyperlib) - chore: update ci submodule (enhanced gitleaks allowlist)
 
 ### Claude Code Integration - Complete ✅
 **Status:** `/start` and `/save` slash commands implemented with HyperCI integration
