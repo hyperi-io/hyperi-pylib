@@ -95,13 +95,13 @@
 - Zero-downtime rolling updates (maxUnavailable: 0, maxSurge: 1)
 - ArgoCD GitOps ready
 
-### Estimated Effort (AI-assisted, Linear.app points)
+### Estimated Effort
 
-- Documentation: **2 points** (KUBERNETES.md + updates)
-- Example projects: **2 points** (api-container + daemon-container)
-- HELM charts: **1 point** (production-ready templates)
+- Documentation: **2h** (KUBERNETES.md + updates)
+- Example projects: **2h** (api-container + daemon-container)
+- HELM charts: **1h** (production-ready templates)
 
-**Total:** **4-8 points** (4-8 hours with AI assistance)
+**Total:** **4-8h**
 
 ---
 
@@ -152,7 +152,7 @@ if __name__ == "__main__":
 - **Config migration**: Replace Pydantic Settings with hyperlib.config (7-layer cascade)
 - **Dockerfile CMD**: Change to `python -m dfe_ui_backend serve --profile prod`
 - **Testing**: Add health endpoint tests, metrics collection tests
-- **Estimate**: **1 point** (1 hour)
+- **Estimate**: **1h**
 
 **Benefits Gained**:
 - ✅ Health endpoints (/health, /ready) - fixes k8s probe gaps
@@ -216,7 +216,7 @@ if __name__ == "__main__":
 - **Health server**: Automatic (separate thread on port 8080)
 - **Dockerfile CMD**: Change to `python -m dfe_hunt_runner start --profile prod`
 - **Testing**: Critical - test no orphaned processes, health server, metrics
-- **Estimate**: **2 points** (2 hours, complex subprocess management)
+- **Estimate**: **2h** (complex subprocess management)
 
 **Benefits Gained**:
 - ✅ **Fixes orphaned process bug** (proper subprocess tracking)
@@ -275,7 +275,7 @@ if __name__ == "__main__":
 - **Config migration**: Replace custom config with hyperlib.config
 - **Type hints**: Add type hints to all command parameters (Typer requirement)
 - **Testing**: Update CLI tests to use Typer's CliRunner
-- **Estimate**: **1 point** (1 hour)
+- **Estimate**: **1h**
 
 **Benefits Gained**:
 - ✅ Type-driven CLI (better IDE support, autocomplete)
@@ -290,11 +290,11 @@ if __name__ == "__main__":
 
 | App | Type | Estimate | Critical Bug Fix | Key Benefits |
 |-----|------|--------|-----------------|--------------|
-| dfe-ui-backend | API | **1 point** | No | Health checks, metrics, graceful shutdown |
-| dfe-hunt-runner | Daemon | **2 points** | **Yes** (orphaning) | Fixes orphaning, health server, metrics |
-| dfe-cli-core | CLI | **1 point** | No | Type-driven CLI, better UX |
+| dfe-ui-backend | API | **1h** | No | Health checks, metrics, graceful shutdown |
+| dfe-hunt-runner | Daemon | **2h** | **Yes** (orphaning) | Fixes orphaning, health server, metrics |
+| dfe-cli-core | CLI | **1h** | No | Type-driven CLI, better UX |
 
-**Total:** **4 points** (4 hours with AI assistance)
+**Total:** **4h**
 
 **Recommended Order**:
 1. **dfe-cli-core** (simplest, validates Typer migration pattern)
@@ -592,14 +592,14 @@ readinessProbe:
 
 ---
 
-## Estimated Effort (AI-assisted, Linear.app points)
+## Estimated Effort
 
-- **Phase 1 (Foundation):** **8 points** (profile system, mixins, metrics)
-- **Phase 2 (Application Types):** **8 points** (5 app types, tests)
-- **Phase 3 (Health Checks):** **4 points** (health mixin, k8s probes)
-- **Phase 4 (Documentation):** **4-8 points** (docs, examples, HELM)
+- **Phase 1 (Foundation):** **8h** (profile system, mixins, metrics)
+- **Phase 2 (Application Types):** **8h** (5 app types, tests)
+- **Phase 3 (Health Checks):** **4h** (health mixin, k8s probes)
+- **Phase 4 (Documentation):** **4-8h** (docs, examples, HELM)
 
-**Total:** **24-28 points** (~3-4 days with AI assistance)
+**Total:** **24-28h**
 
 ---
 
@@ -689,54 +689,54 @@ readinessProbe:
 
 #### Short-term
 
-1. **Add `./ci/ai refresh` command** - **2 points**
+1. **Add `./ci/ai refresh` command** - **2h**
    - Re-syncs .claude/ context files with latest standards
    - Updates CODE-ASSISTANT.md with current HyperCI docs
    - Reduces context switching overhead when standards change
 
-2. **Improve error message consistency** - **4 points**
+2. **Improve error message consistency** - **4h**
    - Wrapper around tool output with consistent formatting
    - Color-coded severity (red = error, yellow = warning)
    - Actionable fix suggestions for all errors
 
-3. **Document two-venv pattern clearly** - **1 point**
+3. **Document two-venv pattern clearly** - **1h**
    - Add FAQ: "Why two .venv directories?"
    - Explain migration path to single .venv
    - Update all docs to reference single .venv only
 
 #### Medium-term
 
-1. **Complete single .venv migration** - **8 points**
+1. **Complete single .venv migration** - **8h**
    - Remove ci-local/.venv entirely
    - Consolidate all deps into project .venv
    - Update all docs and scripts
    - Reduces cognitive load (no two-venv confusion)
 
-2. **Add `./ci/run fix` command** - **2 points**
+2. **Add `./ci/run fix` command** - **2h**
    - Auto-fix ALL auto-fixable issues (black, isort, ruff --fix)
    - Single command instead of running each tool manually
    - Makes conforming to standards even lighter work
 
-3. **Enhance pre-commit hooks** - **4 points**
+3. **Enhance pre-commit hooks** - **4h**
    - Auto-fix formatting on commit (black, isort)
    - Run ruff --fix automatically
    - Only block if non-fixable errors remain
 
 #### Long-term
 
-1. **Unified error reporter** - **8 points**
+1. **Unified error reporter** - **8h**
    - Wrapper that standardizes all tool output
    - Consistent format: `[ERROR] file.py:42 - Description`
    - Grouped by severity (errors first, warnings second)
    - Reduces cognitive load parsing different error formats
 
-2. **AI-assisted auto-fix** - **16 points**
+2. **AI-assisted auto-fix** - **16h**
    - `./ci/run fix --ai` uses Claude/Copilot to suggest fixes for type errors
    - Presents diffs for review before applying
    - Reduces manual intervention further
    - Test-enforceable standards principle in action
 
-3. **Smart context switching detection** - **4 points**
+3. **Smart context switching detection** - **4h**
    - Track last project worked on
    - Auto-update STATE.md timestamp on `./ci/run test`
    - Warn if project not touched in > 5 days (context switch overhead)
@@ -745,11 +745,11 @@ readinessProbe:
 
 ### Add Gitleaks Secret Scanning to HyperCI
 **Status:** Design complete, ready to implement
-**Estimate:** **2 points**
+**Estimate:** **2h**
 
 ### Reorganize src/hyperlib/ to Subdirectory Structure
 **Status:** Planned - match application/ pattern
-**Estimate:** **1 point**
+**Estimate:** **1h**
 
 ### Refactor Application.mcp() to Use FastMCP
 **Status:** Backlog - use library instead of custom implementation
