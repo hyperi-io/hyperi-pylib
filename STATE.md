@@ -6,6 +6,36 @@
 
 **Communication Style**: See [.claude/DEREK.md](.claude/DEREK.md) for Derek's preferred style (professional but relaxed Australian, no LLM fluff)
 
+## CRITICAL: HyperCI Release Automation - Two Separate Systems
+
+**NEVER confuse these two completely separate release systems:**
+
+### 1. HyperCI ITSELF (the ci/ submodule repository)
+**Location:** `/projects/hyperlib/ci` (git submodule pointing to hypersec-io/hyperci)
+**Release automation:** semantic-release CLI + .releaserc.json (Node.js based)
+**Files:**
+- `ci/.releaserc.json` - semantic-release configuration
+- `ci/release.sh` - convenience wrapper
+- `ci/VERSION` - version file (updated by semantic-release)
+- `ci/CHANGELOG.md` - auto-generated changelog
+
+**Why:** HyperCI is infrastructure code that should not depend on itself (avoid circular dependencies). Uses simple Node.js semantic-release CLI, same pattern as dfe-developer.
+
+### 2. HyperCI AS A SERVICE (attached to parent projects like hyperlib)
+**Location:** Parent project uses `/ci` as submodule
+**Release automation:** Python-based `./ci/run release` (advanced CI orchestration)
+**Files:**
+- `ci/modules/python/run.d/90-semantic-release.py` - Python semantic-release
+- `ci/modules/python/run.d/59-python-version-sync.py` - VERSION sync
+- `ci/modules/python/run.d/61-update-badges.py` - Badge updates
+- Parent project `pyproject.toml`, `VERSION`, `CHANGELOG.md`
+
+**Why:** Parent projects (hyperlib, dfe-cli-core, etc.) use the full HyperCI orchestration with Python semantic-release, version syncing, badge updates, build/publish automation.
+
+**KEY RULE:** These are TOTALLY SEPARATE in implementation and concept. Never mix them.
+
+---
+
 ## Session 2025-11-10 - Container-Native Patterns Implementation
 
 ### Phase 1: Foundation - Complete ✅
