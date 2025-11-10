@@ -110,7 +110,10 @@
       "Bash(git -C /projects/hyperlib commit -m \"$(cat <<''EOF''\nfix: merge container-native patterns branch\n\nMerged feat/no-ref/container-native-patterns into main with completed work:\n- Documentation restructure (Phase 4 complete)\n- Application framework updates (mixins, profiles)\n- CI submodule updated to v1.1.1 (semantic-release automation)\n- All tests passing (165/165 unit tests)\n\nReady for v2.8.0 release.\nEOF\n)\")",
       "Bash(git -C /projects/hyperlib push origin main)",
       "Bash(git -C /projects/hyperlib commit -m \"fix: remove unused imports (ruff F401 compliance)\")",
-      "Bash(git -C /projects/hyperlib commit -m \"fix: suppress linter warnings for unused params and conditional imports\")"
+      "Bash(git -C /projects/hyperlib commit -m \"fix: suppress linter warnings for unused params and conditional imports\")",
+      "Bash(git -C /projects/hyperlib tag --list 'v2.8.*')",
+      "Bash(git -C /projects/hyperlib commit -m \"chore: update ci submodule (remove --no-vcs-release flag)\")",
+      "Bash(git -C /projects/hyperlib commit -m \"fix: apply black formatting to custom_recognizers.py\")"
     ],
     "deny": [],
     "ask": []
