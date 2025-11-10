@@ -2,134 +2,110 @@
 
 ## Active
 
-### Container-Native Application Patterns - APPROVED DESIGN
+### Container-Native Application Patterns - Phase 4 (Documentation & Examples)
 
-**Priority:** HIGH (critical for production deployments)
+**Priority:** MEDIUM (Phases 1-3 complete, need docs/examples for users)
 
-**Status:** Design approved, ready to implement
+**Status:** Implementation complete (Phases 1-3), documentation/examples remaining (Phase 4)
 
-**Analysis Documents:** `~/hyperlib/` (containerization_analysis.md, ANALYSIS_SUMMARY.md)
+**What's Complete:**
+- ✅ Three profiles (dev/docker/prod) - [src/hyperlib/application/profiles.py](src/hyperlib/application/profiles.py)
+- ✅ All 5 mixins (Profile, Signal, CLI, Health, Metrics) - [src/hyperlib/application/mixins/](src/hyperlib/application/mixins/)
+- ✅ Mixin composition in all app types (API, Daemon, MCP, Oneshot, CLI)
+- ✅ Prometheus-first metrics with OTEL conversion
+- ✅ CLI-first pattern with Typer
+- ✅ Tests passing (Daemon/MCP/Oneshot: 100%, API: skipped but functional)
 
----
-
-## Implementation Plan
-
-### Design Decisions (APPROVED)
-
-1. **Three Profiles:** `dev`, `docker`, `prod` (no kubernetes profile)
-   - `dev`: Local development (console logs, no metrics, hot reload)
-   - `docker`: Integration testing, CI/CD (JSON logs, metrics, health checks)
-   - `prod`: Production = k8s + HELM + ArgoCD + KEDA (all features enabled)
-
-2. **Architecture:** Mixin-based composition
-   - `CLIExecutableMixin` - Typer CLI for all app types
-   - `SignalHandlerMixin` - Graceful shutdown (SIGTERM/SIGINT)
-   - `ProfileMixin` - Profile loading and application
-   - `HealthCheckMixin` - Health/readiness endpoints
-   - `MetricsMixin` - Auto-instrumentation
-
-3. **Metrics Strategy:** Prometheus-first with auto-OTEL conversion
-   - Default: Prometheus naming conventions (`http_requests_total`, `task_execution_duration_seconds`)
-   - Backend auto-converts to OTEL semantic conventions when `METRICS_BACKEND=opentelemetry`
-   - Zero code changes for developers to switch backends
-   - KEDA-compatible by default (Prometheus format)
-
-4. **CLI-First Pattern:** All apps executed as CLI commands
-   - Every app type gets Typer CLI with standard commands
-   - Standard commands: `version`, `config`, `validate`, `health-check`
-   - App-specific commands: `serve` (API), `start` (Daemon), etc.
-
-5. **Opinionated Defaults:** Production-ready out of the box
-   - `Application.api()` with `profile="prod"` → health checks, metrics, graceful shutdown
-   - `Application.daemon()` with `profile="prod"` → process management, health HTTP server
-   - Developer just adds their business logic
+**What's Remaining (Phase 4):**
 
 ---
 
-## Object Inheritance Hierarchy
+## Phase 4: Documentation & Examples (Remaining Work)
 
-### Mixin Composition Pattern
+### 4.1 Documentation
 
-**Base Mixins** (single responsibility):
-```
-ProfileMixin           - Profile loading and application
-SignalHandlerMixin     - SIGTERM/SIGINT handling with timeout
-CLIExecutableMixin     - Typer CLI commands (version, config, validate)
-HealthCheckMixin       - /health and /ready endpoints
-MetricsMixin           - Auto-instrumentation based on app type
-```
+**Files to create:**
 
-**Application Types** (multiple inheritance):
-```
-APIApplication(
-    CLIExecutableMixin,
-    SignalHandlerMixin,
-    ProfileMixin,
-    HealthCheckMixin,
-    MetricsMixin
-)
-├── Typer commands: serve, health-check, validate, version, config
-├── HTTP metrics: http_requests_total, http_request_duration_seconds
-├── Health endpoints: /health, /ready
-└── Graceful shutdown on SIGTERM/SIGINT
+- `docs/KUBERNETES.md` - k8s + HELM + ArgoCD + KEDA deployment guide (~745 lines)
+  - Health probes (liveness, readiness, startup)
+  - Services (ClusterIP, LoadBalancer, Headless)
+  - ConfigMaps and Secrets
+  - Prometheus ServiceMonitor integration
+  - KEDA autoscaling (Prometheus, CPU, queue depth triggers)
+  - ArgoCD GitOps deployment
+  - Multi-environment configuration (dev/staging/prod)
+  - Pod Disruption Budgets
+  - Troubleshooting guide
 
-DaemonApplication(
-    CLIExecutableMixin,
-    SignalHandlerMixin,
-    ProfileMixin,
-    MetricsMixin
-)
-├── Typer commands: start, status, stop, version, config
-├── Task metrics: task_execution_total, task_execution_duration_seconds
-├── Health HTTP server (separate thread on port 8080)
-└── Fixes process orphaning bug
+- Update `docs/README.md` with container deployment examples
 
-MCPApplication(
-    CLIExecutableMixin,
-    SignalHandlerMixin,
-    ProfileMixin,
-    MetricsMixin
-)
-├── Typer commands: serve, validate, version, config
-├── MCP metrics: mcp_requests_total, mcp_request_duration_seconds
-├── Health check in MCP protocol
-└── Graceful shutdown
+### 4.2 Example Projects
 
-OneshotApplication(
-    CLIExecutableMixin,
-    SignalHandlerMixin,
-    ProfileMixin
-)
-├── Typer commands: run, validate, version, config
-├── Job metrics: job_execution_total, job_execution_duration_seconds
-├── No health checks (one-shot execution)
-└── Graceful shutdown if interrupted
+**Create complete working examples:**
 
-CLIApplication(
-    SignalHandlerMixin,
-    ProfileMixin
-)
-├── Full Typer CLI (user-defined commands)
-├── No metrics by default (CLI tools)
-├── No health checks
-└── Profile-based logging only
-```
+1. **examples/api-container/** - FastAPI REST API with k8s deployment
+   - Application code with health checks and custom dependency checks
+   - Multi-stage Dockerfile with debug utilities (curl, nc, ping)
+   - Kubernetes manifests (deployment.yaml, service.yaml)
+   - Docker Compose with PostgreSQL, Redis, Prometheus
+   - Prometheus configuration
+   - Complete README with deployment instructions
 
-**Method Resolution Order (MRO)**:
-- Python C3 linearization ensures predictable method lookup
-- Mixins ordered left-to-right by initialization priority
-- Profile loading happens first, then signal handlers, then features
+2. **examples/daemon-container/** - Background worker daemon
+   - Daemon application with 3 scheduled tasks
+   - Health checks for database and queue dependencies
+   - Multi-stage Dockerfile (non-root user, health check)
+   - Kubernetes manifests with proper resource limits
+   - Docker Compose setup
+   - Prometheus metrics for task execution
 
-**Rationale**:
-- **Composition over inheritance**: Mixins allow à la carte feature selection
-- **Single responsibility**: Each mixin does ONE thing well
-- **Reusability**: Same mixins across all application types
-- **Testability**: Test mixins independently, then composed apps
-- **Flexibility**: Easy to add new mixins or application types
+### 4.3 HELM Chart Templates
+
+**Create production-ready HELM charts:**
+
+**Files:** `templates/helm/hyperlib-app/`
+
+- `Chart.yaml` - HELM chart metadata
+- `values.yaml` - Default values with documentation
+- `values-dev.yaml` - Development environment overrides
+- `values-staging.yaml` - Staging environment overrides
+- `values-prod.yaml` - Production environment overrides
+- `README.md` - Installation and configuration guide
+
+**Templates:**
+
+- `deployment.yaml` - Pod spec with health probes, multi-profile support
+- `service.yaml` - Service with metrics port
+- `serviceaccount.yaml` - RBAC service account
+- `ingress.yaml` - Ingress with TLS support
+- `hpa.yaml` - Horizontal Pod Autoscaler (mutually exclusive with KEDA)
+- `scaledobject.yaml` - KEDA ScaledObject (Prometheus/CPU/queue triggers)
+- `servicemonitor.yaml` - Prometheus ServiceMonitor
+- `pdb.yaml` - Pod Disruption Budget
+- `configmap.yaml` - Application configuration
+- `secret.yaml` - Secrets management
+
+**Features:**
+
+- Profile-based configuration (dev/docker/prod)
+- Health checks with configurable probe timings
+- KEDA autoscaling or HPA (mutually exclusive)
+- Prometheus ServiceMonitor integration
+- Security best practices (non-root, dropped capabilities)
+- Zero-downtime rolling updates (maxUnavailable: 0, maxSurge: 1)
+- ArgoCD GitOps ready
+
+### Estimated Effort
+
+- Documentation: 2-3 days
+- Example projects: 2-3 days
+- HELM charts: 2-3 days
+
+**Total:** ~1-2 weeks for complete Phase 4
 
 ---
 
-## Migration Assessment - DFE Apps
+## DFE Migration Reference (For Future Use)
 
 ### 1. dfe-ui-backend (FastAPI REST API)
 
@@ -652,6 +628,59 @@ readinessProbe:
 
 ---
 
+## Release Workflow Architecture
+
+**CRITICAL: Understand the distinction between local and remote workflows:**
+
+### Local Workflow (Build + Test)
+
+```bash
+./ci/run check   # Tests, lint, type-check - ALL LOCAL
+./ci/run build   # Build package - LOCAL ONLY
+```
+
+- Runs in local environment
+- Uses local `.venv` and `ci-local/.venv`
+- Fast feedback loop for development
+- No GitHub Actions involved
+
+### Release Workflow (Versioning Local, Build/Publish Remote)
+
+```bash
+./ci/run release   # Run semantic-release locally, push tag
+```
+
+**What happens:**
+
+1. **Local (semantic-release):** Version management happens HERE
+   - Analyzes commits since last tag
+   - Determines next version (2.8.8 → 2.8.9)
+   - **Updates VERSION file** (must happen before tag push)
+   - **Updates CHANGELOG.md** (must happen before tag push)
+   - **Creates git tag** (v2.8.9)
+   - **Commits changes** (`chore(release): 2.8.9 [skip ci]`)
+   - **Pushes tag + commit** to GitHub
+
+2. **GitHub Actions (triggered by tag push):** Build/test/publish happens HERE
+   - Tag push triggers workflow → BuildJet runners
+   - Checks out code (already has v2.8.9 in VERSION file)
+   - `./ci/bootstrap install` - Sets up CI environment (installs uv, gitleaks, etc.)
+   - `./ci/run test` - Tests, lint, type-check (**EXACT SAME** CI code as local)
+   - `./ci/run build` - Build package with correct version (**EXACT SAME** CI code as local)
+   - Publish to JFrog
+   - Create GitHub release
+
+**Key Concept:**
+
+- **Build/check/test:** All LOCAL (fast feedback loop)
+- **Release versioning:** LOCAL (semantic-release analyzes commits, updates VERSION/CHANGELOG)
+- **Release build/publish:** GITHUB CLOUD SIDE (reproducible, auditable)
+- **Same CI code:** GitHub cloud uses the **EXACT SAME** `./ci/run` scripts and code as local
+- **Cloud environment prep:** GitHub runners need additional setup (uv, gitleaks CLI, compilers) before running the same CI scripts
+- **Chicken-and-egg solution:** VERSION file updated locally BEFORE tag push, so cloud build has correct version
+
+---
+
 ## Backlog
 
 ### HyperCI Improvements - DISCUSS & PLAN
@@ -739,38 +768,4 @@ readinessProbe:
 
 ---
 
-## Completed (Recent)
-
-### 2025-11-07 - Typer Migration & Application Restructure
-- Migrated CLIApplication from Click to Typer (mandatory CLI standard)
-- Restructured all application types to proper submodule packages
-- Tests: 15/15 passing
-
-### 2025-11-04 - Config File Merge Module
-- Added comprehensive config file merge to hyperlib.config
-- Supports JSON, YAML, TOML, INI, .env, .gitignore
-- Auto-detection, deep merge, append strategies
-- Tests: 71/71 passing
-
-### 2025-11-04 - Metrics Backend Abstraction
-- Added Prometheus and OpenTelemetry support
-- Backend detection and graceful fallback
-- Tests: 17/18 passing (1 skipped)
-
-### 2025-10-31 - ONE .venv Migration
-- Unified .venv at project root (runtime + CI tools)
-- Published v2.4.4 to JFrog
-
-### 2025-10-31 - Nuitka Builds
-- Fixed all Nuitka build issues
-- Multi-arch support (x64 + ARM64)
-- Package mode (.whl with .so files)
-
-### 2025-10-31 - Application.mcp()
-- 5th deployment type implemented
-- stdio and HTTP transports
-- Included in v2.3.5
-
----
-
-**Last Updated:** 2025-11-07
+**Last Updated:** 2025-11-10
