@@ -94,10 +94,10 @@
 - `3d9f0ac` (ci) - fix: enhance gitleaks allowlist with common false positives
 - `ba8615a` (hyperlib) - chore: update ci submodule (enhanced gitleaks allowlist)
 
-### Slash Command Documentation - Complete ✅
-**Status:** Added prominent `/start` and `/save` command documentation to CODE-ASSISTANT.md and README.md
+### Slash Command Documentation & Infrastructure - Complete ✅
+**Status:** Added documentation and released HyperCI v1.2.9 with slash command infrastructure
 
-**Changes:**
+**Documentation Changes:**
 - Added new "Claude Code Slash Commands" section to CODE-ASSISTANT.md (both local and template)
 - Positioned prominently at top of document (right after Session Start Checklist)
 - Includes complete usage guide: what it does, when to use, why use it
@@ -105,14 +105,35 @@
 - Added user-facing documentation to ci/README.md under "Using ./ci/ai" section
 - Clear proactive session management guidelines
 
+**Infrastructure Changes (HyperCI v1.2.9):**
+- Added copy_overwrite parameter to ci_lib.py merge_file() function
+- Added CODE-ASSISTANT-STARTUP.md template (preserved on updates, developer-specific)
+- Updated settings.json with Read(~/.gitconfig) permission for personalization
+- Updated start.md template with wildcard pattern for standards files
+
 **Files Updated:**
 - [ci-local/CODE-ASSISTANT.md](ci-local/CODE-ASSISTANT.md) - Local instance with slash command documentation
 - [ci/modules/common/templates/CODE-ASSISTANT.md](ci/modules/common/templates/CODE-ASSISTANT.md) - Template (deployed to projects)
 - [ci/README.md](ci/README.md) - User-facing documentation in "Using ./ci/ai" section
+- [ci/modules/common/ci_lib.py](ci/modules/common/ci_lib.py) - copy_overwrite parameter
+- [ci/modules/common/ai.d/15-merge-files.py](ci/modules/common/ai.d/15-merge-files.py) - Support copy_overwrite
+- [ci/modules/common/templates/CODE-ASSISTANT-STARTUP.md](ci/modules/common/templates/CODE-ASSISTANT-STARTUP.md) - New template
+- [ci/modules/common/templates/settings.json](ci/modules/common/templates/settings.json) - Git config read permission
+
+**HyperCI Releases:**
+- v1.2.9 (2025-11-10) - fix: add copy_overwrite support and CODE-ASSISTANT-STARTUP.md template
+  - Semantic-release CLI automatically created release from `fix:` commit
+  - Updated VERSION file and CHANGELOG.md
+  - Released via GitHub Actions
 
 **Commits:**
 - `8ab1be8` (ci) - docs: add prominent slash command documentation to CODE-ASSISTANT.md and README.md
 - `d620b82` (hyperlib) - docs: add prominent slash command documentation for Claude Code users
+- `3846353` (ci) - fix: add copy_overwrite support and CODE-ASSISTANT-STARTUP.md template for slash commands
+- `be7cde9` (ci) - chore(release): 1.2.9 [semantic-release]
+- `36a4176` (hyperlib) - chore: update ci submodule (slash command infrastructure and documentation)
+- `e992b32` (hyperlib) - chore: update ci submodule to v1.2.9 (copy_overwrite and slash command infrastructure)
+- `197b726` (hyperlib) - docs: update STATE.md with slash command documentation commit hashes
 
 ### Claude Code Integration - Complete ✅
 **Status:** `/start` and `/save` slash commands implemented with HyperCI integration
