@@ -94,6 +94,24 @@
 - `3d9f0ac` (ci) - fix: enhance gitleaks allowlist with common false positives
 - `ba8615a` (hyperlib) - chore: update ci submodule (enhanced gitleaks allowlist)
 
+### Slash Command Documentation - Complete ✅
+**Status:** Added prominent `/start` and `/save` command documentation to CODE-ASSISTANT.md and README.md
+
+**Changes:**
+- Added new "Claude Code Slash Commands" section to CODE-ASSISTANT.md (both local and template)
+- Positioned prominently at top of document (right after Session Start Checklist)
+- Includes complete usage guide: what it does, when to use, why use it
+- Flagged as Claude Code only (not Web/Desktop/other AI assistants)
+- Added user-facing documentation to ci/README.md under "Using ./ci/ai" section
+- Clear proactive session management guidelines
+
+**Files Updated:**
+- [ci-local/CODE-ASSISTANT.md](ci-local/CODE-ASSISTANT.md) - Local instance with slash command documentation
+- [ci/modules/common/templates/CODE-ASSISTANT.md](ci/modules/common/templates/CODE-ASSISTANT.md) - Template (deployed to projects)
+- [ci/README.md](ci/README.md) - User-facing documentation in "Using ./ci/ai" section
+
+**Commit:** (pending)
+
 ### Claude Code Integration - Complete ✅
 **Status:** `/start` and `/save` slash commands implemented with HyperCI integration
 
