@@ -32,7 +32,26 @@
 - Net reduction: 152 lines (475 deletions, 323 insertions)
 - No functional changes, purely type annotation cleanup
 
-**Next: Phase 2** - Update all 5 application types to use mixins
+### Phase 2: Application Types - Complete ✅
+**Status:** All 5 application types updated to use mixins
+
+**Commit:** `74e59cc` - fix: comprehensive documentation restructure and application framework updates
+
+**Implemented:**
+- ✅ APIApplication - Mixins + health endpoints + metrics middleware + serve CLI
+- ✅ DaemonApplication - Mixins + health server + task metrics + start CLI
+- ✅ MCPApplication - Mixins + MCP metrics + serve CLI
+- ✅ OneshotApplication - Mixins + job metrics + run CLI
+- ✅ CLIApplication - Mixins + profile-based logging
+
+**Features Added:**
+- Health endpoints (/health for liveness, /ready for readiness)
+- Auto-instrumented metrics (http_requests_total, task_execution_duration_seconds, etc.)
+- Typer CLI commands (serve, start, run, version, config, validate)
+- Profile-based feature enablement (dev/docker/prod)
+- Graceful shutdown (SIGTERM/SIGINT handling)
+
+**Next: Phase 3** - Enhanced HealthCheckMixin with dependency checks
 
 ---
 
