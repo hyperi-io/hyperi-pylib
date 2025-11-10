@@ -110,7 +110,9 @@
 - [ci/modules/common/templates/CODE-ASSISTANT.md](ci/modules/common/templates/CODE-ASSISTANT.md) - Template (deployed to projects)
 - [ci/README.md](ci/README.md) - User-facing documentation in "Using ./ci/ai" section
 
-**Commit:** (pending)
+**Commits:**
+- `8ab1be8` (ci) - docs: add prominent slash command documentation to CODE-ASSISTANT.md and README.md
+- `d620b82` (hyperlib) - docs: add prominent slash command documentation for Claude Code users
 
 ### Claude Code Integration - Complete ✅
 **Status:** `/start` and `/save` slash commands implemented with HyperCI integration
