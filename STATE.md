@@ -4,7 +4,24 @@
 **Type**: Python package (shared library)
 **Purpose**: Enterprise infrastructure for all HyperSec Python projects
 
-**Communication Style**: See [.claude/DEREK.md](.claude/DEREK.md) for Derek's preferred style (professional but relaxed Australian, no LLM fluff)
+---
+
+## 🔄 SESSION MANAGEMENT
+
+**IMPORTANT:** If this is a new session or context was compressed:
+1. **Run `/start` command** to initialize the session properly
+2. Read STATE.md, TODO.md, and standards documentation
+3. Confirm ready before proceeding with work
+
+**Proactive session management (for AI assistants):**
+- **Monitor conversation length** - After 30-40 exchanges, suggest running `/save`
+- **Before natural breaks** - If developer completes a major task, suggest `/save`
+- **Context warning signs** - If responses get truncated or you start summarizing heavily, immediately suggest `/save`
+- Better to save early and preserve context than lose information to compression
+
+**Save progress anytime:** Run `/save` to checkpoint progress, clean up STATE.md and TODO.md (can run multiple times per session)
+
+---
 
 ## CRITICAL: HyperCI Release Automation - Two Separate Systems
 
@@ -33,6 +50,47 @@
 **Why:** Parent projects (hyperlib, dfe-cli-core, etc.) use the full HyperCI orchestration with Python semantic-release, version syncing, badge updates, build/publish automation.
 
 **KEY RULE:** These are TOTALLY SEPARATE in implementation and concept. Never mix them.
+
+---
+
+## Session 2025-11-11 - Claude Code Slash Commands & Session Management
+
+### Claude Code Integration - Complete ✅
+**Status:** `/start` and `/save` slash commands implemented with HyperCI integration
+
+**Implemented:**
+- ✅ `/start` command - Session initialization with developer name personalization
+- ✅ `/save` command - Session progress checkpoint (renamed from `/stop`)
+- ✅ `copy_overwrite` parameter in ci_lib.py merge_file() function
+- ✅ Developer-specific CODE-ASSISTANT-STARTUP.md (preserved on updates)
+- ✅ Git config read permissions (~/.gitconfig) for personalization
+- ✅ HyperCI auto-deployment via `./ci/ai install`
+
+**Files Created/Updated:**
+- [.claude/commands/start.md](.claude/commands/start.md) - Session initialization checklist
+- [.claude/commands/save.md](.claude/commands/save.md) - Progress checkpoint with STATE.md rationalization
+- [ci/modules/common/templates/.claude/commands/start.md](ci/modules/common/templates/.claude/commands/start.md) - Template
+- [ci/modules/common/templates/.claude/commands/save.md](ci/modules/common/templates/.claude/commands/save.md) - Template
+- [ci/modules/common/templates/CODE-ASSISTANT-STARTUP.md](ci/modules/common/templates/CODE-ASSISTANT-STARTUP.md) - Template
+- [ci/modules/common/ci_lib.py](ci/modules/common/ci_lib.py) - Added copy_overwrite parameter
+- [ci/modules/common/ai.d/15-merge-files.py](ci/modules/common/ai.d/15-merge-files.py) - Support copy_overwrite
+- [ci/modules/common/defaults.yaml](ci/modules/common/defaults.yaml) - Slash command deployment config
+- [ci/modules/common/templates/CODE-ASSISTANT.md](ci/modules/common/templates/CODE-ASSISTANT.md) - Updated checklist
+- [ci/modules/common/templates/settings.json](ci/modules/common/templates/settings.json) - Added Read(~/.gitconfig)
+- [.claude/settings.json](.claude/settings.json) - Added Read(~/.gitconfig)
+- [CLAUDE.md](CLAUDE.md) - Session management section
+
+**Key Decisions:**
+1. **Rename `/stop` → `/save`** - Better semantic (checkpoint vs end session)
+2. **copy_overwrite flag** - Generic solution (not .claude/commands special case)
+3. **if_missing for startup** - Preserve developer customizations
+4. **Git config integration** - Personalize greetings with developer's first name
+
+**Behavior:**
+- `/start` - Reads docs, gets git name, personalizes greeting
+- `/save` - Checkpoints progress, rationalizes STATE.md, cleans TODO.md, fixes markdown linting
+- `./ci/ai install` - Deploys/updates slash commands (always overwrites templates)
+- CODE-ASSISTANT-STARTUP.md - Created once, never overwritten (developer's file)
 
 ---
 
