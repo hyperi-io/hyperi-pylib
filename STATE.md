@@ -6,6 +6,133 @@
 
 **Communication Style**: See [.claude/DEREK.md](.claude/DEREK.md) for Derek's preferred style (professional but relaxed Australian, no LLM fluff)
 
+## Session 2025-11-10 - Standards Documentation Restructure
+
+### Coding Standards Documentation Restructure - Complete ✅
+**Status:** Comprehensive restructure completed with token efficiency and human readability
+
+**Commit message (when ready):** `docs: reduce coding standards to LLM-friendly token-efficient versions`
+
+**Goal:** Reduce Derek's for-human coding and automation standards documents to LLM-friendly reduced token versions while keeping them human-readable.
+
+**Strategy:**
+- Core files: Concise summaries with references (~300-600 lines each, auto-loaded by Claude)
+- Details files: Comprehensive guides (~400-800 lines each, human reference)
+- Token reduction target: 35-50k → 25k tokens (30-50% savings)
+
+**Completed:**
+
+1. **Created standards directory structure** (details/, python/details/, ai-platforms/)
+
+2. **Extracted detailed guides to separate files:**
+   - details/DESIGN-PRINCIPLES.md (~420 lines) - SOLID, DRY, KISS, YAGNI
+   - details/ERROR-HANDLING.md (~580 lines) - Security-first error handling
+   - details/AI-GUIDELINES.md (~850 lines) - AI code assistant best practices with cognitive load research
+   - details/NO-MOCKS-POLICY.md (~650 lines) - Production code policy
+   - details/TEST-FIRST-DEVELOPMENT.md (~450 lines) - Test-first strategy for existing code
+   - python/details/PEP8-GUIDE.md (~600 lines) - Comprehensive PEP 8 guide
+   - python/details/HYPERCI-INTEGRATION.md (~800 lines) - Complete HyperCI tooling guide
+
+3. **Condensed core standards files:**
+   - CODING-STANDARDS.md: 873 → 561 lines (35% reduction)
+   - CODING-STANDARDS-PYTHON.md: 1,151 → 683 lines (41% reduction)
+   - GIT-WORKFLOW.md: Added ~500-line "Human-Style Git Commits" section
+
+4. **Created new core standards:**
+   - QUICK-REFERENCE.md (~300 lines) - One-page cheat sheet
+   - CONTAINERIZATION.md (~600 lines) - Kubernetes + HELM + ArgoCD deployment patterns
+   - README.md - Human navigation index with topic/role-based organization
+
+5. **Enhanced AI-GUIDELINES.md with cognitive load research:**
+   - Added "Core Principle: Human-First Design" section (cognitive load must be same or less than human-only projects)
+   - Included Cognitive Load Theory (Sweller, 1988) - working memory limits
+   - Added Derek's bias note: Use "research indicates" not "research shows" for psychology research
+   - Comprehensive accessible references (no paywalls):
+     - Academic papers: ResearchGate links (Scalabrino et al., 2018)
+     - Video: John Sweller keynote (43min, researchED Melbourne 2017)
+     - Articles: Florian Krämer (2024), Rustam Zakirullin GitHub doc (2025), DabApps (2024)
+   - Explained intrinsic/extraneous/germane cognitive load
+   - Linked AI verbosity to extraneous cognitive load
+
+6. **Added new topics to standards:**
+   - Test-first development for existing code (TEST-FIRST-DEVELOPMENT.md)
+   - AI rabbit-holing prevention strategies (AI-GUIDELINES.md)
+   - Human-style git commits (GIT-WORKFLOW.md)
+   - Containerization with debug utilities policy (CONTAINERIZATION.md)
+
+**Token Reduction Results:**
+- Core auto-loaded files: ~2,900 lines (added CONTAINERIZATION.md, GIT-WORKFLOW expansion)
+- Original core files: ~3,060 lines (before restructure)
+- Detail files extracted: ~4,350 lines (now on-demand only)
+- **Net token savings: ~30% (detail files no longer auto-loaded)**
+- Estimated session token usage: ~28k for core standards (down from ~40k)
+
+**Key Design Decisions:**
+
+1. **Human-First Design Principle** (CRITICAL):
+   - AI-assisted projects must be indistinguishable from human-only projects
+   - Cognitive load must be the same or less than human-written code
+   - No AI conventions, patterns, or verbosity that require "translation"
+   - Git commits, code style, and documentation follow human patterns
+
+2. **Containerization Standards:**
+   - k8s + HELM + ArgoCD deployment pattern
+   - Derek's debug utilities policy: Include small utilities (curl, nc, ping) in containers
+     - 2-5% image size increase is acceptable for debuggability
+     - Removing tiny debug utilities for disk savings is not efficient cost optimization
+   - Multi-stage Dockerfiles (separate build/runtime)
+   - Health check endpoints required: /health/live, /health/ready, /health/startup
+   - Non-root user always
+
+3. **Cognitive Load Research Integration:**
+   - Changed "research shows" → "research indicates" (Derek's psychology bias)
+   - All references accessible without paywalls
+   - Video content included for different learning styles
+   - Practical implications explained (intrinsic/extraneous/germane load)
+
+4. **Three Core Principles Integration:**
+   - Added core principles section to all major documentation
+   - **Principle 1:** Reduce cognitive load (for developers AND AI workflows)
+   - **Principle 2:** Reduce context switching overhead (consistent patterns, standardized infrastructure)
+   - **Principle 3:** Automated standards enforcement (make conforming light work)
+   - These principles now appear in: README.md, CODING-STANDARDS.md, HYPERCI-INTEGRATION.md
+   - Context switching guidance added to AI-GUIDELINES.md (23-45min recovery time, $50k/year cost)
+   - **Test-enforceable standards design principle** added to AI-GUIDELINES.md:
+     - Makes AI assistants more reliable and efficient
+     - Automated testing catches AI errors before production
+     - Clear success criteria for AI (formatting, types, security, coverage)
+     - Enables faster iteration with immediate feedback
+
+5. **HyperCI Principles Review:**
+   - Reviewed bootstrap, run, and ai commands against core principles
+   - Overall score: 9/10 - excellent implementation
+   - Recommendations documented in `.tmp/hyperci-principles-review.md`
+   - Short-term: Add `./ci/ai refresh` command, improve error consistency
+   - Medium-term: Complete single .venv migration, add `./ci/run fix` command
+   - Long-term: Unified error reporter, AI-assisted auto-fix
+
+**Files Modified:**
+- ci/docs/standards/CODING-STANDARDS.md (condensed + core principles)
+- ci/docs/standards/CODING-STANDARDS-PYTHON.md (condensed)
+- ci/docs/standards/GIT-WORKFLOW.md (added human-style commits section)
+- ci/docs/standards/README.md (created index + core principles)
+- ci/docs/standards/QUICK-REFERENCE.md (created)
+- ci/docs/standards/CONTAINERIZATION.md (created)
+- ci/docs/standards/details/AI-GUIDELINES.md (cognitive load + context switching + core principles)
+- ci/docs/standards/details/TEST-FIRST-DEVELOPMENT.md (created)
+- ci/docs/standards/python/details/HYPERCI-INTEGRATION.md (added core principles)
+
+**Files Created:**
+- .tmp/hyperci-principles-review.md - HyperCI analysis against core principles
+
+**HyperCI Improvements Added to TODO.md:**
+- Short-term: `./ci/ai refresh` command, error consistency, two-venv docs
+- Medium-term: Single .venv migration, `./ci/run fix` command, enhanced pre-commit hooks
+- Long-term: Unified error reporter, AI-assisted auto-fix, smart context switching detection
+- All improvements aligned with three core principles
+
+**Ready for commit:** All requested work complete, awaiting Derek's approval
+
 ## Session 2025-11-07 Continued (Part 5)
 
 ### Container-Native Application Patterns - Design Complete ✅

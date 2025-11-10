@@ -654,6 +654,75 @@ readinessProbe:
 
 ## Backlog
 
+### HyperCI Improvements - DISCUSS & PLAN
+
+**Based on principles review (see .tmp/hyperci-principles-review.md)**
+
+#### Short-term (1-2 weeks)
+
+1. **Add `./ci/ai refresh` command**
+   - Re-syncs .claude/ context files with latest standards
+   - Updates CODE-ASSISTANT.md with current HyperCI docs
+   - Reduces context switching overhead when standards change
+   - **Effort:** 4-6 hours
+
+2. **Improve error message consistency**
+   - Wrapper around tool output with consistent formatting
+   - Color-coded severity (red = error, yellow = warning)
+   - Actionable fix suggestions for all errors
+   - **Effort:** 6-8 hours
+
+3. **Document two-venv pattern clearly**
+   - Add FAQ: "Why two .venv directories?"
+   - Explain migration path to single .venv
+   - Update all docs to reference single .venv only
+   - **Effort:** 2-3 hours
+
+#### Medium-term (1-2 months)
+
+1. **Complete single .venv migration**
+   - Remove ci-local/.venv entirely
+   - Consolidate all deps into project .venv
+   - Update all docs and scripts
+   - Reduces cognitive load (no two-venv confusion)
+   - **Effort:** 1-2 days
+
+2. **Add `./ci/run fix` command**
+   - Auto-fix ALL auto-fixable issues (black, isort, ruff --fix)
+   - Single command instead of running each tool manually
+   - Makes conforming to standards even lighter work
+   - **Effort:** 4-6 hours
+
+3. **Enhance pre-commit hooks**
+   - Auto-fix formatting on commit (black, isort)
+   - Run ruff --fix automatically
+   - Only block if non-fixable errors remain
+   - **Effort:** 6-8 hours
+
+#### Long-term (3-6 months)
+
+1. **Unified error reporter**
+   - Wrapper that standardizes all tool output
+   - Consistent format: `[ERROR] file.py:42 - Description`
+   - Grouped by severity (errors first, warnings second)
+   - Reduces cognitive load parsing different error formats
+   - **Effort:** 1-2 weeks
+
+2. **AI-assisted auto-fix**
+   - `./ci/run fix --ai` uses Claude/Copilot to suggest fixes for type errors
+   - Presents diffs for review before applying
+   - Reduces manual intervention further
+   - Test-enforceable standards principle in action
+   - **Effort:** 2-3 weeks
+
+3. **Smart context switching detection**
+   - Track last project worked on
+   - Auto-update STATE.md timestamp on `./ci/run test`
+   - Warn if project not touched in > 5 days (context switch overhead)
+   - **Effort:** 1 week
+
+---
+
 ### Add Gitleaks Secret Scanning to HyperCI
 **Status:** Design complete, ready to implement
 **Effort:** 3-4 hours
