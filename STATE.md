@@ -53,6 +53,57 @@
 
 ---
 
+## Session 2025-11-11 (Continued) - Estimate Guidance Updates
+
+### Time Estimate Policy Changes - Complete ✅
+**Status:** Updated CODE-ASSISTANT.md with aggressive AI-assisted timeframe guidance
+
+**Changes:**
+- **Policy reversal:** Estimates now ALWAYS enabled by default (previously opt-in)
+- **Rationale:** With aggressive AI timeframes, estimates are now reliable and useful for planning
+- **Format standardization:** Powers of 2 in hours (0.25h, 0.5h, 1h, 2h, 4h, 8h, 16h, 32h, 64h)
+- **Key principle:** Traditional "1 day" estimates = **1h** with AI assistance (10x productivity gain)
+- **Decimal support:** Sub-hour tasks use 0.25h (15min), 0.5h (30min)
+- **Range format:** Use 4-8h when uncertainty exists
+
+**Files Updated:**
+- [ci/modules/common/templates/CODE-ASSISTANT.md](ci/modules/common/templates/CODE-ASSISTANT.md) - Template
+- [ci-local/CODE-ASSISTANT.md](ci-local/CODE-ASSISTANT.md) - Local instance
+- [TODO.md](TODO.md) - All estimates converted to hours format with powers of 2
+
+**Commits:**
+- `5ff77e3` (ci) - docs: add policy against automatic time estimates in TODO.md tasks
+- `26f239a` (ci) - docs: add Linear.app estimate guidance (aggressive timeframes, 10x AI efficiency)
+- `bcc63d9` (ci) - docs: allow decimal estimates for sub-hour tasks (0.25=15min, 0.5=30min)
+- `bdb6a4c` (ci) - docs: update estimate guidance - aggressive AI timeframes, powers of 2 in hours
+- `eedba9a` (ci) - docs: enable estimates by default with aggressive AI timeframe rules
+- `184a063` (hyperlib) - docs: add policy against automatic time estimates in TODO.md tasks
+- `fbf9527` (hyperlib) - docs: add Linear.app estimate guidance (aggressive timeframes, 10x AI efficiency)
+- `f34436c` (hyperlib) - docs: allow decimal estimates for sub-hour tasks (0.25=15min, 0.5=30min)
+- `e31f92f` (hyperlib) - fix: update TODO.md estimates to aggressive AI-assisted timeframes (Linear.app points)
+- `dcca3f2` (hyperlib) - docs: update estimate guidance to aggressive AI timeframes (powers of 2 hours)
+- `1fb78cd` (hyperlib) - fix: convert all estimates to hours format with powers of 2 scaling
+- `cbd14e1` (hyperlib) - docs: enable estimates by default with aggressive AI timeframe rules
+
+**Estimate Examples:**
+```markdown
+- Documentation update - **1h**
+- API endpoint implementation - **2h**
+- Complete feature with tests - **4h**
+- Quick typo fix - **0.25h**
+- Complex refactor - **8-16h**
+```
+
+**Updated Estimates Summary:**
+- Container-Native Phase 4: **4-8h** (docs + examples + HELM)
+- DFE Migration (all 3 apps): **4h** total
+- Full Container-Native Implementation: **24-28h** (all 4 phases)
+- HyperCI short-term improvements: **2h + 4h + 1h**
+- HyperCI medium-term improvements: **8h + 2h + 4h**
+- HyperCI long-term improvements: **8h + 16h + 4h**
+
+---
+
 ## Session 2025-11-11 - Claude Code Slash Commands & Session Management
 
 ### /start Command - Standards File Discovery - Complete ✅
