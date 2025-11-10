@@ -55,6 +55,18 @@
 
 ## Session 2025-11-11 - Claude Code Slash Commands & Session Management
 
+### /start Command - Standards File Discovery - Complete ✅
+**Status:** Updated `/start` command to use wildcard pattern for standards files
+
+**Changes:**
+- Removed .claude/DEREK.md (replaced by CODE-ASSISTANT-STARTUP.md)
+- Updated `/start` command to use Glob patterns for auto-discovery:
+  - Core files: `ci/docs/standards/*.md` (auto-read on session start)
+  - Detail files: `ci/docs/standards/details/*.md` and `ci/docs/standards/python/details/*.md` (RAG awareness, read on-demand)
+- Wildcard approach allows adding/removing standards files without updating slash command
+
+**Commit:** `7589a37` - fix: remove DEREK.md references from STATE.md
+
 ### Claude Code Integration - Complete ✅
 **Status:** `/start` and `/save` slash commands implemented with HyperCI integration
 
