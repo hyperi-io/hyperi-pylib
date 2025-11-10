@@ -95,13 +95,13 @@
 - Zero-downtime rolling updates (maxUnavailable: 0, maxSurge: 1)
 - ArgoCD GitOps ready
 
-### Estimated Effort
+### Estimated Effort (AI-assisted, Linear.app points)
 
-- Documentation: 2-3 days
-- Example projects: 2-3 days
-- HELM charts: 2-3 days
+- Documentation: **2 points** (KUBERNETES.md + updates)
+- Example projects: **2 points** (api-container + daemon-container)
+- HELM charts: **1 point** (production-ready templates)
 
-**Total:** ~1-2 weeks for complete Phase 4
+**Total:** **4-8 points** (4-8 hours with AI assistance)
 
 ---
 
@@ -152,7 +152,7 @@ if __name__ == "__main__":
 - **Config migration**: Replace Pydantic Settings with hyperlib.config (7-layer cascade)
 - **Dockerfile CMD**: Change to `python -m dfe_ui_backend serve --profile prod`
 - **Testing**: Add health endpoint tests, metrics collection tests
-- **Estimated time**: 2-3 hours
+- **Estimate**: **1 point** (1 hour)
 
 **Benefits Gained**:
 - ✅ Health endpoints (/health, /ready) - fixes k8s probe gaps
@@ -216,7 +216,7 @@ if __name__ == "__main__":
 - **Health server**: Automatic (separate thread on port 8080)
 - **Dockerfile CMD**: Change to `python -m dfe_hunt_runner start --profile prod`
 - **Testing**: Critical - test no orphaned processes, health server, metrics
-- **Estimated time**: 4-6 hours (complex due to subprocess management)
+- **Estimate**: **2 points** (2 hours, complex subprocess management)
 
 **Benefits Gained**:
 - ✅ **Fixes orphaned process bug** (proper subprocess tracking)
@@ -275,7 +275,7 @@ if __name__ == "__main__":
 - **Config migration**: Replace custom config with hyperlib.config
 - **Type hints**: Add type hints to all command parameters (Typer requirement)
 - **Testing**: Update CLI tests to use Typer's CliRunner
-- **Estimated time**: 3-4 hours
+- **Estimate**: **1 point** (1 hour)
 
 **Benefits Gained**:
 - ✅ Type-driven CLI (better IDE support, autocomplete)
@@ -288,13 +288,13 @@ if __name__ == "__main__":
 
 ### Migration Summary
 
-| App | Type | Effort | Critical Bug Fix | Key Benefits |
+| App | Type | Estimate | Critical Bug Fix | Key Benefits |
 |-----|------|--------|-----------------|--------------|
-| dfe-ui-backend | API | 2-3 hrs | No | Health checks, metrics, graceful shutdown |
-| dfe-hunt-runner | Daemon | 4-6 hrs | **Yes** (orphaning) | Fixes orphaning, health server, metrics |
-| dfe-cli-core | CLI | 3-4 hrs | No | Type-driven CLI, better UX |
+| dfe-ui-backend | API | **1 point** | No | Health checks, metrics, graceful shutdown |
+| dfe-hunt-runner | Daemon | **2 points** | **Yes** (orphaning) | Fixes orphaning, health server, metrics |
+| dfe-cli-core | CLI | **1 point** | No | Type-driven CLI, better UX |
 
-**Total Effort**: ~10-13 hours (1-2 days)
+**Total:** **4 points** (4 hours with AI assistance)
 
 **Recommended Order**:
 1. **dfe-cli-core** (simplest, validates Typer migration pattern)
@@ -592,14 +592,14 @@ readinessProbe:
 
 ---
 
-## Estimated Effort
+## Estimated Effort (AI-assisted, Linear.app points)
 
-- **Phase 1 (Foundation):** 3-4 days
-- **Phase 2 (Application Types):** 4-5 days
-- **Phase 3 (Health Checks):** 2-3 days
-- **Phase 4 (Documentation):** 2-3 days
+- **Phase 1 (Foundation):** **8 points** (profile system, mixins, metrics)
+- **Phase 2 (Application Types):** **8 points** (5 app types, tests)
+- **Phase 3 (Health Checks):** **4 points** (health mixin, k8s probes)
+- **Phase 4 (Documentation):** **4-8 points** (docs, examples, HELM)
 
-**Total:** ~3 weeks
+**Total:** **24-28 points** (~3-4 days with AI assistance)
 
 ---
 
@@ -687,78 +687,69 @@ readinessProbe:
 
 **Based on principles review (see .tmp/hyperci-principles-review.md)**
 
-#### Short-term (1-2 weeks)
+#### Short-term
 
-1. **Add `./ci/ai refresh` command**
+1. **Add `./ci/ai refresh` command** - **2 points**
    - Re-syncs  context files with latest standards
    - Updates CODE-ASSISTANT.md with current HyperCI docs
    - Reduces context switching overhead when standards change
-   - **Effort:** 4-6 hours
 
-2. **Improve error message consistency**
+2. **Improve error message consistency** - **4 points**
    - Wrapper around tool output with consistent formatting
    - Color-coded severity (red = error, yellow = warning)
    - Actionable fix suggestions for all errors
-   - **Effort:** 6-8 hours
 
-3. **Document two-venv pattern clearly**
+3. **Document two-venv pattern clearly** - **1 point**
    - Add FAQ: "Why two .venv directories?"
    - Explain migration path to single .venv
    - Update all docs to reference single .venv only
-   - **Effort:** 2-3 hours
 
-#### Medium-term (1-2 months)
+#### Medium-term
 
-1. **Complete single .venv migration**
+1. **Complete single .venv migration** - **8 points**
    - Remove ci-local/.venv entirely
    - Consolidate all deps into project .venv
    - Update all docs and scripts
    - Reduces cognitive load (no two-venv confusion)
-   - **Effort:** 1-2 days
 
-2. **Add `./ci/run fix` command**
+2. **Add `./ci/run fix` command** - **2 points**
    - Auto-fix ALL auto-fixable issues (black, isort, ruff --fix)
    - Single command instead of running each tool manually
    - Makes conforming to standards even lighter work
-   - **Effort:** 4-6 hours
 
-3. **Enhance pre-commit hooks**
+3. **Enhance pre-commit hooks** - **4 points**
    - Auto-fix formatting on commit (black, isort)
    - Run ruff --fix automatically
    - Only block if non-fixable errors remain
-   - **Effort:** 6-8 hours
 
-#### Long-term (3-6 months)
+#### Long-term
 
-1. **Unified error reporter**
+1. **Unified error reporter** - **8 points**
    - Wrapper that standardizes all tool output
    - Consistent format: `[ERROR] file.py:42 - Description`
    - Grouped by severity (errors first, warnings second)
    - Reduces cognitive load parsing different error formats
-   - **Effort:** 1-2 weeks
 
-2. **AI-assisted auto-fix**
+2. **AI-assisted auto-fix** - **16 points**
    - `./ci/run fix --ai` uses/Copilot to suggest fixes for type errors
    - Presents diffs for review before applying
    - Reduces manual intervention further
    - Test-enforceable standards principle in action
-   - **Effort:** 2-3 weeks
 
-3. **Smart context switching detection**
+3. **Smart context switching detection** - **4 points**
    - Track last project worked on
    - Auto-update STATE.md timestamp on `./ci/run test`
    - Warn if project not touched in > 5 days (context switch overhead)
-   - **Effort:** 1 week
 
 ---
 
 ### Add Gitleaks Secret Scanning to HyperCI
 **Status:** Design complete, ready to implement
-**Effort:** 3-4 hours
+**Estimate:** **2 points**
 
 ### Reorganize src/hyperlib/ to Subdirectory Structure
 **Status:** Planned - match application/ pattern
-**Effort:** 1-2 hours
+**Estimate:** **1 point**
 
 ### Refactor Application.mcp() to Use FastMCP
 **Status:** Backlog - use library instead of custom implementation
