@@ -6,6 +6,291 @@
 
 **Communication Style**: See [.claude/DEREK.md](.claude/DEREK.md) for Derek's preferred style (professional but relaxed Australian, no LLM fluff)
 
+## Session 2025-11-10 - Container-Native Patterns Implementation
+
+### Phase 1: Foundation - Complete ✅
+**Status:** Profile system, mixins, and Prometheus→OTEL conversion implemented
+
+**Commit:** `fb4aa3c` - fix: implement Phase 1 container-native patterns foundation
+
+**Implemented:**
+- ✅ Profile system (dev, docker, prod)
+- ✅ All 5 base mixins (Profile, Signals, CLI, Health, Metrics)
+- ✅ Prometheus→OTEL metric name conversion (30+ mappings)
+- ✅ 32/32 tests passing (13 profile + 19 mixin tests)
+
+**Files Created:**
+- [src/hyperlib/application/profiles.py](src/hyperlib/application/profiles.py) - Profile definitions and loading
+- [src/hyperlib/application/mixins/](src/hyperlib/application/mixins/) - 5 mixins (profile, signals, cli, health, metrics)
+- [tests/unit/test_profiles.py](tests/unit/test_profiles.py) - 13 profile tests
+- [tests/unit/test_mixins.py](tests/unit/test_mixins.py) - 19 mixin tests
+
+**Type Hint Modernization - Complete ✅**
+**Commit:** `23defec` - fix: modernize type hints to Python 3.10+ syntax
+
+- Dict → dict, Optional[X] → X | None (PEP 585, PEP 604)
+- Net reduction: 152 lines (475 deletions, 323 insertions)
+- No functional changes, purely type annotation cleanup
+
+### Phase 2: Application Types - Complete ✅
+**Status:** All 5 application types updated to use mixins
+
+**Commit:** `74e59cc` - fix: comprehensive documentation restructure and application framework updates
+
+**Implemented:**
+- ✅ APIApplication - Mixins + health endpoints + metrics middleware + serve CLI
+- ✅ DaemonApplication - Mixins + health server + task metrics + start CLI
+- ✅ MCPApplication - Mixins + MCP metrics + serve CLI
+- ✅ OneshotApplication - Mixins + job metrics + run CLI
+- ✅ CLIApplication - Mixins + profile-based logging
+
+**Features Added:**
+- Health endpoints (/health for liveness, /ready for readiness)
+- Auto-instrumented metrics (http_requests_total, task_execution_duration_seconds, etc.)
+- Typer CLI commands (serve, start, run, version, config, validate)
+- Profile-based feature enablement (dev/docker/prod)
+- Graceful shutdown (SIGTERM/SIGINT handling)
+
+### Phase 3: Enhanced Health Checks - Complete ✅
+**Status:** HealthCheckMixin fully implemented with standalone HTTP server
+
+**Commit:** `f0706c6` - fix: implement Phase 3 - enhanced HealthCheckMixin
+
+**Implemented:**
+- ✅ Standalone HTTP server for non-HTTP apps (Daemon, MCP, Oneshot)
+- ✅ /health endpoint (liveness probe - always 200 if running)
+- ✅ /ready endpoint (readiness probe - runs dependency checks)
+- ✅ @app.health_check decorator for custom checks
+- ✅ Automatic shutdown integration (via SignalHandlerMixin)
+- ✅ 9 comprehensive tests (profiles, endpoints, shutdown)
+
+**How it works:**
+- HTTP apps (API): Health endpoints added to FastAPI directly
+- Non-HTTP apps: Standalone HTTP server in daemon thread (port 8080)
+- Dependency checks: Registered via `@app.health_check` decorator
+- Kubernetes ready: /health for liveness, /ready for readiness
+
+### Phase 4: Documentation & Examples - Complete ✅
+**Status:** All documentation, examples, and HELM charts implemented
+
+**Commits:**
+- `80da16c` - docs: add Phase 4 container deployment and profiles documentation
+- `2147575` - docs: add Phase 4 Kubernetes, examples, and HELM charts
+
+**Completed:**
+- ✅ PROFILES.md - Comprehensive profile reference (dev/docker/prod)
+- ✅ CONTAINER_DEPLOYMENT.md - Docker deployment guide (~400 lines)
+- ✅ KUBERNETES.md - Complete k8s guide (~745 lines)
+- ✅ Updated APP-API.md and APP-DAEMON.md with health check decorator
+- ✅ examples/api-container/ - Complete FastAPI REST API example
+- ✅ examples/daemon-container/ - Complete background worker example
+- ✅ templates/helm/hyperlib-app/ - Production-ready HELM chart
+
+**Features Delivered:**
+- Kubernetes deployment patterns (k8s manifests, health probes, services)
+- KEDA autoscaling with Prometheus triggers
+- Prometheus ServiceMonitor integration
+- ArgoCD GitOps deployment configuration
+- Multi-environment HELM values (dev/staging/prod)
+- Pod Disruption Budgets and security best practices
+- Complete working examples with Docker Compose
+- Multi-stage Dockerfiles with debug utilities (Derek's policy)
+
+**Container-Native Patterns Implementation: COMPLETE ✅**
+
+All 4 phases delivered:
+- Phase 1: Profile system + mixins + metrics ✅
+- Phase 2: Application types updated ✅
+- Phase 3: Enhanced health checks ✅
+- Phase 4: Documentation + examples + HELM ✅
+
+**Next Steps:** Merge to main, release new version
+
+---
+
+## Session 2025-11-10 (Earlier) - Standards Documentation Restructure
+
+### Coding Standards Documentation Restructure - Complete ✅
+**Status:** Comprehensive restructure completed with token efficiency and human readability
+
+**Commit message (when ready):** `docs: reduce coding standards to LLM-friendly token-efficient versions`
+
+**Goal:** Reduce Derek's for-human coding and automation standards documents to LLM-friendly reduced token versions while keeping them human-readable.
+
+**Strategy:**
+- Core files: Concise summaries with references (~300-600 lines each, auto-loaded by Claude)
+- Details files: Comprehensive guides (~400-800 lines each, human reference)
+- Token reduction target: 35-50k → 25k tokens (30-50% savings)
+
+**Completed:**
+
+1. **Created standards directory structure** (details/, python/details/, ai-platforms/)
+
+2. **Extracted detailed guides to separate files:**
+   - details/DESIGN-PRINCIPLES.md (~420 lines) - SOLID, DRY, KISS, YAGNI
+   - details/ERROR-HANDLING.md (~580 lines) - Security-first error handling
+   - details/AI-GUIDELINES.md (~850 lines) - AI code assistant best practices with cognitive load research
+   - details/NO-MOCKS-POLICY.md (~650 lines) - Production code policy
+   - details/TEST-FIRST-DEVELOPMENT.md (~450 lines) - Test-first strategy for existing code
+   - python/details/PEP8-GUIDE.md (~600 lines) - Comprehensive PEP 8 guide
+   - python/details/HYPERCI-INTEGRATION.md (~800 lines) - Complete HyperCI tooling guide
+
+3. **Condensed core standards files:**
+   - CODING-STANDARDS.md: 873 → 561 lines (35% reduction)
+   - CODING-STANDARDS-PYTHON.md: 1,151 → 683 lines (41% reduction)
+   - GIT-WORKFLOW.md: Added ~500-line "Human-Style Git Commits" section
+
+4. **Created new core standards:**
+   - QUICK-REFERENCE.md (~300 lines) - One-page cheat sheet
+   - CONTAINERIZATION.md (~600 lines) - Kubernetes + HELM + ArgoCD deployment patterns
+   - README.md - Human navigation index with topic/role-based organization
+
+5. **Enhanced AI-GUIDELINES.md with cognitive load research:**
+   - Added "Core Principle: Human-First Design" section (cognitive load must be same or less than human-only projects)
+   - Included Cognitive Load Theory (Sweller, 1988) - working memory limits
+   - Added Derek's bias note: Use "research indicates" not "research shows" for psychology research
+   - Comprehensive accessible references (no paywalls):
+     - Academic papers: ResearchGate links (Scalabrino et al., 2018)
+     - Video: John Sweller keynote (43min, researchED Melbourne 2017)
+     - Articles: Florian Krämer (2024), Rustam Zakirullin GitHub doc (2025), DabApps (2024)
+   - Explained intrinsic/extraneous/germane cognitive load
+   - Linked AI verbosity to extraneous cognitive load
+
+6. **Added new topics to standards:**
+   - Test-first development for existing code (TEST-FIRST-DEVELOPMENT.md)
+   - AI rabbit-holing prevention strategies (AI-GUIDELINES.md)
+   - Human-style git commits (GIT-WORKFLOW.md)
+   - Containerization with debug utilities policy (CONTAINERIZATION.md)
+
+**Token Reduction Results:**
+- Core auto-loaded files: ~2,900 lines (added CONTAINERIZATION.md, GIT-WORKFLOW expansion)
+- Original core files: ~3,060 lines (before restructure)
+- Detail files extracted: ~4,350 lines (now on-demand only)
+- **Net token savings: ~30% (detail files no longer auto-loaded)**
+- Estimated session token usage: ~28k for core standards (down from ~40k)
+
+**Key Design Decisions:**
+
+1. **Human-First Design Principle** (CRITICAL):
+   - AI-assisted projects must be indistinguishable from human-only projects
+   - Cognitive load must be the same or less than human-written code
+   - No AI conventions, patterns, or verbosity that require "translation"
+   - Git commits, code style, and documentation follow human patterns
+
+2. **Containerization Standards:**
+   - k8s + HELM + ArgoCD deployment pattern
+   - Derek's debug utilities policy: Include small utilities (curl, nc, ping) in containers
+     - 2-5% image size increase is acceptable for debuggability
+     - Removing tiny debug utilities for disk savings is not efficient cost optimization
+   - Multi-stage Dockerfiles (separate build/runtime)
+   - Health check endpoints required: /health/live, /health/ready, /health/startup
+   - Non-root user always
+
+3. **Cognitive Load Research Integration:**
+   - Changed "research shows" → "research indicates" (Derek's psychology bias)
+   - All references accessible without paywalls
+   - Video content included for different learning styles
+   - Practical implications explained (intrinsic/extraneous/germane load)
+
+4. **Three Core Principles Integration:**
+   - Added core principles section to all major documentation
+   - **Principle 1:** Reduce cognitive load (for developers AND AI workflows)
+   - **Principle 2:** Reduce context switching overhead (consistent patterns, standardized infrastructure)
+   - **Principle 3:** Automated standards enforcement (make conforming light work)
+   - These principles now appear in: README.md, CODING-STANDARDS.md, HYPERCI-INTEGRATION.md
+   - Context switching guidance added to AI-GUIDELINES.md (23-45min recovery time, $50k/year cost)
+   - **Test-enforceable standards design principle** added to AI-GUIDELINES.md:
+     - Makes AI assistants more reliable and efficient
+     - Automated testing catches AI errors before production
+     - Clear success criteria for AI (formatting, types, security, coverage)
+     - Enables faster iteration with immediate feedback
+
+5. **HyperCI Principles Review:**
+   - Reviewed bootstrap, run, and ai commands against core principles
+   - Overall score: 9/10 - excellent implementation
+   - Recommendations documented in `.tmp/hyperci-principles-review.md`
+   - Short-term: Add `./ci/ai refresh` command, improve error consistency
+   - Medium-term: Complete single .venv migration, add `./ci/run fix` command
+   - Long-term: Unified error reporter, AI-assisted auto-fix
+
+**Files Modified:**
+- ci/docs/standards/CODING-STANDARDS.md (condensed + core principles)
+- ci/docs/standards/CODING-STANDARDS-PYTHON.md (condensed)
+- ci/docs/standards/GIT-WORKFLOW.md (added human-style commits section)
+- ci/docs/standards/README.md (created index + core principles)
+- ci/docs/standards/QUICK-REFERENCE.md (created)
+- ci/docs/standards/CONTAINERIZATION.md (created)
+- ci/docs/standards/details/AI-GUIDELINES.md (cognitive load + context switching + core principles)
+- ci/docs/standards/details/TEST-FIRST-DEVELOPMENT.md (created)
+- ci/docs/standards/python/details/HYPERCI-INTEGRATION.md (added core principles)
+
+**Files Created:**
+- .tmp/hyperci-principles-review.md - HyperCI analysis against core principles
+
+**HyperCI Improvements Added to TODO.md:**
+- Short-term: `./ci/ai refresh` command, error consistency, two-venv docs
+- Medium-term: Single .venv migration, `./ci/run fix` command, enhanced pre-commit hooks
+- Long-term: Unified error reporter, AI-assisted auto-fix, smart context switching detection
+- All improvements aligned with three core principles
+
+**Ready for commit:** All requested work complete, awaiting Derek's approval
+
+## Session 2025-11-07 Continued (Part 5)
+
+### Container-Native Application Patterns - Design Complete ✅
+**Status:** Design approved, implementation plan in TODO.md, ready to start Phase 1
+
+**Context:**
+- Analyzed 3 DFE projects (dfe-ui-backend, dfe-hunt-runner, dfe-cli-core) for containerization patterns
+- Identified critical issues: Hunt Runner orphaning bug, inconsistent health checks, no metrics
+- Design documents: `~/hyperlib/containerization_analysis.md`, `~/hyperlib/ANALYSIS_SUMMARY.md`
+
+**Key Design Decisions:**
+1. **Three Profiles:** dev (local), docker (CI/CD), prod (k8s+HELM+ArgoCD+KEDA)
+   - No kubernetes profile (prod = k8s deployment)
+   - Profile-based feature enablement (health checks, metrics, logging format)
+2. **Mixin-Based Composition:**
+   - ProfileMixin, SignalHandlerMixin, CLIExecutableMixin, HealthCheckMixin, MetricsMixin
+   - Reusable across all application types
+   - Single responsibility, test independently
+3. **Metrics Strategy:** Prometheus-first with auto-OTEL conversion
+   - Default: Prometheus naming (`http_requests_total`, `task_execution_duration_seconds`)
+   - Auto-convert to OTEL semantic conventions when `METRICS_BACKEND=opentelemetry`
+   - Zero code changes to switch backends, KEDA-compatible
+4. **CLI-First Pattern:** All apps executed as CLI commands in containers
+   - Every app type gets Typer CLI (serve, start, run, health-check, version, config)
+   - Container CMD: `python -m myapp serve --profile prod`
+5. **Opinionated Defaults:** Production-ready out of the box
+   - `Application.api(profile="prod")` → health checks, metrics, graceful shutdown
+   - `Application.daemon(profile="prod")` → health HTTP server, task metrics, fixes orphaning bug
+
+**Object Inheritance Hierarchy:**
+```
+APIApplication(CLIExecutableMixin, SignalHandlerMixin, ProfileMixin, HealthCheckMixin, MetricsMixin)
+DaemonApplication(CLIExecutableMixin, SignalHandlerMixin, ProfileMixin, MetricsMixin)
+MCPApplication(CLIExecutableMixin, SignalHandlerMixin, ProfileMixin, MetricsMixin)
+OneshotApplication(CLIExecutableMixin, SignalHandlerMixin, ProfileMixin)
+CLIApplication(SignalHandlerMixin, ProfileMixin)
+```
+
+**Migration Assessment (DFE Apps):**
+- **dfe-cli-core** (CLI): 3-4 hours - Click→Typer migration, type hints, config
+- **dfe-ui-backend** (API): 2-3 hours - Replace custom setup with hyperlib framework
+- **dfe-hunt-runner** (Daemon): 4-6 hours - **Fixes critical orphaning bug**, subprocess tracking
+- **Total effort:** 10-13 hours (1-2 days)
+
+**Implementation Plan (4 Phases, ~3 weeks):**
+- **Phase 1 (Week 1):** Profile system, base mixins, metrics integration with Prometheus→OTEL conversion
+- **Phase 2 (Week 2):** Update all 5 application types (API, Daemon, MCP, Oneshot, CLI)
+- **Phase 3 (Week 3):** HealthCheckMixin with dependency checks, k8s probe timings
+- **Phase 4 (Week 4):** Documentation, examples, HELM chart templates
+
+**Next Actions:**
+1. Review TODO.md implementation plan
+2. Create feature branch: `feat/container-native-patterns`
+3. Start Phase 1: Profile system + base mixins
+4. Iterate with tests after each phase
+
 ## Session 2025-11-07 Continued (Part 4)
 
 ### Gitleaks Secret Scanning (HyperCI) - Complete ✅
