@@ -65,7 +65,15 @@
   - Detail files: `ci/docs/standards/details/*.md` and `ci/docs/standards/python/details/*.md` (RAG awareness, read on-demand)
 - Wildcard approach allows adding/removing standards files without updating slash command
 
-**Commit:** `7589a37` - fix: remove DEREK.md references from STATE.md
+**Architecture:**
+- `ci/modules/common/templates/.claude/` - Templates deployed to other projects (tracked in ci repo)
+- `.claude/` - Local instances for testing in hyperlib (gitignored)
+- Changes to slash commands must be made **concurrently** in both locations
+
+**Commits:**
+- `7589a37` (hyperlib) - fix: remove DEREK.md references from STATE.md
+- `50b6fe0` (hyperlib) - docs: document /start command wildcard pattern update
+- `e8117df` (ci) - fix: update /start command template to use wildcard pattern for standards files
 
 ### Claude Code Integration - Complete ✅
 **Status:** `/start` and `/save` slash commands implemented with HyperCI integration
