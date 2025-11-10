@@ -66,14 +66,18 @@
 - Wildcard approach allows adding/removing standards files without updating slash command
 
 **Architecture:**
-- `ci/modules/common/templates/.claude/` - Templates deployed to other projects (tracked in ci repo)
-- `.claude/` - Local instances for testing in hyperlib (gitignored)
+- `ci/modules/common/templates/start.md` and `save.md` - Templates deployed to other projects (tracked in ci repo)
+- `.claude/commands/start.md` and `save.md` - Local instances for testing in hyperlib (gitignored)
 - Changes to slash commands must be made **concurrently** in both locations
+- Deployment: `./ci/ai install` copies templates to `.claude/commands/` in target projects
 
 **Commits:**
 - `7589a37` (hyperlib) - fix: remove DEREK.md references from STATE.md
 - `50b6fe0` (hyperlib) - docs: document /start command wildcard pattern update
 - `e8117df` (ci) - fix: update /start command template to use wildcard pattern for standards files
+- `bbd1416` (ci) - fix: move slash command templates to root of templates/ directory
+- `4fc0ec5` (ci) - fix: update slash command source paths in defaults.yaml
+- `3eb34a4` (hyperlib) - chore: update ci submodule (flat template structure for slash commands)
 
 ### Claude Code Integration - Complete ✅
 **Status:** `/start` and `/save` slash commands implemented with HyperCI integration
