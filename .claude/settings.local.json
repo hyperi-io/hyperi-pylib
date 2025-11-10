@@ -93,7 +93,8 @@
       "Bash(git -C /projects/hyperlib log --oneline --grep=\"Phase 2\" --all)",
       "Bash(git -C /projects/hyperlib show fb4aa3c:src/hyperlib/application/api/application.py)",
       "Bash(git -C /projects/hyperlib show:*)",
-      "Bash(git -C /projects/hyperlib commit -m \"docs: update STATE.md with Phase 2 completion status\")"
+      "Bash(git -C /projects/hyperlib commit -m \"docs: update STATE.md with Phase 2 completion status\")",
+      "Bash(git -C /projects/hyperlib commit -m \"docs: update STATE.md with Phase 3 completion\")"
     ],
     "deny": [],
     "ask": []
