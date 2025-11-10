@@ -94,7 +94,17 @@
       "Bash(git -C /projects/hyperlib show fb4aa3c:src/hyperlib/application/api/application.py)",
       "Bash(git -C /projects/hyperlib show:*)",
       "Bash(git -C /projects/hyperlib commit -m \"docs: update STATE.md with Phase 2 completion status\")",
-      "Bash(git -C /projects/hyperlib commit -m \"docs: update STATE.md with Phase 3 completion\")"
+      "Bash(git -C /projects/hyperlib commit -m \"docs: update STATE.md with Phase 3 completion\")",
+      "Bash(gh run list:*)",
+      "Bash(gh run view:*)",
+      "Bash(gh workflow:*)",
+      "Bash(gh api:*)",
+      "Bash(gh pr create:*)",
+      "Bash(gh pr merge:*)",
+      "Bash(source:*)",
+      "Bash(pip install:*)",
+      "Bash(.venv/bin/uv:*)",
+      "Bash(env)"
     ],
     "deny": [],
     "ask": []
