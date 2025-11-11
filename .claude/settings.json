@@ -62,8 +62,6 @@
       "Bash(jf *)",
       "Bash(gh *)",
       "Bash(cd *)",
-      "Bash(pushd *)",
-      "Bash(popd)",
       "Bash(export *)",
       "Bash(source *)",
       "Bash(date *)",
