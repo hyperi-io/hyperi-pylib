@@ -53,6 +53,30 @@
 
 ---
 
+## Session 2025-11-12 (Continued) - Claude Code Settings Documentation Updates
+
+### Token Verification with tokenx CLI - Complete ✅
+**Status:** Updated PROMPT-MD-TOKEN-ENGINEERING.md with tokenx CLI integration
+
+**Changes:**
+- Added tokenx CLI detection and installation instructions
+- Provided precise token counting examples for Claude Sonnet 4.5
+- Updated Step 5 (Measure Results) with tokenx usage
+- Updated Step 6 (Commit) template to use tokenx results format
+- Updated LLM instruction template to mention tokenx
+- Kept fallback to wc -c approximate method
+
+**Benefits:**
+- Precise Claude-specific token counting (not approximate)
+- Verify token reduction accurately with real model tokenizer
+- Better optimization feedback loop for token engineering
+
+**Commits:**
+- `e5df9b1` (ci) - docs: add tokenx CLI integration for precise token counting
+- `7491c03` (hyperlib) - chore: update ci submodule (tokenx CLI integration for token counting)
+
+---
+
 ## Session 2025-11-11 (Continued 3) - Container-Native Phase 4 Documentation
 
 ### Phase 4: Documentation & Examples - Complete ✅
