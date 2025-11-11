@@ -2,6 +2,69 @@
   "enabledPlugins": {
     "docker": true
   },
+  "allowedCommands": [
+    {
+      "command": "fd",
+      "description": "Modern find alternative",
+      "autoApprove": true,
+      "patterns": [
+        "fd *",
+        "fd -e * -t f *"
+      ]
+    },
+    {
+      "command": "rg",
+      "description": "ripgrep search",
+      "autoApprove": true,
+      "patterns": [
+        "rg * *",
+        "rg -l *",
+        "rg -c *",
+        "rg --files-with-matches *"
+      ]
+    },
+    {
+      "command": "jq",
+      "description": "JSON processor",
+      "autoApprove": true,
+      "patterns": [
+        "jq * *"
+      ]
+    },
+    {
+      "command": "parallel",
+      "description": "GNU parallel",
+      "autoApprove": true,
+      "patterns": [
+        "parallel *",
+        "* | parallel *"
+      ]
+    },
+    {
+      "command": "yq",
+      "description": "YAML processor",
+      "autoApprove": true,
+      "patterns": [
+        "yq * *"
+      ]
+    },
+    {
+      "command": "bat",
+      "description": "Enhanced cat",
+      "autoApprove": true,
+      "patterns": [
+        "bat *"
+      ]
+    }
+  ],
+  "autoApprovePatterns": [
+    "^fd ",
+    "^rg ",
+    "^jq ",
+    "^yq ",
+    "^parallel ",
+    "^bat "
+  ],
   "permissions": {
     "allow": [
       "WebSearch",
@@ -14,6 +77,7 @@
       "LS",
       "Search",
       "Find",
+      "Read(~/.gitconfig)",
       "Bash(.tmp/*)",
       "Bash(mkdir .tmp *)",
       "Bash(rm .tmp/*)",
@@ -35,6 +99,11 @@
       "Bash(env)",
       "Bash(printenv *)",
       "Bash(jq *)",
+      "Bash(yq *)",
+      "Bash(fd *)",
+      "Bash(rg *)",
+      "Bash(parallel *)",
+      "Bash(bat *)",
       "Bash(sed *)",
       "Bash(awk *)",
       "Bash(sort *)",
