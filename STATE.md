@@ -61,7 +61,7 @@
 **Key Architectural Insight:**
 > **STANDARDS.md is the single source of truth for HyperSec-wide corporate standards, and `/start` is just a Claude Code convenience wrapper that automates what's documented in STANDARDS.md.**
 >
-> **IMPORTANT:** `/start` also reads `ci-local/ai/*.md` for project-specific or developer-specific overrides/customizations. STANDARDS.md provides the corporate baseline, while ci-local/ai/ allows projects and developers to add their own guidance without modifying the corporate standards.
+> **IMPORTANT:** `/start` also reads `ci-local/code-assistant/*.md` for project-specific or developer-specific overrides/customizations. STANDARDS.md provides the corporate baseline, while ci-local/code-assistant/ allows projects and developers to add their own guidance without modifying the corporate standards.
 
 **Changes:**
 
@@ -93,7 +93,7 @@ ci/docs/standards/
 ├── common/ (universal standards)
 └── python/ (Python standards)
 
-ci-local/ai/
+ci-local/code-assistant/
 └── *.md (project/developer-specific overrides and customizations)
      - ALWAYS loaded by /start (via Glob)
      - Supplements corporate standards without modifying them
