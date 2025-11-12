@@ -53,6 +53,74 @@
 
 ---
 
+## Session 2025-11-12 (Continued 2) - Context-Adaptive Standards Loading
+
+### Context-Adaptive Loading Strategy - Complete ✅
+**Status:** Standards now work with ANY AI assistant (not just Claude Code) with tiered loading based on context window size
+
+**Key Architectural Insight:**
+> **STANDARDS.md is the source of truth, and `/start` is just a Claude Code convenience wrapper that automates what's documented in STANDARDS.md.**
+
+**Changes:**
+
+1. **AI-Assistant-Agnostic Standards** (commit `34a38d0`):
+   - Genericized all standards files to work with any AI assistant
+   - COMMON.md: Reframed slash commands as "Claude Code Optimized" with fallbacks
+   - HYPERCI.md: Changed tool-specific language to generic (Write tool → file write capability)
+   - Removed Claude Code-specific assumptions
+
+2. **Context-Adaptive Loading Strategy** (STANDARDS.md):
+   - **500K+ context:** Load everything (~130k tokens, 13-26% usage) - Most reliable, no RAG
+   - **200K or less:** Load critical files only (~30k tokens, 15% usage) - Efficient, use RAG for details
+   - AI self-detects context window and chooses appropriate strategy
+   - Works with Claude Code, Codex, Gemini, Cursor, and other AI assistants
+
+3. **Session Configuration Reporting** (commit `a6b0408`):
+   - `/start` command now reports session configuration:
+     - Context window size (total token budget)
+     - Loading strategy used (500K+ load-all OR 200K minimal+RAG)
+     - Number of files loaded and estimated token usage
+     - Reasoning for strategy choice
+   - Example: "1M tokens → 500K+ load-all → 15 files (~130k tokens, 13%)"
+
+**Architecture:**
+```
+ci/docs/standards/
+├── STANDARDS.md (source of truth - generic, works everywhere)
+├── code-assistant/ (generic AI guidance)
+├── common/ (universal standards)
+└── python/ (Python standards)
+
+ci/modules/common/templates/
+├── start.md (Claude Code /start automation + session reporting)
+└── save.md (Claude Code /save automation)
+```
+
+**Benefits:**
+- ✅ Standards work with ANY AI code assistant (not locked to Claude Code)
+- ✅ 200K context users can use standards efficiently (30k vs 130k tokens)
+- ✅ 1M context users get maximum reliability (load everything upfront)
+- ✅ Transparent verification (session config report shows what was loaded)
+- ✅ Generic foundation with Claude Code optimizations layered on top
+
+**Files Modified:**
+- [ci/docs/standards/STANDARDS.md](ci/docs/standards/STANDARDS.md) - Context-adaptive loading strategy
+- [ci/docs/standards/code-assistant/COMMON.md](ci/docs/standards/code-assistant/COMMON.md) - Generic session management
+- [ci/docs/standards/code-assistant/HYPERCI.md](ci/docs/standards/code-assistant/HYPERCI.md) - Generic tool references
+- [ci/modules/common/templates/start.md](ci/modules/common/templates/start.md) - Session config reporting
+
+**Commits:**
+- `34a38d0` (ci) - refactor: make standards AI-assistant-agnostic with context-adaptive loading
+- `a6b0408` (ci) - feat: add session configuration reporting to /start command
+- `25bc97d` (hyperlib) - chore: update ci submodule (context-adaptive loading + session reporting)
+
+**Testing:**
+- Run `/start` to see session configuration report
+- Verify AI reports: context window size, strategy used, files loaded
+- Test with different models (1M vs 200K) to verify correct strategy selection
+
+---
+
 ## Session 2025-11-12 (Continued) - Claude Code Settings Documentation Updates
 
 ### Token Verification with tokenx CLI - Complete ✅
