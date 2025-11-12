@@ -105,7 +105,8 @@
       "Bash(tr *)",
       "Bash(xargs *)",
       "Bash([A-Z_]*=* *)",
-      "Bash(export [A-Z_]*)"
+      "Bash(export [A-Z_]*)",
+      "Bash(git -C * *)"
     ],
     "deny": [],
     "ask": [
@@ -149,6 +150,7 @@
     "USE_BUILTIN_RIPGREP": "1",
     "CLAUDE_CODE_ENABLE_PARALLEL_TOOLS": "1",
     "CLAUDE_CODE_MAX_PARALLEL_TOOLS": "3",
-    "CLAUDE_CODE_CONTEXT_WINDOW_TOKENS": "950000"
+    "CLAUDE_CODE_CONTEXT_WINDOW_TOKENS": "1000000",
+    "ANTHROPIC_DEFAULT_SONNET_MODEL": "claude-sonnet-4-5-20250929[1m]"
   }
 }

@@ -53,6 +53,41 @@
 
 ---
 
+## Session 2025-11-12 (Continued 4) - 1M Context Window Fix
+
+### Claude Code 1M Context Configuration - Complete ✅
+**Status:** Fixed model string to enable 1M context window
+
+**Problem:**
+- settings.local.json had incorrect model string: `"claude-sonnet-4-5-20250929[1m]"`
+- Claude Code requires **full model name** with [1m] suffix
+- Result: Only getting 200K context instead of 1M
+
+**Solution:**
+- Updated to correct full model name: `"anthropic.claude-sonnet-4-5-20250929-v1:0[1m]"`
+- Verified via Claude Code docs at https://code.claude.com/docs/en/model-config
+- [1m] suffix only works with full model names, not shortened aliases
+
+**Files Updated:**
+- [.claude/settings.local.json](.claude/settings.local.json) - Corrected model string
+
+**Testing:**
+- Requires Claude Code restart to take effect
+- Should enable 1M context window (950K usable with headroom)
+- Will switch to 500K+ load-all strategy (more reliable than RAG)
+
+**Rationale:**
+- 500K+ load-all strategy (~130k tokens, 13-26% usage) is more reliable than RAG
+- Loads all standards upfront, no reliance on AI to proactively read detail files
+- Eliminates hallucination risk from missing context
+
+**Next Session:**
+- Verify 1M context active
+- Load all standards files using 500K+ strategy
+- Continue with Container-Native Phase 4
+
+---
+
 ## Session 2025-11-12 (Continued 3) - Standards Directory Refactoring & Clean Reset
 
 ### Directory Rename: ci-local/ai/ → ci-local/code-assistant/ - Complete ✅
