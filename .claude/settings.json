@@ -133,24 +133,11 @@
       "Bash(kill *)"
     ]
   },
-  "hooks": {
-    "SessionStart": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bash -c 'echo \"Today: $(date +%Y-%m-%d)\"; echo \"\"; echo \"=== CONTEXT DETECTION ===\"; if [ -f ci.yaml ] && [ -f STATE.md ]; then echo \"Context: PROJECT (has ci.yaml)\"; echo \"\"; cat STATE.md; elif [ -f ci/STATE.md ] && [ ! -f ci.yaml ]; then echo \"Context: HYPERCI REPOSITORY (ci infrastructure)\"; echo \"\"; cat ci/STATE.md; elif [ -f STATE.md ]; then cat STATE.md; elif [ -f CLAUDE.md ]; then cat CLAUDE.md; fi; echo \"\"; if [ -f TODO.md ]; then cat TODO.md; fi; echo \"\"; echo \"=== STANDARDS (ALWAYS APPLY) ===\"; echo \"CRITICAL: NEVER add Co-Authored-By or AI attribution to commits.\"; echo \"Git pre-commit hook will automatically strip attribution.\"; echo \"\"; if [ -d ci/docs/standards ]; then find ci/docs/standards -name \"*.md\" -type f -exec sh -c \"echo \\\"--- {} ---\\\" && cat {}\" \\;; elif [ -d docs/standards ]; then find docs/standards -name \"*.md\" -type f -exec sh -c \"echo \\\"--- {} ---\\\" && cat {}\" \\;; fi'"
-          }
-        ]
-      }
-    ]
-  },
   "env": {
     "CLAUDE_CODE_MAX_OUTPUT_TOKENS": "12288",
     "USE_BUILTIN_RIPGREP": "1",
     "CLAUDE_CODE_ENABLE_PARALLEL_TOOLS": "1",
     "CLAUDE_CODE_MAX_PARALLEL_TOOLS": "3",
-    "CLAUDE_CODE_CONTEXT_WINDOW_TOKENS": "1000000",
-    "ANTHROPIC_DEFAULT_SONNET_MODEL": "claude-sonnet-4-5-20250929[1m]"
+    "CLAUDE_CODE_CONTEXT_WINDOW_TOKENS": "1000000"
   }
 }
