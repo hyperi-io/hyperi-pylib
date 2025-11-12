@@ -53,6 +53,89 @@
 
 ---
 
+## Session 2025-11-13 (Continued) - CAG Strategy & Standards Refactoring
+
+### CAG Strategy Implementation - Complete ✅
+**Status:** Implemented Claude Agnostic Guidelines (CAG) - load ALL standards upfront
+
+**Changes:**
+1. **STANDARDS.md Rewrite** - Complete CAG-only strategy
+   - Removed all context-window conditional logic (500K+ vs 200K)
+   - Removed all RAG references
+   - Load ALL from: code-assistant/, common/, and language directory
+   - Kept model and context window reporting (useful info)
+   - Reduced from ~100 lines to ~60 lines
+
+2. **TOKEN-ENGINEERING.md Refactoring**
+   - Moved from code-assistant/ to ai/ (NOT session-loaded)
+   - Removed all hardcoded file paths
+   - Consolidated LLM instructions to end section
+   - Renamed profile: AI-Human → Human-AI (Symbiotic, Balanced)
+   - Reduced from 600→360 lines (40% reduction)
+
+3. **Standards Directory Refactoring**
+   - Renamed python/CODING.md → python/CODING-PYTHON.md
+   - Made common/CODING.md language-agnostic (removed Python-specific examples)
+   - All Python-specific content now in python/ directory only
+
+4. **isort Removal** - Complete cleanup
+   - Removed isort execution from 30-python-test.py
+   - Removed isort from all dependency templates (3 files)
+   - Removed [tool.isort] configuration sections
+   - Documented: Ruff I rules handle import sorting
+
+5. **Settings Cleanup**
+   - Removed SessionStart hooks.find from .claude/settings.json
+   - Removed ANTHROPIC_DEFAULT_SONNET_MODEL from .claude/settings.json
+   - Templates already clean (no changes needed)
+
+6. **Bash Wrapper Consistency**
+   - Fixed ai wrapper: "bootstrap install" not "--install"
+   - Fixed run wrapper: "bootstrap install" not "--install"
+   - Fixed bootstrap.py docstring: correct vs incorrect example
+   - Verified all wrappers pass --help to Python correctly
+
+### Token Measurement Results
+
+**Session-Loaded Files (CAG Strategy):**
+- Code-Assistant: 71,102 bytes (~17,775 tokens)
+- Common (10 files): 116,917 bytes (~29,229 tokens)
+- Python (3 files): 33,316 bytes (~8,329 tokens)
+- **Total: 221,335 bytes (~55,334 tokens, 28% of 200K window)**
+
+**Token Optimizations Applied:**
+- python/HYPERCI.md: 20K → 11.7K (41.7% reduction)
+- python/PEP8.md: 18K → 11K (39% reduction)
+- python/CODING.md → python/CODING-PYTHON.md: 17K → 10.5K (40% reduction)
+- common/GIT-WORKFLOW.md: 19.7K → 15.6K (20.8% reduction)
+- common/ files (9 files): ~1.8% average reduction
+- **Total savings: ~10K bytes (~2,500 tokens)**
+
+**Files Modified:**
+- [ci/docs/standards/STANDARDS.md](ci/docs/standards/STANDARDS.md) - CAG-only rewrite
+- [ci/docs/standards/ai/TOKEN-ENGINEERING.md](ci/docs/standards/ai/TOKEN-ENGINEERING.md) - Moved and refactored
+- [ci/docs/standards/python/CODING-PYTHON.md](ci/docs/standards/python/CODING-PYTHON.md) - Renamed from CODING.md
+- [ci/docs/standards/common/CODING.md](ci/docs/standards/common/CODING.md) - Made language-agnostic
+- [ci/modules/python/run.d/30-python-test.py](ci/modules/python/run.d/30-python-test.py) - Removed isort
+- [ci/modules/python/templates/*.toml](ci/modules/python/templates/) - Removed isort dependencies
+- [.claude/settings.json](.claude/settings.json) - Removed SessionStart hooks and model config
+- [ci/bootstrap](ci/bootstrap), [ci/run](ci/run), [ci/ai](ci/ai) - Fixed command syntax
+- [README.md](README.md) - Marked Application framework as WIP
+
+**Key Commits:**
+- `3da8cae` (ci) - CAG strategy, isort removal, token optimization (26 commits)
+- `f6cf02b` (hyperlib) - Update ci submodule (CAG strategy)
+- `77f53d9` (ci) - Fix wrapper syntax (install not --install)
+- `c0425df` (hyperlib) - Final ci submodule update
+
+**Architecture Clarification:**
+- **CAG = Claude Agnostic Guidelines:** Load ALL standards upfront, always
+- No more conditional loading based on context window size
+- Simpler, more reliable, works with ANY AI assistant
+- 200K context window sufficient for all standards (~28% usage)
+
+---
+
 ## Session 2025-11-13 - GIT-WORKFLOW.md Token Optimization
 
 ### Token Optimization - Complete ✅
