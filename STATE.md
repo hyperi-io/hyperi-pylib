@@ -59,7 +59,9 @@
 **Status:** Standards now work with ANY AI assistant (not just Claude Code) with tiered loading based on context window size
 
 **Key Architectural Insight:**
-> **STANDARDS.md is the source of truth, and `/start` is just a Claude Code convenience wrapper that automates what's documented in STANDARDS.md.**
+> **STANDARDS.md is the single source of truth for HyperSec-wide corporate standards, and `/start` is just a Claude Code convenience wrapper that automates what's documented in STANDARDS.md.**
+>
+> **IMPORTANT:** `/start` also reads `ci-local/ai/*.md` for project-specific or developer-specific overrides/customizations. STANDARDS.md provides the corporate baseline, while ci-local/ai/ allows projects and developers to add their own guidance without modifying the corporate standards.
 
 **Changes:**
 
@@ -86,10 +88,16 @@
 **Architecture:**
 ```
 ci/docs/standards/
-├── STANDARDS.md (source of truth - generic, works everywhere)
+├── STANDARDS.md (HyperSec corporate standards - single source of truth)
 ├── code-assistant/ (generic AI guidance)
 ├── common/ (universal standards)
 └── python/ (Python standards)
+
+ci-local/ai/
+└── *.md (project/developer-specific overrides and customizations)
+     - ALWAYS loaded by /start (via Glob)
+     - Supplements corporate standards without modifying them
+     - Examples: project-specific workflows, developer preferences
 
 ci/modules/common/templates/
 ├── start.md (Claude Code /start automation + session reporting)
