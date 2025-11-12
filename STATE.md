@@ -53,15 +53,99 @@
 
 ---
 
+## Session 2025-11-12 (Continued 3) - Standards Directory Refactoring & Clean Reset
+
+### Directory Rename: ci-local/ai/ → ci-local/code-assistant/ - Complete ✅
+**Status:** Renamed directory for consistency with corporate standards structure
+
+**Changes:**
+- Renamed `ci-local/ai/` → `ci-local/code-assistant/` throughout all files
+- Updated references in STANDARDS.md, start.md, STATE.md
+- Consistent naming: `ci/docs/standards/code-assistant/` (corporate) and `ci-local/code-assistant/` (project customizations)
+
+**Commits:**
+- `12a2c88` (ci) - refactor: rename ci-local/ai to ci-local/code-assistant for consistency
+- `85b8c8d` (hyperlib) - chore: update ci submodule (renamed ci-local/ai to ci-local/code-assistant)
+- `2e2a5f8` (hyperlib) - docs: clarify architectural insight about STANDARDS.md and ci-local/code-assistant
+
+### NO MOCKS Policy Violation - Fixed ✅
+**Status:** Implemented missing `merge_env()` function in ci_lib.py
+
+**Problem:**
+- AI installation script referenced `merge_env()` function that wasn't implemented
+- Initial (WRONG) attempt: Added TODO/stub workarounds
+- **Critical violation:** HyperSec NO MOCKS/NO STUBS POLICY
+
+**Solution:**
+- Implemented complete `merge_env()` function in ci_lib.py (lines 1705-1750)
+- Reads JSON file, creates/updates "env" section, writes back with formatting
+- Proper error handling and logging
+- No TODOs, no stubs, fully functional
+
+**Commits:**
+- `7394fee` (ci) - fix: implement merge_env function for context_tokens injection
+- `8823a7c` (hyperlib) - chore: update ci submodule (merge_env implementation)
+
+### Clean AI Deployment - Complete ✅
+**Status:** Fresh deployment with all latest templates
+
+**Deployed Files:**
+
+1. **settings.local.json** (NEW - clean):
+   - Only contains: `"model": "claude-sonnet-4-5-20250929[1m]"`
+   - Removed 84 accumulated permission entries from previous session
+   - Clean state for 1M model configuration
+
+2. **settings.json** (MERGED - updated):
+   - ✅ Added `"Bash(git -C * *)"` pattern for submodule operations
+   - ✅ Injected `CLAUDE_CODE_CONTEXT_WINDOW_TOKENS: 950000` (1M model)
+   - All existing permissions preserved
+
+3. **.claude/commands/start.md** (COPY-OVERWRITE):
+   - ✅ References `ci-local/code-assistant/*.md` (not `ci-local/ai/`)
+   - ✅ Context-adaptive loading strategy (500K+ vs 200K)
+   - ✅ Session configuration reporting
+
+4. **.claude/commands/save.md** (COPY-OVERWRITE):
+   - ✅ Deployed from latest template
+
+**Deployment Summary:**
+Created comprehensive deployment documentation in [.tmp/ai-deployment-summary.md](.tmp/ai-deployment-summary.md) covering:
+- Files deployed by operation type (COPY-OVERWRITE, MERGE, JSON MERGE)
+- Migration strategy options
+- Testing strategy
+- Behavior documentation
+
+### Key Architectural Insight (Updated)
+> **STANDARDS.md is the single source of truth for HyperSec-wide corporate standards, and `/start` is just a Claude Code convenience wrapper that automates what's documented in STANDARDS.md.**
+>
+> **IMPORTANT:** `/start` also reads `ci-local/code-assistant/*.md` for project-specific or developer-specific overrides/customizations. STANDARDS.md provides the corporate baseline, while ci-local/code-assistant/ allows projects and developers to add their own guidance without modifying the corporate standards.
+
+**Architecture:**
+```
+ci/docs/standards/
+├── STANDARDS.md (HyperSec corporate standards - single source of truth)
+├── code-assistant/ (generic AI guidance)
+├── common/ (universal standards)
+└── python/ (Python standards)
+
+ci-local/code-assistant/
+└── *.md (project/developer-specific overrides and customizations)
+     - ALWAYS loaded by /start (via Glob)
+     - Supplements corporate standards without modifying them
+     - Examples: project-specific workflows, developer preferences
+
+ci/modules/common/templates/
+├── start.md (Claude Code /start automation + session reporting)
+└── save.md (Claude Code /save automation)
+```
+
+---
+
 ## Session 2025-11-12 (Continued 2) - Context-Adaptive Standards Loading
 
 ### Context-Adaptive Loading Strategy - Complete ✅
 **Status:** Standards now work with ANY AI assistant (not just Claude Code) with tiered loading based on context window size
-
-**Key Architectural Insight:**
-> **STANDARDS.md is the single source of truth for HyperSec-wide corporate standards, and `/start` is just a Claude Code convenience wrapper that automates what's documented in STANDARDS.md.**
->
-> **IMPORTANT:** `/start` also reads `ci-local/code-assistant/*.md` for project-specific or developer-specific overrides/customizations. STANDARDS.md provides the corporate baseline, while ci-local/code-assistant/ allows projects and developers to add their own guidance without modifying the corporate standards.
 
 **Changes:**
 
@@ -85,47 +169,10 @@
      - Reasoning for strategy choice
    - Example: "1M tokens → 500K+ load-all → 15 files (~130k tokens, 13%)"
 
-**Architecture:**
-```
-ci/docs/standards/
-├── STANDARDS.md (HyperSec corporate standards - single source of truth)
-├── code-assistant/ (generic AI guidance)
-├── common/ (universal standards)
-└── python/ (Python standards)
-
-ci-local/code-assistant/
-└── *.md (project/developer-specific overrides and customizations)
-     - ALWAYS loaded by /start (via Glob)
-     - Supplements corporate standards without modifying them
-     - Examples: project-specific workflows, developer preferences
-
-ci/modules/common/templates/
-├── start.md (Claude Code /start automation + session reporting)
-└── save.md (Claude Code /save automation)
-```
-
-**Benefits:**
-- ✅ Standards work with ANY AI code assistant (not locked to Claude Code)
-- ✅ 200K context users can use standards efficiently (30k vs 130k tokens)
-- ✅ 1M context users get maximum reliability (load everything upfront)
-- ✅ Transparent verification (session config report shows what was loaded)
-- ✅ Generic foundation with Claude Code optimizations layered on top
-
-**Files Modified:**
-- [ci/docs/standards/STANDARDS.md](ci/docs/standards/STANDARDS.md) - Context-adaptive loading strategy
-- [ci/docs/standards/code-assistant/COMMON.md](ci/docs/standards/code-assistant/COMMON.md) - Generic session management
-- [ci/docs/standards/code-assistant/HYPERCI.md](ci/docs/standards/code-assistant/HYPERCI.md) - Generic tool references
-- [ci/modules/common/templates/start.md](ci/modules/common/templates/start.md) - Session config reporting
-
 **Commits:**
 - `34a38d0` (ci) - refactor: make standards AI-assistant-agnostic with context-adaptive loading
 - `a6b0408` (ci) - feat: add session configuration reporting to /start command
 - `25bc97d` (hyperlib) - chore: update ci submodule (context-adaptive loading + session reporting)
-
-**Testing:**
-- Run `/start` to see session configuration report
-- Verify AI reports: context window size, strategy used, files loaded
-- Test with different models (1M vs 200K) to verify correct strategy selection
 
 ---
 
