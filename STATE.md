@@ -53,10 +53,49 @@
 
 ---
 
+## Session 2025-11-13 (Continued 2) - CAG/RAG Hybrid Implementation
+
+### CAG/RAG Hybrid Strategy - Complete ✅
+**Status:** Implemented token-efficient loading strategy (68% token reduction)
+
+**Problem:**
+- Full CAG strategy loaded 201KB (~55k tokens, 28% of context)
+- Only 72% context remaining for actual work
+- Unsustainable for productive sessions
+
+**Solution - CAG/RAG Hybrid:**
+- **Tier 1 (Mandatory):** Load 8 essential files (~17k tokens estimated)
+  - All code-assistant/ files (COMMON.md, AI-GUIDELINES.md, PYTHON.md, HYPERCI.md)
+  - Essential common/ files (QUICK-REFERENCE.md, GIT-WORKFLOW.md, CHARS-POLICY.md, CODE-HEADER.md)
+  - Python essentials (CODING-PYTHON.md)
+  - Project overrides (ci-local/code-assistant/*.md)
+- **Tier 2 (On-Demand):** Load 9 detailed files when topic discussed
+  - Architecture: DESIGN-PRINCIPLES.md, CONTAINERIZATION.md
+  - Error Handling: ERROR-HANDLING.md
+  - Code Quality: NO-MOCKS-POLICY.md, CODING.md
+  - Testing: TEST-FIRST.md
+  - Python Details: PEP8.md, HYPERCI.md (python/)
+
+**Files Updated:**
+- [ci/docs/standards/STANDARDS.md](ci/docs/standards/STANDARDS.md) - Added RAG index, Tier 1/2 strategy
+- [.claude/commands/start.md](.claude/commands/start.md) - Simplified to reference STANDARDS.md
+- Version: v1.3.0 (minor version, not major - standards improvements use minor semver)
+
+**Benefits:**
+- ✅ 68% token reduction (55k → 17k tokens at start)
+- ✅ More context available for actual work
+- ✅ Essential standards always loaded (git, naming, Python basics)
+- ✅ On-demand loading via clear RAG index
+
+**Trade-off:**
+- Manual maintenance of STANDARDS.md RAG index (accepted)
+
+---
+
 ## Session 2025-11-13 (Continued) - CAG Strategy & Standards Refactoring
 
 ### CAG Strategy Implementation - Complete ✅
-**Status:** Implemented Claude Agnostic Guidelines (CAG) - load ALL standards upfront
+**Status:** Implemented Claude Agnostic Guidelines (CAG) - load ALL standards upfront (SUPERSEDED by CAG/RAG hybrid above)
 
 **Changes:**
 1. **STANDARDS.md Rewrite** - Complete CAG-only strategy
