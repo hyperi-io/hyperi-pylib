@@ -1,6 +1,6 @@
 # Hyperlib - Project State
 
-**Repository**: https://github.com/hypersec-io/hyperlib
+**Repository**: https://github.com/hypersec-io/hs-lib
 **Type**: Python package (shared library)
 **Purpose**: Enterprise infrastructure for all HyperSec Python projects
 
@@ -28,7 +28,7 @@
 **NEVER confuse these two completely separate release systems:**
 
 ### 1. HyperCI ITSELF (the ci/ submodule repository)
-**Location:** `/projects/hyperlib/ci` (git submodule pointing to hypersec-io/hyperci)
+**Location:** `/projects/hs-lib/ci` (git submodule pointing to hypersec-io/hyperci)
 **Release automation:** semantic-release CLI + .releaserc.json (Node.js based)
 **Files:**
 - `ci/.releaserc.json` - semantic-release configuration
@@ -38,7 +38,7 @@
 
 **Why:** HyperCI is infrastructure code that should not depend on itself (avoid circular dependencies). Uses simple Node.js semantic-release CLI, same pattern as dfe-developer.
 
-### 2. HyperCI AS A SERVICE (attached to parent projects like hyperlib)
+### 2. HyperCI AS A SERVICE (attached to parent projects like hs-lib)
 **Location:** Parent project uses `/ci` as submodule
 **Release automation:** Python-based `./ci/run release` (advanced CI orchestration)
 **Files:**
@@ -47,7 +47,7 @@
 - `ci/modules/python/run.d/61-update-badges.py` - Badge updates
 - Parent project `pyproject.toml`, `VERSION`, `CHANGELOG.md`
 
-**Why:** Parent projects (hyperlib, dfe-cli-core, etc.) use the full HyperCI orchestration with Python semantic-release, version syncing, badge updates, build/publish automation.
+**Why:** Parent projects (hs-lib, dfe-cli-core, etc.) use the full HyperCI orchestration with Python semantic-release, version syncing, badge updates, build/publish automation.
 
 **KEY RULE:** These are TOTALLY SEPARATE in implementation and concept. Never mix them.
 
@@ -86,7 +86,7 @@ Enhanced VSCode settings template with comprehensive .venv enforcement:
 
 **Commits:**
 - **ci:** `7d5e737` - "fix: ensure VSCode always uses local .venv, never system Python"
-- **hyperlib:** `4eed1ad` - "fix: update ci submodule (VSCode venv enforcement)"
+- **hs-lib:** `4eed1ad` - "fix: update ci submodule (VSCode venv enforcement)"
 
 ### JFrog Virtual Repository Implementation - Complete ✅
 **Status:** Updated all Python package installations to use JFrog virtual repository
@@ -99,7 +99,7 @@ Enhanced VSCode settings template with comprehensive .venv enforcement:
 **Root Cause:**
 - Using local-only repository (`hypersec-pypi-local`) instead of virtual repository
 - Virtual repository (`hypersec-pypi`) aggregates both:
-  - `hypersec-pypi-local` - Private packages (hyperlib)
+  - `hypersec-pypi-local` - Private packages (hs-lib)
   - `pypi-remote` - Public PyPI cache (dynaconf, etc.)
 
 **Solution:**
@@ -123,8 +123,8 @@ Updated all references from `hypersec-pypi-local` to `hypersec-pypi`:
 
 **Commits:**
 - **ci:** `a7098d5` - "fix: use JFrog virtual repository (hypersec-pypi) for Python packages"
-- **hyperlib:** `717479f` - "fix: use JFrog virtual repository for all Python package installations"
-- **hyperlib:** `f81f44c` - "fix: update pyproject.toml to use JFrog virtual repository"
+- **hs-lib:** `717479f` - "fix: use JFrog virtual repository for all Python package installations"
+- **hs-lib:** `f81f44c` - "fix: update pyproject.toml to use JFrog virtual repository"
 
 **Next Actions:**
 - None - both features complete and pushed to GitHub
@@ -241,9 +241,9 @@ Updated all references from `hypersec-pypi-local` to `hypersec-pypi`:
 
 **Key Commits:**
 - `3da8cae` (ci) - CAG strategy, isort removal, token optimization (26 commits)
-- `f6cf02b` (hyperlib) - Update ci submodule (CAG strategy)
+- `f6cf02b` (hs-lib) - Update ci submodule (CAG strategy)
 - `77f53d9` (ci) - Fix wrapper syntax (install not --install)
-- `c0425df` (hyperlib) - Final ci submodule update
+- `c0425df` (hs-lib) - Final ci submodule update
 
 **Architecture Clarification:**
 - **CAG = Claude Agnostic Guidelines:** Load ALL standards upfront, always
@@ -281,7 +281,7 @@ Updated all references from `hypersec-pypi-local` to `hypersec-pypi`:
 
 **Commits:**
 - `f0aa741` (ci) - docs: token-optimize GIT-WORKFLOW.md (Human-AI profile, 20.8% reduction)
-- `b52bbf1` (hyperlib) - chore: update ci submodule (GIT-WORKFLOW.md token optimization)
+- `b52bbf1` (hs-lib) - chore: update ci submodule (GIT-WORKFLOW.md token optimization)
 
 **Files Modified:**
 - [ci/docs/standards/common/GIT-WORKFLOW.md](ci/docs/standards/common/GIT-WORKFLOW.md) - Token-optimized
@@ -337,8 +337,8 @@ Updated all references from `hypersec-pypi-local` to `hypersec-pypi`:
 
 **Commits:**
 - `12a2c88` (ci) - refactor: rename ci-local/ai to ci-local/code-assistant for consistency
-- `85b8c8d` (hyperlib) - chore: update ci submodule (renamed ci-local/ai to ci-local/code-assistant)
-- `2e2a5f8` (hyperlib) - docs: clarify architectural insight about STANDARDS.md and ci-local/code-assistant
+- `85b8c8d` (hs-lib) - chore: update ci submodule (renamed ci-local/ai to ci-local/code-assistant)
+- `2e2a5f8` (hs-lib) - docs: clarify architectural insight about STANDARDS.md and ci-local/code-assistant
 
 ### NO MOCKS Policy Violation - Fixed ✅
 **Status:** Implemented missing `merge_env()` function in ci_lib.py
@@ -356,7 +356,7 @@ Updated all references from `hypersec-pypi-local` to `hypersec-pypi`:
 
 **Commits:**
 - `7394fee` (ci) - fix: implement merge_env function for context_tokens injection
-- `8823a7c` (hyperlib) - chore: update ci submodule (merge_env implementation)
+- `8823a7c` (hs-lib) - chore: update ci submodule (merge_env implementation)
 
 ### Clean AI Deployment - Complete ✅
 **Status:** Fresh deployment with all latest templates
@@ -444,7 +444,7 @@ ci/modules/common/templates/
 **Commits:**
 - `34a38d0` (ci) - refactor: make standards AI-assistant-agnostic with context-adaptive loading
 - `a6b0408` (ci) - feat: add session configuration reporting to /start command
-- `25bc97d` (hyperlib) - chore: update ci submodule (context-adaptive loading + session reporting)
+- `25bc97d` (hs-lib) - chore: update ci submodule (context-adaptive loading + session reporting)
 
 ---
 
@@ -468,7 +468,7 @@ ci/modules/common/templates/
 
 **Commits:**
 - `e5df9b1` (ci) - docs: add tokenx CLI integration for precise token counting
-- `7491c03` (hyperlib) - chore: update ci submodule (tokenx CLI integration for token counting)
+- `7491c03` (hs-lib) - chore: update ci submodule (tokenx CLI integration for token counting)
 
 ---
 
@@ -490,7 +490,7 @@ ci/modules/common/templates/
    - Both include: Dockerfile, docker-compose.yml, k8s manifests, README
 
 3. **HELM Chart Template** - Complete ✅
-   - [templates/helm/hyperlib-app/](templates/helm/hyperlib-app/) - Production-ready HELM chart
+   - [templates/helm/hs-lib-app/](templates/helm/hs-lib-app/) - Production-ready HELM chart
    - Includes: deployment, service, ingress, HPA, KEDA, ServiceMonitor, PDB
    - Multi-environment values files (dev/staging/prod)
 
@@ -534,7 +534,7 @@ All 4 phases delivered:
 - Added localhost/example domain patterns
 
 **Commits:**
-- `79657ae` (hyperlib) - docs: fix incorrect ci/ci.yaml references - should be ci-local/ci.yaml
+- `79657ae` (hs-lib) - docs: fix incorrect ci/ci.yaml references - should be ci-local/ci.yaml
 
 **Next:** Container-Native Phase 4 ready when needed
 
@@ -564,13 +564,13 @@ All 4 phases delivered:
 - `bcc63d9` (ci) - docs: allow decimal estimates for sub-hour tasks (0.25=15min, 0.5=30min)
 - `bdb6a4c` (ci) - docs: update estimate guidance - aggressive AI timeframes, powers of 2 in hours
 - `eedba9a` (ci) - docs: enable estimates by default with aggressive AI timeframe rules
-- `184a063` (hyperlib) - docs: add policy against automatic time estimates in TODO.md tasks
-- `fbf9527` (hyperlib) - docs: add Linear.app estimate guidance (aggressive timeframes, 10x AI efficiency)
-- `f34436c` (hyperlib) - docs: allow decimal estimates for sub-hour tasks (0.25=15min, 0.5=30min)
-- `e31f92f` (hyperlib) - fix: update TODO.md estimates to aggressive AI-assisted timeframes (Linear.app points)
-- `dcca3f2` (hyperlib) - docs: update estimate guidance to aggressive AI timeframes (powers of 2 hours)
-- `1fb78cd` (hyperlib) - fix: convert all estimates to hours format with powers of 2 scaling
-- `cbd14e1` (hyperlib) - docs: enable estimates by default with aggressive AI timeframe rules
+- `184a063` (hs-lib) - docs: add policy against automatic time estimates in TODO.md tasks
+- `fbf9527` (hs-lib) - docs: add Linear.app estimate guidance (aggressive timeframes, 10x AI efficiency)
+- `f34436c` (hs-lib) - docs: allow decimal estimates for sub-hour tasks (0.25=15min, 0.5=30min)
+- `e31f92f` (hs-lib) - fix: update TODO.md estimates to aggressive AI-assisted timeframes (Linear.app points)
+- `dcca3f2` (hs-lib) - docs: update estimate guidance to aggressive AI timeframes (powers of 2 hours)
+- `1fb78cd` (hs-lib) - fix: convert all estimates to hours format with powers of 2 scaling
+- `cbd14e1` (hs-lib) - docs: enable estimates by default with aggressive AI timeframe rules
 
 **Estimate Examples:**
 ```markdown
@@ -605,18 +605,18 @@ All 4 phases delivered:
 
 **Architecture:**
 - `ci/modules/common/templates/start.md` and `save.md` - Templates deployed to other projects (tracked in ci repo)
-- `.claude/commands/start.md` and `save.md` - Local instances for testing in hyperlib (gitignored)
+- `.claude/commands/start.md` and `save.md` - Local instances for testing in hs-lib (gitignored)
 - Changes to slash commands must be made **concurrently** in both locations
 - Deployment: `./ci/ai install` copies templates to `.claude/commands/` in target projects
 
 **Commits:**
-- `7589a37` (hyperlib) - fix: remove DEREK.md references from STATE.md
-- `50b6fe0` (hyperlib) - docs: document /start command wildcard pattern update
+- `7589a37` (hs-lib) - fix: remove DEREK.md references from STATE.md
+- `50b6fe0` (hs-lib) - docs: document /start command wildcard pattern update
 - `e8117df` (ci) - fix: update /start command template to use wildcard pattern for standards files
 - `bbd1416` (ci) - fix: move slash command templates to root of templates/ directory
 - `4fc0ec5` (ci) - fix: update slash command source paths in defaults.yaml
-- `3eb34a4` (hyperlib) - chore: update ci submodule (flat template structure for slash commands)
-- `026d4fa` (hyperlib) - docs: update slash command architecture (flat template structure)
+- `3eb34a4` (hs-lib) - chore: update ci submodule (flat template structure for slash commands)
+- `026d4fa` (hs-lib) - docs: update slash command architecture (flat template structure)
 
 ### Gitleaks Configuration Enhancement - Complete ✅
 **Status:** Enhanced gitleaks allowlist with comprehensive false-positive patterns
@@ -630,7 +630,7 @@ All 4 phases delivered:
 
 **Commits:**
 - `3d9f0ac` (ci) - fix: enhance gitleaks allowlist with common false positives
-- `ba8615a` (hyperlib) - chore: update ci submodule (enhanced gitleaks allowlist)
+- `ba8615a` (hs-lib) - chore: update ci submodule (enhanced gitleaks allowlist)
 
 ### Slash Command Documentation & Infrastructure - Complete ✅
 **Status:** Added documentation and released HyperCI v1.2.9 with slash command infrastructure
@@ -666,12 +666,12 @@ All 4 phases delivered:
 
 **Commits:**
 - `8ab1be8` (ci) - docs: add prominent slash command documentation to CODE-ASSISTANT.md and README.md
-- `d620b82` (hyperlib) - docs: add prominent slash command documentation for Claude Code users
+- `d620b82` (hs-lib) - docs: add prominent slash command documentation for Claude Code users
 - `3846353` (ci) - fix: add copy_overwrite support and CODE-ASSISTANT-STARTUP.md template for slash commands
 - `be7cde9` (ci) - chore(release): 1.2.9 [semantic-release]
-- `36a4176` (hyperlib) - chore: update ci submodule (slash command infrastructure and documentation)
-- `e992b32` (hyperlib) - chore: update ci submodule to v1.2.9 (copy_overwrite and slash command infrastructure)
-- `197b726` (hyperlib) - docs: update STATE.md with slash command documentation commit hashes
+- `36a4176` (hs-lib) - chore: update ci submodule (slash command infrastructure and documentation)
+- `e992b32` (hs-lib) - chore: update ci submodule to v1.2.9 (copy_overwrite and slash command infrastructure)
+- `197b726` (hs-lib) - docs: update STATE.md with slash command documentation commit hashes
 
 ### Claude Code Integration - Complete ✅
 **Status:** `/start` and `/save` slash commands implemented with HyperCI integration
@@ -726,8 +726,8 @@ All 4 phases delivered:
 - ✅ 32/32 tests passing (13 profile + 19 mixin tests)
 
 **Files Created:**
-- [src/hyperlib/application/profiles.py](src/hyperlib/application/profiles.py) - Profile definitions and loading
-- [src/hyperlib/application/mixins/](src/hyperlib/application/mixins/) - 5 mixins (profile, signals, cli, health, metrics)
+- [src/hs-lib/application/profiles.py](src/hs-lib/application/profiles.py) - Profile definitions and loading
+- [src/hs-lib/application/mixins/](src/hs-lib/application/mixins/) - 5 mixins (profile, signals, cli, health, metrics)
 - [tests/unit/test_profiles.py](tests/unit/test_profiles.py) - 13 profile tests
 - [tests/unit/test_mixins.py](tests/unit/test_mixins.py) - 19 mixin tests
 
@@ -790,7 +790,7 @@ All 4 phases delivered:
 - ✅ Updated APP-API.md and APP-DAEMON.md with health check decorator
 - ✅ examples/api-container/ - Complete FastAPI REST API example
 - ✅ examples/daemon-container/ - Complete background worker example
-- ✅ templates/helm/hyperlib-app/ - Production-ready HELM chart
+- ✅ templates/helm/hs-lib-app/ - Production-ready HELM chart
 
 **Features Delivered:**
 - Kubernetes deployment patterns (k8s manifests, health probes, services)
@@ -949,7 +949,7 @@ All 4 phases delivered:
 **Context:**
 - Analyzed 3 DFE projects (dfe-ui-backend, dfe-hunt-runner, dfe-cli-core) for containerization patterns
 - Identified critical issues: Hunt Runner orphaning bug, inconsistent health checks, no metrics
-- Design documents: `~/hyperlib/containerization_analysis.md`, `~/hyperlib/ANALYSIS_SUMMARY.md`
+- Design documents: `~/hs-lib/containerization_analysis.md`, `~/hs-lib/ANALYSIS_SUMMARY.md`
 
 **Key Design Decisions:**
 1. **Three Profiles:** dev (local), docker (CI/CD), prod (k8s+HELM+ArgoCD+KEDA)
@@ -981,7 +981,7 @@ CLIApplication(SignalHandlerMixin, ProfileMixin)
 
 **Migration Assessment (DFE Apps):**
 - **dfe-cli-core** (CLI): 3-4 hours - Click→Typer migration, type hints, config
-- **dfe-ui-backend** (API): 2-3 hours - Replace custom setup with hyperlib framework
+- **dfe-ui-backend** (API): 2-3 hours - Replace custom setup with hs-lib framework
 - **dfe-hunt-runner** (Daemon): 4-6 hours - **Fixes critical orphaning bug**, subprocess tracking
 - **Total effort:** 10-13 hours (1-2 days)
 
@@ -1034,7 +1034,7 @@ CLIApplication(SignalHandlerMixin, ProfileMixin)
 - **OpenTelemetry support:**
   - OTLP mode: Push metrics to collector (default)
   - Prometheus mode: Expose metrics for scraping
-  - Optional dependency: `pip install hyperlib[opentelemetry]`
+  - Optional dependency: `pip install hs-lib[opentelemetry]`
   - Dependencies: opentelemetry-api, opentelemetry-sdk, opentelemetry-exporter-otlp, opentelemetry-exporter-prometheus
 - **Lifecycle management:**
   - Prometheus: Background thread for process/container metrics collection
@@ -1045,7 +1045,7 @@ CLIApplication(SignalHandlerMixin, ProfileMixin)
   - Tests cover: backend switching, fallback behavior, unified API, lifecycle
 - **Usage:**
   ```python
-  from hyperlib.metrics import create_metrics
+  from hs_lib.metrics import create_metrics
 
   # Default (Prometheus)
   metrics = create_metrics("myapp")
@@ -1077,12 +1077,12 @@ CLIApplication(SignalHandlerMixin, ProfileMixin)
   - Test data from DLPTest.com, Nightfall datasets (realistic SSNs, credit cards, complex patterns)
   - All 42 tests passing (100%)
 - Updated dependencies
-  - Added `presidio` extra: `pip install hyperlib[presidio]`
-  - Standardized on psycopg3: `psycopg[binary]>=3.1.0` (note: hyperlib doesn't use it directly, just lists for users)
+  - Added `presidio` extra: `pip install hs-lib[presidio]`
+  - Standardized on psycopg3: `psycopg[binary]>=3.1.0` (note: hs-lib doesn't use it directly, just lists for users)
 - Architecture clarification
   - **Logger filters:** Runtime log masking (for dfe-cli-core, dfe-ui-backend)
   - **Anonymizer module:** Structured data, config files, streaming (separate concern)
-  - **Gitleaks:** Pre-commit Git scanning (separate tool, for hyperci not hyperlib)
+  - **Gitleaks:** Pre-commit Git scanning (separate tool, for hyperci not hs-lib)
 
 ### Test Status (Updated)
 - Hyperlib unit: 165/165 (100%)
@@ -1094,7 +1094,7 @@ CLIApplication(SignalHandlerMixin, ProfileMixin)
 ## Session 2025-11-07 Continued (Part 2)
 
 ### ClickHouse Database Support - Complete ✅
-- Added ClickHouse to `build_database_url()` in hyperlib.database
+- Added ClickHouse to `build_database_url()` in hs-lib.database
   - Default port: 9000 (native protocol)
   - Scheme: `clickhouse://`
   - Follows same pattern as PostgreSQL, MySQL, Redis
@@ -1107,7 +1107,7 @@ CLIApplication(SignalHandlerMixin, ProfileMixin)
   - Multiple format support: JSON, form data, database URLs, key=value
   - Bearer token detection, database URL password masking
   - Custom field support (class-level and instance-level)
-- Integrated with hyperlib logger (automatic, zero-config)
+- Integrated with hs-lib logger (automatic, zero-config)
   - Default: ENABLED (masks by default)
   - Configurable: `HYPERLIB_LOGGING__MASK_SENSITIVE_DATA=false`
   - Performance: ~5-10μs per log message (negligible overhead)
@@ -1115,7 +1115,7 @@ CLIApplication(SignalHandlerMixin, ProfileMixin)
 - Zero external dependencies (stdlib `re` only)
 
 ### Opinionated Anonymizer with Presidio - Complete ✅
-- Implemented comprehensive anonymizer package (`hyperlib.anonymizer`)
+- Implemented comprehensive anonymizer package (`hs-lib.anonymizer`)
   - **Presets:** minimal (secrets), standard (default), compliance (HIPAA/GDPR/PCI-DSS)
   - **Strategies:** REPLACE, REDACT, MASK, HASH, ENCRYPT
   - **Presidio integration:** ML-based PII detection (50+ entity types)
@@ -1128,7 +1128,7 @@ CLIApplication(SignalHandlerMixin, ProfileMixin)
 - **Convenience functions:**
   - `anonymize_text()`, `anonymize_dict()`, `scan_for_pii()`
   - `anonymize_config_file()`, `scan_file_for_secrets()` (pre-commit hooks)
-- **Installation:** `pip install hyperlib[presidio]` (optional dependency)
+- **Installation:** `pip install hs-lib[presidio]` (optional dependency)
 - **Use cases:**
   - Large database result sets (millions of rows)
   - Data processing (Polars lazy evaluation)
@@ -1148,7 +1148,7 @@ CLIApplication(SignalHandlerMixin, ProfileMixin)
   4. Periodic full scans (historical leaks)
 - **Clear separation:**
   - **Gitleaks:** Pre-commit secret scanning (hyperci)
-  - **Presidio:** Runtime PII anonymization (hyperlib)
+  - **Presidio:** Runtime PII anonymization (hs-lib)
   - Different tools, different domains
 - **Design document:** `.tmp/hyperci-secret-scanning-design.md`
   - Complete implementation guide
@@ -1158,7 +1158,7 @@ CLIApplication(SignalHandlerMixin, ProfileMixin)
 ### Next Phase (Future Sessions)
 - Integrate Presidio with logger filters (two-tier approach)
   - Tier 1 (default): Regex-based (fast, zero deps) ✅ Already done
-  - Tier 2 (opt-in): Presidio (`hyperlib[presidio]`, better accuracy)
+  - Tier 2 (opt-in): Presidio (`hs-lib[presidio]`, better accuracy)
   - Graceful fallback if Presidio not installed
 - Add comprehensive tests for anonymizer package
 - Optional: Implement Gitleaks integration in hyperci
@@ -1176,8 +1176,8 @@ CLIApplication(SignalHandlerMixin, ProfileMixin)
   - Replaced verbose documentation with "use this for that" approach
 - Separated hyperci-specific guidance from general project standards
   - Moved ci_lib logging instructions to STATE.md (hyperci development only)
-  - PYTHON-STANDARDS.md now covers all projects using hyperlib
-  - Clear distinction: ci_lib (internal) vs hyperlib (standard)
+  - PYTHON-STANDARDS.md now covers all projects using hs-lib
+  - Clear distinction: ci_lib (internal) vs hs-lib (standard)
 
 ## Session 2025-11-03 Completed
 
@@ -1240,30 +1240,30 @@ curl -LsSf https://astral.sh/uv/install.sh | sh
 
 ## Strategic Goal: Replace ci_lib with Hyperlib
 
-**Long-term architecture goal** (when hyperlib is stable):
+**Long-term architecture goal** (when hs-lib is stable):
 
-Replace ci_lib.py functions with hyperlib equivalents to reduce duplication:
-- Configuration: ci_lib.get_config_value() → hyperlib.config.get_config()
-- Logging: ci_lib logger → hyperlib.logger
-- Utilities: Port shared functions to hyperlib
+Replace ci_lib.py functions with hs-lib equivalents to reduce duplication:
+- Configuration: ci_lib.get_config_value() → hs-lib.config.get_config()
+- Logging: ci_lib logger → hs-lib.logger
+- Utilities: Port shared functions to hs-lib
 
 **Current Blocker:**
-- Circular dependency risk (hyperlib needs hyperci for CI, hyperci needs hyperlib for utils)
-- hyperlib must be stable first
+- Circular dependency risk (hs-lib needs hyperci for CI, hyperci needs hs-lib for utils)
+- hs-lib must be stable first
 
 **Strategy:**
-1. Stabilize hyperlib (production-ready, well-tested)
-2. Port ci_lib functions to hyperlib gradually
-3. Update hyperci to import from hyperlib
+1. Stabilize hs-lib (production-ready, well-tested)
+2. Port ci_lib functions to hs-lib gradually
+3. Update hyperci to import from hs_lib
 4. Remove duplicate code from ci_lib.py
-5. ci_lib becomes thin wrapper around hyperlib
+5. ci_lib becomes thin wrapper around hs-lib
 
 **When Ready:**
-- hyperlib config.py has full 7-layer cascade (DONE - Session 2025-11-04)
-- hyperlib.config.get_config() supports additional files (DONE - Session 2025-11-04)
-- hyperlib logger.py is production-ready (DONE)
-- hyperci pip installs hyperlib from JFrog (published package)
-- hyperci imports from hyperlib: `from hyperlib.config import get_config`
+- hs-lib config.py has full 7-layer cascade (DONE - Session 2025-11-04)
+- hs-lib.config.get_config() supports additional files (DONE - Session 2025-11-04)
+- hs-lib logger.py is production-ready (DONE)
+- hyperci pip installs hs-lib from JFrog (published package)
+- hyperci imports from hs_lib: `from hs_lib.config import get_config`
 - ci_lib becomes thin wrapper (80% reduction possible)
 
 ## HyperCI Development Guidelines
@@ -1284,7 +1284,7 @@ logger.error("Build failed")
 - Color output for terminal readability
 - Appropriate severity levels (info, warning, error)
 
-**Note:** This is ONLY for hyperci CI script development. Normal projects should use hyperlib.logger instead.
+**Note:** This is ONLY for hyperci CI script development. Normal projects should use hs-lib.logger instead.
 
 ## Next Tasks
 - Clean up ci_lib.py naming (get_ prefix inconsistency)
