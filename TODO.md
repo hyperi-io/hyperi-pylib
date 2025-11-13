@@ -2,27 +2,6 @@
 
 ## Active
 
-### ❌ FAILED: 1M Context Window Configuration
-
-**Status:** FAILED - Accepting 200K context window for now
-
-**What was attempted:**
-- Tried configuring in settings files (didn't work)
-- Attempted environment variables in settings.json (didn't work)
-- Tried various model string formats (didn't work)
-- Attempted `/model` runtime command (not available/didn't work)
-
-**Result:**
-- Still getting 200K context window (not 1M)
-- Configuration attempts unsuccessful
-
-**Current plan:**
-- Accept 200K context window as working configuration
-- Use 200K minimal+RAG strategy for standards loading
-- May revisit 1M configuration in future if needed
-
----
-
 ### Container-Native Application Patterns - Phase 4 (Documentation & Examples)
 
 **Priority:** MEDIUM (Phases 1-3 complete, need docs/examples for users)

@@ -53,6 +53,84 @@
 
 ---
 
+## Session 2025-11-13 (Continued 3) - VSCode .venv Enforcement & JFrog Virtual Repository
+
+### VSCode .venv Enforcement - Complete ✅
+**Status:** Enhanced VSCode settings to ensure local .venv is ALWAYS used, system Python NEVER used
+
+**Problem:**
+- VSCode could fall back to system Python if .venv not activated properly
+- CLI tools (pytest, ruff) might use system packages instead of .venv
+- No explicit PATH enforcement in terminal sessions
+
+**Solution:**
+Enhanced VSCode settings template with comprehensive .venv enforcement:
+- **Critical settings:**
+  - `python.analysis.autoSearchPaths: false` - Prevents global Python search
+  - `PATH` environment variable prepended with `.venv/bin` (all platforms)
+  - `VIRTUAL_ENV` environment variable set explicitly
+  - Both `python.defaultInterpreterPath` and `python.pythonPath` locked to .venv
+- **Cross-platform support:** Linux, macOS, Windows
+- **Tool paths:** pytest, ruff explicitly configured to use .venv executables
+- **Auto-activation:** Terminal automatically activates .venv on launch
+
+**Files Updated:**
+- [ci/modules/common/templates/.vscode/settings.json](ci/modules/common/templates/.vscode/settings.json) - Enhanced template
+- [ci/.gitignore](ci/.gitignore) - Allow `modules/*/templates/.vscode/` to be tracked
+- [ci/modules/common/defaults.yaml](ci/modules/common/defaults.yaml) - VSCode merge configuration (already present)
+
+**Bootstrap Integration:**
+- Template deployed via `./ci/bootstrap install`
+- JSON deep merge into `.vscode/settings.json`
+- Marker: `"hyperci-vscode"` for idempotent merging
+
+**Commits:**
+- **ci:** `7d5e737` - "fix: ensure VSCode always uses local .venv, never system Python"
+- **hyperlib:** `4eed1ad` - "fix: update ci submodule (VSCode venv enforcement)"
+
+### JFrog Virtual Repository Implementation - Complete ✅
+**Status:** Updated all Python package installations to use JFrog virtual repository
+
+**Problem:**
+- Installation from `hypersec-pypi-local` failed with "dynaconf not found"
+- Only private packages available, public dependencies missing
+- Required manual `--extra-index-url` fallbacks
+
+**Root Cause:**
+- Using local-only repository (`hypersec-pypi-local`) instead of virtual repository
+- Virtual repository (`hypersec-pypi`) aggregates both:
+  - `hypersec-pypi-local` - Private packages (hyperlib)
+  - `pypi-remote` - Public PyPI cache (dynaconf, etc.)
+
+**Solution:**
+Updated all references from `hypersec-pypi-local` to `hypersec-pypi`:
+
+**HyperCI (ci submodule):**
+- [modules/python/bootstrap.d/32-jfrog.py](ci/modules/python/bootstrap.d/32-jfrog.py) - Changed default `ARTIFACTORY_PYPI_HOST`
+- [modules/python/templates/.env.sample](ci/modules/python/templates/.env.sample) - Updated documentation
+
+**Hyperlib (parent):**
+- [README.md](README.md) - Installation examples use virtual repository
+- [.env.sample](.env.sample) - Updated default `ARTIFACTORY_PYPI_HOST`
+- [pyproject.toml](pyproject.toml) - `tool.uv.index` URL uses virtual repository
+
+**Benefits:**
+- ✅ Single URL for all package installations
+- ✅ No need for `--extra-index-url` fallbacks
+- ✅ All dependencies resolve from JFrog
+- ✅ Eliminates "dynaconf not found" errors
+- ✅ Automatic for all new projects via bootstrap
+
+**Commits:**
+- **ci:** `a7098d5` - "fix: use JFrog virtual repository (hypersec-pypi) for Python packages"
+- **hyperlib:** `717479f` - "fix: use JFrog virtual repository for all Python package installations"
+- **hyperlib:** `f81f44c` - "fix: update pyproject.toml to use JFrog virtual repository"
+
+**Next Actions:**
+- None - both features complete and pushed to GitHub
+
+---
+
 ## Session 2025-11-13 (Continued 2) - CAG/RAG Hybrid Implementation
 
 ### CAG/RAG Hybrid Strategy - Complete ✅
