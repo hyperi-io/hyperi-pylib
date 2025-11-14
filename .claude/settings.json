@@ -105,8 +105,7 @@
       "Bash(tr *)",
       "Bash(xargs *)",
       "Bash([A-Z_]*=* *)",
-      "Bash(export [A-Z_]*)",
-      "Bash(git -C * *)"
+      "Bash(export [A-Z_]*)"
     ],
     "deny": [],
     "ask": [
