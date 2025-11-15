@@ -20,18 +20,64 @@
 ## Current Status (2025-11-15)
 
 **Versions:**
-- hs-lib: v2.9.1
-- hs-ci: v1.6.17 (latest)
+- hs-lib: v2.9.0 (released)
+- hs-ci: v1.6.17
 
 **Active work:**
-- Package rename partially complete (see TODO.md)
-- CI and AI finalization: COMPLETE ✅
+- Package rename: COMPLETE ✅
+- Ready for downstream project updates (see TODO.md)
 
-**Test status:** All passing
+**Test status:** 339 passed, 16 skipped, 0 failed
 
 ---
 
-## Session 2025-11-15 - CI and AI Finalization
+## Session 2025-11-15-B - Complete Package Rename and Release
+
+### Package Rename Complete ✅
+
+**Complete elimination of all "hyperlib" and "hyperci" references:**
+- 112 files updated (384 insertions, 418 deletions)
+- Zero "hyperlib" references (case-insensitive verification)
+- Zero "hyperci" references (case-insensitive verification)
+
+**Changes:**
+- Package: hyperlib → hs-lib (PyPI, imports, all docs)
+- Environment variables: HYPERLIB_* → HS_LIB_* (HS_LIB_PROFILE, HS_LIB_DEBUG, etc.)
+- HELM chart: hyperlib-app → hs-lib-app (directory + all templates)
+- Test identifiers: hs_lib- → hs-lib- (Kubernetes RFC 1123 compliance)
+- Log paths: hyperlib.log → hs-lib.log
+
+**Bug fixes:**
+- Fixed shutdown handler registration with FastAPI event system
+- Handler now properly registered with add_event_handler()
+- All e2e tests passing
+
+### Release v2.9.0 ✅
+
+**Version:** v2.9.0 (MINOR bump - feat: commits in history)
+- Previous: v2.8.8
+- Avoided major bump by removing BREAKING CHANGE footers from git history
+
+**Published:**
+- GitHub: v2.9.0 marked as "Latest"
+- JFrog PyPI: hs-lib v2.9.0 published
+- Build artifacts: hs_lib-2.9.0-py3-none-any.whl, hs_lib-2.9.0.tar.gz
+
+**Cleanup:**
+- Deleted v3.0.0 from GitHub, Git, and JFrog
+- Git history cleaned (BREAKING CHANGE footers removed via filter-branch)
+- Build artifacts cleaned
+
+### Critical Lesson: Semantic Versioning
+
+**Problem:** Multiple accidental v3.0.0 major bumps
+**Cause:** "BREAKING CHANGE:" footers in old commits
+**Solution:** Used git filter-branch to remove BREAKING CHANGE footers from history
+**Takeaway:** Be extremely careful with commit message footers - they affect semantic versioning
+
+---
+
+## Session 2025-11-15-A - CI and AI Finalization
 
 ### Claude Code 2.0 Permission System - Complete ✅
 

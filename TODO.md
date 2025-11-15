@@ -4,12 +4,18 @@
 
 ### Update Downstream Projects (DFE apps) - **1-2h**
 
-**Status:** hs-lib package rename complete, downstream projects pending
+**Status:** hs-lib v2.9.0 released, ready for downstream updates
 
-- dfe-ui-backend: Update dependency and imports
-- dfe-hunt-runner: Update dependency and imports
-- dfe-cli-core: Update dependency and imports
-- Test all three projects
+**Changes needed in each project:**
+- Update pyproject.toml: `hyperlib` → `hs-lib`
+- Update imports: Keep `from hs_lib` (already correct)
+- Update environment variables: `HYPERLIB_*` → `HS_LIB_*`
+- Test and verify
+
+**Projects:**
+- dfe-ui-backend
+- dfe-hunt-runner
+- dfe-cli-core
 
 ---
 
