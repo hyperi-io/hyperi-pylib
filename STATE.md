@@ -1591,3 +1591,1601 @@ cd ci-local && uv lock --upgrade    # Update CI tools
 ---
 
 **See also:** `ci/docs/PYTHON.md`, `ci/docs/NUITKA.md`, `ci/docs/TESTING.md`
+
+
+---
+
+<!-- HYPERCI_STATE_MD: HYPERCI_CLAUDE_MD: Merged from CLAUDE.md -->
+# Hyperlib - Project State
+
+**Repository**: https://github.com/hypersec-io/hs-lib
+**Type**: Python package (shared library)
+**Purpose**: Enterprise infrastructure for all HyperSec Python projects
+
+---
+
+## 🔄 SESSION MANAGEMENT
+
+**IMPORTANT:** If this is a new session or context was compressed:
+1. **Run `/start` command** to initialize the session properly
+2. Read STATE.md, TODO.md, and standards documentation
+3. Confirm ready before proceeding with work
+
+**Proactive session management (for AI assistants):**
+- **Monitor conversation length** - After 30-40 exchanges, suggest running `/save`
+- **Before natural breaks** - If developer completes a major task, suggest `/save`
+- **Context warning signs** - If responses get truncated or you start summarizing heavily, immediately suggest `/save`
+- Better to save early and preserve context than lose information to compression
+
+**Save progress anytime:** Run `/save` to checkpoint progress, clean up STATE.md and TODO.md (can run multiple times per session)
+
+---
+
+## CRITICAL: HyperCI Release Automation - Two Separate Systems
+
+**NEVER confuse these two completely separate release systems:**
+
+### 1. HyperCI ITSELF (the ci/ submodule repository)
+**Location:** `/projects/hs-lib/ci` (git submodule pointing to hypersec-io/hyperci)
+**Release automation:** semantic-release CLI + .releaserc.json (Node.js based)
+**Files:**
+- `ci/.releaserc.json` - semantic-release configuration
+- `ci/release.sh` - convenience wrapper
+- `ci/VERSION` - version file (updated by semantic-release)
+- `ci/CHANGELOG.md` - auto-generated changelog
+
+**Why:** HyperCI is infrastructure code that should not depend on itself (avoid circular dependencies). Uses simple Node.js semantic-release CLI, same pattern as dfe-developer.
+
+### 2. HyperCI AS A SERVICE (attached to parent projects like hs-lib)
+**Location:** Parent project uses `/ci` as submodule
+**Release automation:** Python-based `./ci/run release` (advanced CI orchestration)
+**Files:**
+- `ci/modules/python/run.d/90-semantic-release.py` - Python semantic-release
+- `ci/modules/python/run.d/59-python-version-sync.py` - VERSION sync
+- `ci/modules/python/run.d/61-update-badges.py` - Badge updates
+- Parent project `pyproject.toml`, `VERSION`, `CHANGELOG.md`
+
+**Why:** Parent projects (hs-lib, dfe-cli-core, etc.) use the full HyperCI orchestration with Python semantic-release, version syncing, badge updates, build/publish automation.
+
+**KEY RULE:** These are TOTALLY SEPARATE in implementation and concept. Never mix them.
+
+---
+
+## Session 2025-11-13 (Continued 3) - VSCode .venv Enforcement & JFrog Virtual Repository
+
+### VSCode .venv Enforcement - Complete ✅
+**Status:** Enhanced VSCode settings to ensure local .venv is ALWAYS used, system Python NEVER used
+
+**Problem:**
+- VSCode could fall back to system Python if .venv not activated properly
+- CLI tools (pytest, ruff) might use system packages instead of .venv
+- No explicit PATH enforcement in terminal sessions
+
+**Solution:**
+Enhanced VSCode settings template with comprehensive .venv enforcement:
+- **Critical settings:**
+  - `python.analysis.autoSearchPaths: false` - Prevents global Python search
+  - `PATH` environment variable prepended with `.venv/bin` (all platforms)
+  - `VIRTUAL_ENV` environment variable set explicitly
+  - Both `python.defaultInterpreterPath` and `python.pythonPath` locked to .venv
+- **Cross-platform support:** Linux, macOS, Windows
+- **Tool paths:** pytest, ruff explicitly configured to use .venv executables
+- **Auto-activation:** Terminal automatically activates .venv on launch
+
+**Files Updated:**
+- [ci/modules/common/templates/.vscode/settings.json](ci/modules/common/templates/.vscode/settings.json) - Enhanced template
+- [ci/.gitignore](ci/.gitignore) - Allow `modules/*/templates/.vscode/` to be tracked
+- [ci/modules/common/defaults.yaml](ci/modules/common/defaults.yaml) - VSCode merge configuration (already present)
+
+**Bootstrap Integration:**
+- Template deployed via `./ci/bootstrap install`
+- JSON deep merge into `.vscode/settings.json`
+- Marker: `"hyperci-vscode"` for idempotent merging
+
+**Commits:**
+- **ci:** `7d5e737` - "fix: ensure VSCode always uses local .venv, never system Python"
+- **hs-lib:** `4eed1ad` - "fix: update ci submodule (VSCode venv enforcement)"
+
+### JFrog Virtual Repository Implementation - Complete ✅
+**Status:** Updated all Python package installations to use JFrog virtual repository
+
+**Problem:**
+- Installation from `hypersec-pypi-local` failed with "dynaconf not found"
+- Only private packages available, public dependencies missing
+- Required manual `--extra-index-url` fallbacks
+
+**Root Cause:**
+- Using local-only repository (`hypersec-pypi-local`) instead of virtual repository
+- Virtual repository (`hypersec-pypi`) aggregates both:
+  - `hypersec-pypi-local` - Private packages (hs-lib)
+  - `pypi-remote` - Public PyPI cache (dynaconf, etc.)
+
+**Solution:**
+Updated all references from `hypersec-pypi-local` to `hypersec-pypi`:
+
+**HyperCI (ci submodule):**
+- [modules/python/bootstrap.d/32-jfrog.py](ci/modules/python/bootstrap.d/32-jfrog.py) - Changed default `ARTIFACTORY_PYPI_HOST`
+- [modules/python/templates/.env.sample](ci/modules/python/templates/.env.sample) - Updated documentation
+
+**Hyperlib (parent):**
+- [README.md](README.md) - Installation examples use virtual repository
+- [.env.sample](.env.sample) - Updated default `ARTIFACTORY_PYPI_HOST`
+- [pyproject.toml](pyproject.toml) - `tool.uv.index` URL uses virtual repository
+
+**Benefits:**
+- ✅ Single URL for all package installations
+- ✅ No need for `--extra-index-url` fallbacks
+- ✅ All dependencies resolve from JFrog
+- ✅ Eliminates "dynaconf not found" errors
+- ✅ Automatic for all new projects via bootstrap
+
+**Commits:**
+- **ci:** `a7098d5` - "fix: use JFrog virtual repository (hypersec-pypi) for Python packages"
+- **hs-lib:** `717479f` - "fix: use JFrog virtual repository for all Python package installations"
+- **hs-lib:** `f81f44c` - "fix: update pyproject.toml to use JFrog virtual repository"
+
+**Next Actions:**
+- None - both features complete and pushed to GitHub
+
+---
+
+## Session 2025-11-13 (Continued 2) - CAG/RAG Hybrid Implementation
+
+### CAG/RAG Hybrid Strategy - Complete ✅
+**Status:** Implemented token-efficient loading strategy (68% token reduction)
+
+**Problem:**
+- Full CAG strategy loaded 201KB (~55k tokens, 28% of context)
+- Only 72% context remaining for actual work
+- Unsustainable for productive sessions
+
+**Solution - CAG/RAG Hybrid:**
+- **Tier 1 (Mandatory):** Load 8 essential files (~17k tokens estimated)
+  - All code-assistant/ files (COMMON.md, AI-GUIDELINES.md, PYTHON.md, HYPERCI.md)
+  - Essential common/ files (QUICK-REFERENCE.md, GIT-WORKFLOW.md, CHARS-POLICY.md, CODE-HEADER.md)
+  - Python essentials (CODING-PYTHON.md)
+  - Project overrides (ci-local/code-assistant/*.md)
+- **Tier 2 (On-Demand):** Load 9 detailed files when topic discussed
+  - Architecture: DESIGN-PRINCIPLES.md, CONTAINERIZATION.md
+  - Error Handling: ERROR-HANDLING.md
+  - Code Quality: NO-MOCKS-POLICY.md, CODING.md
+  - Testing: TEST-FIRST.md
+  - Python Details: PEP8.md, HYPERCI.md (python/)
+
+**Files Updated:**
+- [ci/docs/standards/STANDARDS.md](ci/docs/standards/STANDARDS.md) - Added RAG index, Tier 1/2 strategy
+- [.claude/commands/start.md](.claude/commands/start.md) - Simplified to reference STANDARDS.md
+- Version: v1.3.0 (minor version, not major - standards improvements use minor semver)
+
+**Benefits:**
+- ✅ 68% token reduction (55k → 17k tokens at start)
+- ✅ More context available for actual work
+- ✅ Essential standards always loaded (git, naming, Python basics)
+- ✅ On-demand loading via clear RAG index
+
+**Trade-off:**
+- Manual maintenance of STANDARDS.md RAG index (accepted)
+
+---
+
+## Session 2025-11-13 (Continued) - CAG Strategy & Standards Refactoring
+
+### CAG Strategy Implementation - Complete ✅
+**Status:** Implemented Claude Agnostic Guidelines (CAG) - load ALL standards upfront (SUPERSEDED by CAG/RAG hybrid above)
+
+**Changes:**
+1. **STANDARDS.md Rewrite** - Complete CAG-only strategy
+   - Removed all context-window conditional logic (500K+ vs 200K)
+   - Removed all RAG references
+   - Load ALL from: code-assistant/, common/, and language directory
+   - Kept model and context window reporting (useful info)
+   - Reduced from ~100 lines to ~60 lines
+
+2. **TOKEN-ENGINEERING.md Refactoring**
+   - Moved from code-assistant/ to ai/ (NOT session-loaded)
+   - Removed all hardcoded file paths
+   - Consolidated LLM instructions to end section
+   - Renamed profile: AI-Human → Human-AI (Symbiotic, Balanced)
+   - Reduced from 600→360 lines (40% reduction)
+
+3. **Standards Directory Refactoring**
+   - Renamed python/CODING.md → python/CODING-PYTHON.md
+   - Made common/CODING.md language-agnostic (removed Python-specific examples)
+   - All Python-specific content now in python/ directory only
+
+4. **isort Removal** - Complete cleanup
+   - Removed isort execution from 30-python-test.py
+   - Removed isort from all dependency templates (3 files)
+   - Removed [tool.isort] configuration sections
+   - Documented: Ruff I rules handle import sorting
+
+5. **Settings Cleanup**
+   - Removed SessionStart hooks.find from .claude/settings.json
+   - Removed ANTHROPIC_DEFAULT_SONNET_MODEL from .claude/settings.json
+   - Templates already clean (no changes needed)
+
+6. **Bash Wrapper Consistency**
+   - Fixed ai wrapper: "bootstrap install" not "--install"
+   - Fixed run wrapper: "bootstrap install" not "--install"
+   - Fixed bootstrap.py docstring: correct vs incorrect example
+   - Verified all wrappers pass --help to Python correctly
+
+### Token Measurement Results
+
+**Session-Loaded Files (CAG Strategy):**
+- Code-Assistant: 71,102 bytes (~17,775 tokens)
+- Common (10 files): 116,917 bytes (~29,229 tokens)
+- Python (3 files): 33,316 bytes (~8,329 tokens)
+- **Total: 221,335 bytes (~55,334 tokens, 28% of 200K window)**
+
+**Token Optimizations Applied:**
+- python/HYPERCI.md: 20K → 11.7K (41.7% reduction)
+- python/PEP8.md: 18K → 11K (39% reduction)
+- python/CODING.md → python/CODING-PYTHON.md: 17K → 10.5K (40% reduction)
+- common/GIT-WORKFLOW.md: 19.7K → 15.6K (20.8% reduction)
+- common/ files (9 files): ~1.8% average reduction
+- **Total savings: ~10K bytes (~2,500 tokens)**
+
+**Files Modified:**
+- [ci/docs/standards/STANDARDS.md](ci/docs/standards/STANDARDS.md) - CAG-only rewrite
+- [ci/docs/standards/ai/TOKEN-ENGINEERING.md](ci/docs/standards/ai/TOKEN-ENGINEERING.md) - Moved and refactored
+- [ci/docs/standards/python/CODING-PYTHON.md](ci/docs/standards/python/CODING-PYTHON.md) - Renamed from CODING.md
+- [ci/docs/standards/common/CODING.md](ci/docs/standards/common/CODING.md) - Made language-agnostic
+- [ci/modules/python/run.d/30-python-test.py](ci/modules/python/run.d/30-python-test.py) - Removed isort
+- [ci/modules/python/templates/*.toml](ci/modules/python/templates/) - Removed isort dependencies
+- [.claude/settings.json](.claude/settings.json) - Removed SessionStart hooks and model config
+- [ci/bootstrap](ci/bootstrap), [ci/run](ci/run), [ci/ai](ci/ai) - Fixed command syntax
+- [README.md](README.md) - Marked Application framework as WIP
+
+**Key Commits:**
+- `3da8cae` (ci) - CAG strategy, isort removal, token optimization (26 commits)
+- `f6cf02b` (hs-lib) - Update ci submodule (CAG strategy)
+- `77f53d9` (ci) - Fix wrapper syntax (install not --install)
+- `c0425df` (hs-lib) - Final ci submodule update
+
+**Architecture Clarification:**
+- **CAG = Claude Agnostic Guidelines:** Load ALL standards upfront, always
+- No more conditional loading based on context window size
+- Simpler, more reliable, works with ANY AI assistant
+- 200K context window sufficient for all standards (~28% usage)
+
+---
+
+## Session 2025-11-13 - GIT-WORKFLOW.md Token Optimization
+
+### Token Optimization - Complete ✅
+**Status:** Applied conservative Human-AI profile to GIT-WORKFLOW.md
+
+**Results:**
+- Original: 19,732 bytes (4,933 tokens)
+- Optimized: 15,620 bytes (3,905 tokens)
+- Reduction: 4,112 bytes (1,028 tokens, 20.8%)
+
+**Optimization Strategy:**
+- Conservative approach (target 10-15%, achieved 20.8%)
+- Condensed verbose prose slightly
+- Removed true redundancy (repeated explanations)
+- **Preserved 100%:** ALL commit types, ALL branch types, ALL examples, ALL validation rules
+
+**Key Transformations:**
+1. Branch type descriptions: Concise without losing meaning
+   - "Introduce a new feature or capability" → "New feature or capability"
+2. Commit type descriptions: Shorter but complete
+   - "Maintenance tasks (dependencies, config, infra cleanup)" → "Maintenance (dependencies, config, infra)"
+3. Guidelines: Condensed multi-line to single-line
+   - "Blank line before footer, Each trailer on own line, Use standard trailers" → "Blank line before footer, one trailer per line, standard trailers only"
+4. Examples: Preserved all, removed only verbose commentary
+5. Core reference material: 100% preserved (developers need complete reference)
+
+**Commits:**
+- `f0aa741` (ci) - docs: token-optimize GIT-WORKFLOW.md (Human-AI profile, 20.8% reduction)
+- `b52bbf1` (hs-lib) - chore: update ci submodule (GIT-WORKFLOW.md token optimization)
+
+**Files Modified:**
+- [ci/docs/standards/common/GIT-WORKFLOW.md](ci/docs/standards/common/GIT-WORKFLOW.md) - Token-optimized
+
+**Next:** Continue applying Human-AI profile to other standards files per TOKEN-ENGINEERING.md
+
+---
+
+## Session 2025-11-12 (Continued 4) - 1M Context Window Fix
+
+### Claude Code 1M Context Configuration - Complete ✅
+**Status:** Fixed model string to enable 1M context window
+
+**Problem:**
+- settings.local.json had incorrect model string: `"claude-sonnet-4-5-20250929[1m]"`
+- Claude Code requires **full model name** with [1m] suffix
+- Result: Only getting 200K context instead of 1M
+
+**Solution:**
+- Updated to correct full model name: `"anthropic.claude-sonnet-4-5-20250929-v1:0[1m]"`
+- Verified via Claude Code docs at https://code.claude.com/docs/en/model-config
+- [1m] suffix only works with full model names, not shortened aliases
+
+**Files Updated:**
+- [.claude/settings.local.json](.claude/settings.local.json) - Corrected model string
+
+**Testing:**
+- Requires Claude Code restart to take effect
+- Should enable 1M context window (950K usable with headroom)
+- Will switch to 500K+ load-all strategy (more reliable than RAG)
+
+**Rationale:**
+- 500K+ load-all strategy (~130k tokens, 13-26% usage) is more reliable than RAG
+- Loads all standards upfront, no reliance on AI to proactively read detail files
+- Eliminates hallucination risk from missing context
+
+**Next Session:**
+- Verify 1M context active
+- Load all standards files using 500K+ strategy
+- Continue with Container-Native Phase 4
+
+---
+
+## Session 2025-11-12 (Continued 3) - Standards Directory Refactoring & Clean Reset
+
+### Directory Rename: ci-local/ai/ → ci-local/code-assistant/ - Complete ✅
+**Status:** Renamed directory for consistency with corporate standards structure
+
+**Changes:**
+- Renamed `ci-local/ai/` → `ci-local/code-assistant/` throughout all files
+- Updated references in STANDARDS.md, start.md, STATE.md
+- Consistent naming: `ci/docs/standards/code-assistant/` (corporate) and `ci-local/code-assistant/` (project customizations)
+
+**Commits:**
+- `12a2c88` (ci) - refactor: rename ci-local/ai to ci-local/code-assistant for consistency
+- `85b8c8d` (hs-lib) - chore: update ci submodule (renamed ci-local/ai to ci-local/code-assistant)
+- `2e2a5f8` (hs-lib) - docs: clarify architectural insight about STANDARDS.md and ci-local/code-assistant
+
+### NO MOCKS Policy Violation - Fixed ✅
+**Status:** Implemented missing `merge_env()` function in ci_lib.py
+
+**Problem:**
+- AI installation script referenced `merge_env()` function that wasn't implemented
+- Initial (WRONG) attempt: Added TODO/stub workarounds
+- **Critical violation:** HyperSec NO MOCKS/NO STUBS POLICY
+
+**Solution:**
+- Implemented complete `merge_env()` function in ci_lib.py (lines 1705-1750)
+- Reads JSON file, creates/updates "env" section, writes back with formatting
+- Proper error handling and logging
+- No TODOs, no stubs, fully functional
+
+**Commits:**
+- `7394fee` (ci) - fix: implement merge_env function for context_tokens injection
+- `8823a7c` (hs-lib) - chore: update ci submodule (merge_env implementation)
+
+### Clean AI Deployment - Complete ✅
+**Status:** Fresh deployment with all latest templates
+
+**Deployed Files:**
+
+1. **settings.local.json** (NEW - clean):
+   - Only contains: `"model": "claude-sonnet-4-5-20250929[1m]"`
+   - Removed 84 accumulated permission entries from previous session
+   - Clean state for 1M model configuration
+
+2. **settings.json** (MERGED - updated):
+   - ✅ Added `"Bash(git -C * *)"` pattern for submodule operations
+   - ✅ Injected `CLAUDE_CODE_CONTEXT_WINDOW_TOKENS: 950000` (1M model)
+   - All existing permissions preserved
+
+3. **.claude/commands/start.md** (COPY-OVERWRITE):
+   - ✅ References `ci-local/code-assistant/*.md` (not `ci-local/ai/`)
+   - ✅ Context-adaptive loading strategy (500K+ vs 200K)
+   - ✅ Session configuration reporting
+
+4. **.claude/commands/save.md** (COPY-OVERWRITE):
+   - ✅ Deployed from latest template
+
+**Deployment Summary:**
+Created comprehensive deployment documentation in [.tmp/ai-deployment-summary.md](.tmp/ai-deployment-summary.md) covering:
+- Files deployed by operation type (COPY-OVERWRITE, MERGE, JSON MERGE)
+- Migration strategy options
+- Testing strategy
+- Behavior documentation
+
+### Key Architectural Insight (Updated)
+> **STANDARDS.md is the single source of truth for HyperSec-wide corporate standards, and `/start` is just a Claude Code convenience wrapper that automates what's documented in STANDARDS.md.**
+>
+> **IMPORTANT:** `/start` also reads `ci-local/code-assistant/*.md` for project-specific or developer-specific overrides/customizations. STANDARDS.md provides the corporate baseline, while ci-local/code-assistant/ allows projects and developers to add their own guidance without modifying the corporate standards.
+
+**Architecture:**
+```
+ci/docs/standards/
+├── STANDARDS.md (HyperSec corporate standards - single source of truth)
+├── code-assistant/ (generic AI guidance)
+├── common/ (universal standards)
+└── python/ (Python standards)
+
+ci-local/code-assistant/
+└── *.md (project/developer-specific overrides and customizations)
+     - ALWAYS loaded by /start (via Glob)
+     - Supplements corporate standards without modifying them
+     - Examples: project-specific workflows, developer preferences
+
+ci/modules/common/templates/
+├── start.md (Claude Code /start automation + session reporting)
+└── save.md (Claude Code /save automation)
+```
+
+---
+
+## Session 2025-11-12 (Continued 2) - Context-Adaptive Standards Loading
+
+### Context-Adaptive Loading Strategy - Complete ✅
+**Status:** Standards now work with ANY AI assistant (not just Claude Code) with tiered loading based on context window size
+
+**Changes:**
+
+1. **AI-Assistant-Agnostic Standards** (commit `34a38d0`):
+   - Genericized all standards files to work with any AI assistant
+   - COMMON.md: Reframed slash commands as "Claude Code Optimized" with fallbacks
+   - HYPERCI.md: Changed tool-specific language to generic (Write tool → file write capability)
+   - Removed Claude Code-specific assumptions
+
+2. **Context-Adaptive Loading Strategy** (STANDARDS.md):
+   - **500K+ context:** Load everything (~130k tokens, 13-26% usage) - Most reliable, no RAG
+   - **200K or less:** Load critical files only (~30k tokens, 15% usage) - Efficient, use RAG for details
+   - AI self-detects context window and chooses appropriate strategy
+   - Works with Claude Code, Codex, Gemini, Cursor, and other AI assistants
+
+3. **Session Configuration Reporting** (commit `a6b0408`):
+   - `/start` command now reports session configuration:
+     - Context window size (total token budget)
+     - Loading strategy used (500K+ load-all OR 200K minimal+RAG)
+     - Number of files loaded and estimated token usage
+     - Reasoning for strategy choice
+   - Example: "1M tokens → 500K+ load-all → 15 files (~130k tokens, 13%)"
+
+**Commits:**
+- `34a38d0` (ci) - refactor: make standards AI-assistant-agnostic with context-adaptive loading
+- `a6b0408` (ci) - feat: add session configuration reporting to /start command
+- `25bc97d` (hs-lib) - chore: update ci submodule (context-adaptive loading + session reporting)
+
+---
+
+## Session 2025-11-12 (Continued) - Claude Code Settings Documentation Updates
+
+### Token Verification with tokenx CLI - Complete ✅
+**Status:** Updated PROMPT-MD-TOKEN-ENGINEERING.md with tokenx CLI integration
+
+**Changes:**
+- Added tokenx CLI detection and installation instructions
+- Provided precise token counting examples for Claude Sonnet 4.5
+- Updated Step 5 (Measure Results) with tokenx usage
+- Updated Step 6 (Commit) template to use tokenx results format
+- Updated LLM instruction template to mention tokenx
+- Kept fallback to wc -c approximate method
+
+**Benefits:**
+- Precise Claude-specific token counting (not approximate)
+- Verify token reduction accurately with real model tokenizer
+- Better optimization feedback loop for token engineering
+
+**Commits:**
+- `e5df9b1` (ci) - docs: add tokenx CLI integration for precise token counting
+- `7491c03` (hs-lib) - chore: update ci submodule (tokenx CLI integration for token counting)
+
+---
+
+## Session 2025-11-11 (Continued 3) - Container-Native Phase 4 Documentation
+
+### Phase 4: Documentation & Examples - Complete ✅
+**Status:** All Phase 4 deliverables verified and complete
+
+**Verified Deliverables:**
+
+1. **Documentation** - Complete ✅
+   - [docs/KUBERNETES.md](docs/KUBERNETES.md) - Comprehensive k8s deployment guide (~745 lines)
+   - [docs/README.md](docs/README.md) - Updated with container deployment examples
+   - Includes: Health checks, services, ConfigMaps, Secrets, Prometheus, KEDA, ArgoCD, troubleshooting
+
+2. **Example Projects** - Complete ✅
+   - [examples/api-container/](examples/api-container/) - FastAPI REST API with Docker + k8s
+   - [examples/daemon-container/](examples/daemon-container/) - Background worker with health checks
+   - Both include: Dockerfile, docker-compose.yml, k8s manifests, README
+
+3. **HELM Chart Template** - Complete ✅
+   - [templates/helm/hs-lib-app/](templates/helm/hs-lib-app/) - Production-ready HELM chart
+   - Includes: deployment, service, ingress, HPA, KEDA, ServiceMonitor, PDB
+   - Multi-environment values files (dev/staging/prod)
+
+**Files Updated:**
+- [docs/README.md](docs/README.md) - Enhanced container deployment section with multi-stage Dockerfile, k8s deployment, KEDA autoscaling examples
+
+**Container-Native Patterns Implementation: COMPLETE ✅**
+
+All 4 phases delivered:
+- Phase 1: Profile system + mixins + metrics ✅ (Session 2025-11-10)
+- Phase 2: Application types updated ✅ (Session 2025-11-10)
+- Phase 3: Enhanced health checks ✅ (Session 2025-11-10)
+- Phase 4: Documentation + examples + HELM ✅ (Session 2025-11-11)
+
+**Next:** Ready for merge to main, release new version
+
+---
+
+## Session 2025-11-11 (Continued 2) - ci/ Submodule Update & Configuration Sync
+
+### HyperCI Template Updates - Complete ✅
+**Status:** Updated ci/ submodule to latest with configuration improvements
+
+**Changes:**
+- Updated ci/ submodule (commits `955bec7`, `4239b27`, `a704578`, `397702a`, `ca55434`)
+- Synced local configuration files with latest HyperCI templates
+- Enhanced gitleaks configuration with comprehensive false-positive patterns
+- Updated pip.conf with UV compatibility comment
+
+**Files Updated:**
+- [.claude/settings.json](.claude/settings.json) - Removed deprecated allowedCommands (now handled by core)
+- [.gitleaks.toml](.gitleaks.toml) - Added minVersion requirement, expanded allowlists
+- [.pip/pip.conf](.pip/pip.conf) - Added UV compatibility note
+- [pyproject.toml](pyproject.toml) - Fixed trailing newline
+
+**Gitleaks Improvements:**
+- `minVersion = "v8.25.0"` requirement for consistent behavior
+- Expanded path allowlists: binary files, lock files, vendor directories
+- Added template syntax patterns: `{{variable}}`, `${ENV_VAR}`, `$ENV_VAR`
+- Added test/dummy patterns: `test_key`, `dummy_password`, `fake_token`, `aaaaa`, `xxxxx`
+- Added localhost/example domain patterns
+
+**Commits:**
+- `79657ae` (hs-lib) - docs: fix incorrect ci/ci.yaml references - should be ci-local/ci.yaml
+
+**Next:** Container-Native Phase 4 ready when needed
+
+---
+
+## Session 2025-11-11 (Continued) - Estimate Guidance Updates
+
+### Time Estimate Policy Changes - Complete ✅
+**Status:** Updated CODE-ASSISTANT.md with aggressive AI-assisted timeframe guidance
+
+**Changes:**
+- **Policy reversal:** Estimates now ALWAYS enabled by default (previously opt-in)
+- **Rationale:** With aggressive AI timeframes, estimates are now reliable and useful for planning
+- **Format standardization:** Powers of 2 in hours (0.25h, 0.5h, 1h, 2h, 4h, 8h, 16h, 32h, 64h)
+- **Key principle:** Traditional "1 day" estimates = **1h** with AI assistance (10x productivity gain)
+- **Decimal support:** Sub-hour tasks use 0.25h (15min), 0.5h (30min)
+- **Range format:** Use 4-8h when uncertainty exists
+
+**Files Updated:**
+- [ci/modules/common/templates/CODE-ASSISTANT.md](ci/modules/common/templates/CODE-ASSISTANT.md) - Template
+- [ci-local/CODE-ASSISTANT.md](ci-local/CODE-ASSISTANT.md) - Local instance
+- [TODO.md](TODO.md) - All estimates converted to hours format with powers of 2
+
+**Commits:**
+- `5ff77e3` (ci) - docs: add policy against automatic time estimates in TODO.md tasks
+- `26f239a` (ci) - docs: add Linear.app estimate guidance (aggressive timeframes, 10x AI efficiency)
+- `bcc63d9` (ci) - docs: allow decimal estimates for sub-hour tasks (0.25=15min, 0.5=30min)
+- `bdb6a4c` (ci) - docs: update estimate guidance - aggressive AI timeframes, powers of 2 in hours
+- `eedba9a` (ci) - docs: enable estimates by default with aggressive AI timeframe rules
+- `184a063` (hs-lib) - docs: add policy against automatic time estimates in TODO.md tasks
+- `fbf9527` (hs-lib) - docs: add Linear.app estimate guidance (aggressive timeframes, 10x AI efficiency)
+- `f34436c` (hs-lib) - docs: allow decimal estimates for sub-hour tasks (0.25=15min, 0.5=30min)
+- `e31f92f` (hs-lib) - fix: update TODO.md estimates to aggressive AI-assisted timeframes (Linear.app points)
+- `dcca3f2` (hs-lib) - docs: update estimate guidance to aggressive AI timeframes (powers of 2 hours)
+- `1fb78cd` (hs-lib) - fix: convert all estimates to hours format with powers of 2 scaling
+- `cbd14e1` (hs-lib) - docs: enable estimates by default with aggressive AI timeframe rules
+
+**Estimate Examples:**
+```markdown
+- Documentation update - **1h**
+- API endpoint implementation - **2h**
+- Complete feature with tests - **4h**
+- Quick typo fix - **0.25h**
+- Complex refactor - **8-16h**
+```
+
+**Updated Estimates Summary:**
+- Container-Native Phase 4: **4-8h** (docs + examples + HELM)
+- DFE Migration (all 3 apps): **4h** total
+- Full Container-Native Implementation: **24-28h** (all 4 phases)
+- HyperCI short-term improvements: **2h + 4h + 1h**
+- HyperCI medium-term improvements: **8h + 2h + 4h**
+- HyperCI long-term improvements: **8h + 16h + 4h**
+
+---
+
+## Session 2025-11-11 - Claude Code Slash Commands & Session Management
+
+### /start Command - Standards File Discovery - Complete ✅
+**Status:** Updated `/start` command to use wildcard pattern for standards files
+
+**Changes:**
+- Removed .claude/DEREK.md (replaced by CODE-ASSISTANT-STARTUP.md)
+- Updated `/start` command to use Glob patterns for auto-discovery:
+  - Core files: `ci/docs/standards/*.md` (auto-read on session start)
+  - Detail files: `ci/docs/standards/details/*.md` and `ci/docs/standards/python/details/*.md` (RAG awareness, read on-demand)
+- Wildcard approach allows adding/removing standards files without updating slash command
+
+**Architecture:**
+- `ci/modules/common/templates/start.md` and `save.md` - Templates deployed to other projects (tracked in ci repo)
+- `.claude/commands/start.md` and `save.md` - Local instances for testing in hs-lib (gitignored)
+- Changes to slash commands must be made **concurrently** in both locations
+- Deployment: `./ci/ai install` copies templates to `.claude/commands/` in target projects
+
+**Commits:**
+- `7589a37` (hs-lib) - fix: remove DEREK.md references from STATE.md
+- `50b6fe0` (hs-lib) - docs: document /start command wildcard pattern update
+- `e8117df` (ci) - fix: update /start command template to use wildcard pattern for standards files
+- `bbd1416` (ci) - fix: move slash command templates to root of templates/ directory
+- `4fc0ec5` (ci) - fix: update slash command source paths in defaults.yaml
+- `3eb34a4` (hs-lib) - chore: update ci submodule (flat template structure for slash commands)
+- `026d4fa` (hs-lib) - docs: update slash command architecture (flat template structure)
+
+### Gitleaks Configuration Enhancement - Complete ✅
+**Status:** Enhanced gitleaks allowlist with comprehensive false-positive patterns
+
+**Improvements:**
+- Added `minVersion = "v8.25.0"` requirement
+- Expanded path allowlists: binary files, lock files, vendor directories
+- Added template syntax patterns: `{{variable}}`, `${ENV_VAR}`, `$ENV_VAR`
+- Added test/dummy patterns: `test_key`, `dummy_password`, `fake_token`, `aaaaa`, `xxxxx`
+- Added localhost/example domain patterns
+
+**Commits:**
+- `3d9f0ac` (ci) - fix: enhance gitleaks allowlist with common false positives
+- `ba8615a` (hs-lib) - chore: update ci submodule (enhanced gitleaks allowlist)
+
+### Slash Command Documentation & Infrastructure - Complete ✅
+**Status:** Added documentation and released HyperCI v1.2.9 with slash command infrastructure
+
+**Documentation Changes:**
+- Added new "Claude Code Slash Commands" section to CODE-ASSISTANT.md (both local and template)
+- Positioned prominently at top of document (right after Session Start Checklist)
+- Includes complete usage guide: what it does, when to use, why use it
+- Flagged as Claude Code only (not Web/Desktop/other AI assistants)
+- Added user-facing documentation to ci/README.md under "Using ./ci/ai" section
+- Clear proactive session management guidelines
+
+**Infrastructure Changes (HyperCI v1.2.9):**
+- Added copy_overwrite parameter to ci_lib.py merge_file() function
+- Added CODE-ASSISTANT-STARTUP.md template (preserved on updates, developer-specific)
+- Updated settings.json with Read(~/.gitconfig) permission for personalization
+- Updated start.md template with wildcard pattern for standards files
+
+**Files Updated:**
+- [ci-local/CODE-ASSISTANT.md](ci-local/CODE-ASSISTANT.md) - Local instance with slash command documentation
+- [ci/modules/common/templates/CODE-ASSISTANT.md](ci/modules/common/templates/CODE-ASSISTANT.md) - Template (deployed to projects)
+- [ci/README.md](ci/README.md) - User-facing documentation in "Using ./ci/ai" section
+- [ci/modules/common/ci_lib.py](ci/modules/common/ci_lib.py) - copy_overwrite parameter
+- [ci/modules/common/ai.d/15-merge-files.py](ci/modules/common/ai.d/15-merge-files.py) - Support copy_overwrite
+- [ci/modules/common/templates/CODE-ASSISTANT-STARTUP.md](ci/modules/common/templates/CODE-ASSISTANT-STARTUP.md) - New template
+- [ci/modules/common/templates/settings.json](ci/modules/common/templates/settings.json) - Git config read permission
+
+**HyperCI Releases:**
+- v1.2.9 (2025-11-10) - fix: add copy_overwrite support and CODE-ASSISTANT-STARTUP.md template
+  - Semantic-release CLI automatically created release from `fix:` commit
+  - Updated VERSION file and CHANGELOG.md
+  - Released via GitHub Actions
+
+**Commits:**
+- `8ab1be8` (ci) - docs: add prominent slash command documentation to CODE-ASSISTANT.md and README.md
+- `d620b82` (hs-lib) - docs: add prominent slash command documentation for Claude Code users
+- `3846353` (ci) - fix: add copy_overwrite support and CODE-ASSISTANT-STARTUP.md template for slash commands
+- `be7cde9` (ci) - chore(release): 1.2.9 [semantic-release]
+- `36a4176` (hs-lib) - chore: update ci submodule (slash command infrastructure and documentation)
+- `e992b32` (hs-lib) - chore: update ci submodule to v1.2.9 (copy_overwrite and slash command infrastructure)
+- `197b726` (hs-lib) - docs: update STATE.md with slash command documentation commit hashes
+
+### Claude Code Integration - Complete ✅
+**Status:** `/start` and `/save` slash commands implemented with HyperCI integration
+
+**Implemented:**
+- ✅ `/start` command - Session initialization with developer name personalization
+- ✅ `/save` command - Session progress checkpoint (renamed from `/stop`)
+- ✅ `copy_overwrite` parameter in ci_lib.py merge_file() function
+- ✅ Developer-specific CODE-ASSISTANT-STARTUP.md (preserved on updates)
+- ✅ Git config read permissions (~/.gitconfig) for personalization
+- ✅ HyperCI auto-deployment via `./ci/ai install`
+
+**Files Created/Updated:**
+- [.claude/commands/start.md](.claude/commands/start.md) - Session initialization checklist
+- [.claude/commands/save.md](.claude/commands/save.md) - Progress checkpoint with STATE.md rationalization
+- [ci/modules/common/templates/.claude/commands/start.md](ci/modules/common/templates/.claude/commands/start.md) - Template
+- [ci/modules/common/templates/.claude/commands/save.md](ci/modules/common/templates/.claude/commands/save.md) - Template
+- [ci/modules/common/templates/CODE-ASSISTANT-STARTUP.md](ci/modules/common/templates/CODE-ASSISTANT-STARTUP.md) - Template
+- [ci/modules/common/ci_lib.py](ci/modules/common/ci_lib.py) - Added copy_overwrite parameter
+- [ci/modules/common/ai.d/15-merge-files.py](ci/modules/common/ai.d/15-merge-files.py) - Support copy_overwrite
+- [ci/modules/common/defaults.yaml](ci/modules/common/defaults.yaml) - Slash command deployment config
+- [ci/modules/common/templates/CODE-ASSISTANT.md](ci/modules/common/templates/CODE-ASSISTANT.md) - Updated checklist
+- [ci/modules/common/templates/settings.json](ci/modules/common/templates/settings.json) - Added Read(~/.gitconfig)
+- [.claude/settings.json](.claude/settings.json) - Added Read(~/.gitconfig)
+- [CLAUDE.md](CLAUDE.md) - Session management section
+
+**Key Decisions:**
+1. **Rename `/stop` → `/save`** - Better semantic (checkpoint vs end session)
+2. **copy_overwrite flag** - Generic solution (not .claude/commands special case)
+3. **if_missing for startup** - Preserve developer customizations
+4. **Git config integration** - Personalize greetings with developer's first name
+
+**Behavior:**
+- `/start` - Reads docs, gets git name, personalizes greeting
+- `/save` - Checkpoints progress, rationalizes STATE.md, cleans TODO.md, fixes markdown linting
+- `./ci/ai install` - Deploys/updates slash commands (always overwrites templates)
+- CODE-ASSISTANT-STARTUP.md - Created once, never overwritten (developer's file)
+
+---
+
+## Session 2025-11-10 - Container-Native Patterns Implementation
+
+### Phase 1: Foundation - Complete ✅
+**Status:** Profile system, mixins, and Prometheus→OTEL conversion implemented
+
+**Commit:** `fb4aa3c` - fix: implement Phase 1 container-native patterns foundation
+
+**Implemented:**
+- ✅ Profile system (dev, docker, prod)
+- ✅ All 5 base mixins (Profile, Signals, CLI, Health, Metrics)
+- ✅ Prometheus→OTEL metric name conversion (30+ mappings)
+- ✅ 32/32 tests passing (13 profile + 19 mixin tests)
+
+**Files Created:**
+- [src/hs-lib/application/profiles.py](src/hs-lib/application/profiles.py) - Profile definitions and loading
+- [src/hs-lib/application/mixins/](src/hs-lib/application/mixins/) - 5 mixins (profile, signals, cli, health, metrics)
+- [tests/unit/test_profiles.py](tests/unit/test_profiles.py) - 13 profile tests
+- [tests/unit/test_mixins.py](tests/unit/test_mixins.py) - 19 mixin tests
+
+**Type Hint Modernization - Complete ✅**
+**Commit:** `23defec` - fix: modernize type hints to Python 3.10+ syntax
+
+- Dict → dict, Optional[X] → X | None (PEP 585, PEP 604)
+- Net reduction: 152 lines (475 deletions, 323 insertions)
+- No functional changes, purely type annotation cleanup
+
+### Phase 2: Application Types - Complete ✅
+**Status:** All 5 application types updated to use mixins
+
+**Commit:** `74e59cc` - fix: comprehensive documentation restructure and application framework updates
+
+**Implemented:**
+- ✅ APIApplication - Mixins + health endpoints + metrics middleware + serve CLI
+- ✅ DaemonApplication - Mixins + health server + task metrics + start CLI
+- ✅ MCPApplication - Mixins + MCP metrics + serve CLI
+- ✅ OneshotApplication - Mixins + job metrics + run CLI
+- ✅ CLIApplication - Mixins + profile-based logging
+
+**Features Added:**
+- Health endpoints (/health for liveness, /ready for readiness)
+- Auto-instrumented metrics (http_requests_total, task_execution_duration_seconds, etc.)
+- Typer CLI commands (serve, start, run, version, config, validate)
+- Profile-based feature enablement (dev/docker/prod)
+- Graceful shutdown (SIGTERM/SIGINT handling)
+
+### Phase 3: Enhanced Health Checks - Complete ✅
+**Status:** HealthCheckMixin fully implemented with standalone HTTP server
+
+**Commit:** `f0706c6` - fix: implement Phase 3 - enhanced HealthCheckMixin
+
+**Implemented:**
+- ✅ Standalone HTTP server for non-HTTP apps (Daemon, MCP, Oneshot)
+- ✅ /health endpoint (liveness probe - always 200 if running)
+- ✅ /ready endpoint (readiness probe - runs dependency checks)
+- ✅ @app.health_check decorator for custom checks
+- ✅ Automatic shutdown integration (via SignalHandlerMixin)
+- ✅ 9 comprehensive tests (profiles, endpoints, shutdown)
+
+**How it works:**
+- HTTP apps (API): Health endpoints added to FastAPI directly
+- Non-HTTP apps: Standalone HTTP server in daemon thread (port 8080)
+- Dependency checks: Registered via `@app.health_check` decorator
+- Kubernetes ready: /health for liveness, /ready for readiness
+
+### Phase 4: Documentation & Examples - Complete ✅
+**Status:** All documentation, examples, and HELM charts implemented
+
+**Commits:**
+- `80da16c` - docs: add Phase 4 container deployment and profiles documentation
+- `2147575` - docs: add Phase 4 Kubernetes, examples, and HELM charts
+
+**Completed:**
+- ✅ PROFILES.md - Comprehensive profile reference (dev/docker/prod)
+- ✅ CONTAINER_DEPLOYMENT.md - Docker deployment guide (~400 lines)
+- ✅ KUBERNETES.md - Complete k8s guide (~745 lines)
+- ✅ Updated APP-API.md and APP-DAEMON.md with health check decorator
+- ✅ examples/api-container/ - Complete FastAPI REST API example
+- ✅ examples/daemon-container/ - Complete background worker example
+- ✅ templates/helm/hs-lib-app/ - Production-ready HELM chart
+
+**Features Delivered:**
+- Kubernetes deployment patterns (k8s manifests, health probes, services)
+- KEDA autoscaling with Prometheus triggers
+- Prometheus ServiceMonitor integration
+- ArgoCD GitOps deployment configuration
+- Multi-environment HELM values (dev/staging/prod)
+- Pod Disruption Budgets and security best practices
+- Complete working examples with Docker Compose
+- Multi-stage Dockerfiles with debug utilities (Derek's policy)
+
+**Container-Native Patterns Implementation: COMPLETE ✅**
+
+All 4 phases delivered:
+- Phase 1: Profile system + mixins + metrics ✅
+- Phase 2: Application types updated ✅
+- Phase 3: Enhanced health checks ✅
+- Phase 4: Documentation + examples + HELM ✅
+
+**Next Steps:** Merge to main, release new version
+
+---
+
+## Session 2025-11-10 (Earlier) - Standards Documentation Restructure
+
+### Coding Standards Documentation Restructure - Complete ✅
+**Status:** Comprehensive restructure completed with token efficiency and human readability
+
+**Commit message (when ready):** `docs: reduce coding standards to LLM-friendly token-efficient versions`
+
+**Goal:** Reduce Derek's for-human coding and automation standards documents to LLM-friendly reduced token versions while keeping them human-readable.
+
+**Strategy:**
+- Core files: Concise summaries with references (~300-600 lines each, auto-loaded by Claude)
+- Details files: Comprehensive guides (~400-800 lines each, human reference)
+- Token reduction target: 35-50k → 25k tokens (30-50% savings)
+
+**Completed:**
+
+1. **Created standards directory structure** (details/, python/details/, ai-platforms/)
+
+2. **Extracted detailed guides to separate files:**
+   - details/DESIGN-PRINCIPLES.md (~420 lines) - SOLID, DRY, KISS, YAGNI
+   - details/ERROR-HANDLING.md (~580 lines) - Security-first error handling
+   - details/AI-GUIDELINES.md (~850 lines) - AI code assistant best practices with cognitive load research
+   - details/NO-MOCKS-POLICY.md (~650 lines) - Production code policy
+   - details/TEST-FIRST-DEVELOPMENT.md (~450 lines) - Test-first strategy for existing code
+   - python/details/PEP8-GUIDE.md (~600 lines) - Comprehensive PEP 8 guide
+   - python/details/HYPERCI-INTEGRATION.md (~800 lines) - Complete HyperCI tooling guide
+
+3. **Condensed core standards files:**
+   - CODING-STANDARDS.md: 873 → 561 lines (35% reduction)
+   - CODING-STANDARDS-PYTHON.md: 1,151 → 683 lines (41% reduction)
+   - GIT-WORKFLOW.md: Added ~500-line "Human-Style Git Commits" section
+
+4. **Created new core standards:**
+   - QUICK-REFERENCE.md (~300 lines) - One-page cheat sheet
+   - CONTAINERIZATION.md (~600 lines) - Kubernetes + HELM + ArgoCD deployment patterns
+   - README.md - Human navigation index with topic/role-based organization
+
+5. **Enhanced AI-GUIDELINES.md with cognitive load research:**
+   - Added "Core Principle: Human-First Design" section (cognitive load must be same or less than human-only projects)
+   - Included Cognitive Load Theory (Sweller, 1988) - working memory limits
+   - Added Derek's bias note: Use "research indicates" not "research shows" for psychology research
+   - Comprehensive accessible references (no paywalls):
+     - Academic papers: ResearchGate links (Scalabrino et al., 2018)
+     - Video: John Sweller keynote (43min, researchED Melbourne 2017)
+     - Articles: Florian Krämer (2024), Rustam Zakirullin GitHub doc (2025), DabApps (2024)
+   - Explained intrinsic/extraneous/germane cognitive load
+   - Linked AI verbosity to extraneous cognitive load
+
+6. **Added new topics to standards:**
+   - Test-first development for existing code (TEST-FIRST-DEVELOPMENT.md)
+   - AI rabbit-holing prevention strategies (AI-GUIDELINES.md)
+   - Human-style git commits (GIT-WORKFLOW.md)
+   - Containerization with debug utilities policy (CONTAINERIZATION.md)
+
+**Token Reduction Results:**
+- Core auto-loaded files: ~2,900 lines (added CONTAINERIZATION.md, GIT-WORKFLOW expansion)
+- Original core files: ~3,060 lines (before restructure)
+- Detail files extracted: ~4,350 lines (now on-demand only)
+- **Net token savings: ~30% (detail files no longer auto-loaded)**
+- Estimated session token usage: ~28k for core standards (down from ~40k)
+
+**Key Design Decisions:**
+
+1. **Human-First Design Principle** (CRITICAL):
+   - AI-assisted projects must be indistinguishable from human-only projects
+   - Cognitive load must be the same or less than human-written code
+   - No AI conventions, patterns, or verbosity that require "translation"
+   - Git commits, code style, and documentation follow human patterns
+
+2. **Containerization Standards:**
+   - k8s + HELM + ArgoCD deployment pattern
+   - Derek's debug utilities policy: Include small utilities (curl, nc, ping) in containers
+     - 2-5% image size increase is acceptable for debuggability
+     - Removing tiny debug utilities for disk savings is not efficient cost optimization
+   - Multi-stage Dockerfiles (separate build/runtime)
+   - Health check endpoints required: /health/live, /health/ready, /health/startup
+   - Non-root user always
+
+3. **Cognitive Load Research Integration:**
+   - Changed "research shows" → "research indicates" (Derek's psychology bias)
+   - All references accessible without paywalls
+   - Video content included for different learning styles
+   - Practical implications explained (intrinsic/extraneous/germane load)
+
+4. **Three Core Principles Integration:**
+   - Added core principles section to all major documentation
+   - **Principle 1:** Reduce cognitive load (for developers AND AI workflows)
+   - **Principle 2:** Reduce context switching overhead (consistent patterns, standardized infrastructure)
+   - **Principle 3:** Automated standards enforcement (make conforming light work)
+   - These principles now appear in: README.md, CODING-STANDARDS.md, HYPERCI-INTEGRATION.md
+   - Context switching guidance added to AI-GUIDELINES.md (23-45min recovery time, $50k/year cost)
+   - **Test-enforceable standards design principle** added to AI-GUIDELINES.md:
+     - Makes AI assistants more reliable and efficient
+     - Automated testing catches AI errors before production
+     - Clear success criteria for AI (formatting, types, security, coverage)
+     - Enables faster iteration with immediate feedback
+
+5. **HyperCI Principles Review:**
+   - Reviewed bootstrap, run, and ai commands against core principles
+   - Overall score: 9/10 - excellent implementation
+   - Recommendations documented in `.tmp/hyperci-principles-review.md`
+   - Short-term: Add `./ci/ai refresh` command, improve error consistency
+   - Medium-term: Complete single .venv migration, add `./ci/run fix` command
+   - Long-term: Unified error reporter, AI-assisted auto-fix
+
+**Files Modified:**
+- ci/docs/standards/CODING-STANDARDS.md (condensed + core principles)
+- ci/docs/standards/CODING-STANDARDS-PYTHON.md (condensed)
+- ci/docs/standards/GIT-WORKFLOW.md (added human-style commits section)
+- ci/docs/standards/README.md (created index + core principles)
+- ci/docs/standards/QUICK-REFERENCE.md (created)
+- ci/docs/standards/CONTAINERIZATION.md (created)
+- ci/docs/standards/details/AI-GUIDELINES.md (cognitive load + context switching + core principles)
+- ci/docs/standards/details/TEST-FIRST-DEVELOPMENT.md (created)
+- ci/docs/standards/python/details/HYPERCI-INTEGRATION.md (added core principles)
+
+**Files Created:**
+- .tmp/hyperci-principles-review.md - HyperCI analysis against core principles
+
+**HyperCI Improvements Added to TODO.md:**
+- Short-term: `./ci/ai refresh` command, error consistency, two-venv docs
+- Medium-term: Single .venv migration, `./ci/run fix` command, enhanced pre-commit hooks
+- Long-term: Unified error reporter, AI-assisted auto-fix, smart context switching detection
+- All improvements aligned with three core principles
+
+**Ready for commit:** All requested work complete, awaiting Derek's approval
+
+## Session 2025-11-07 Continued (Part 5)
+
+### Container-Native Application Patterns - Design Complete ✅
+**Status:** Design approved, implementation plan in TODO.md, ready to start Phase 1
+
+**Context:**
+- Analyzed 3 DFE projects (dfe-ui-backend, dfe-hunt-runner, dfe-cli-core) for containerization patterns
+- Identified critical issues: Hunt Runner orphaning bug, inconsistent health checks, no metrics
+- Design documents: `~/hs-lib/containerization_analysis.md`, `~/hs-lib/ANALYSIS_SUMMARY.md`
+
+**Key Design Decisions:**
+1. **Three Profiles:** dev (local), docker (CI/CD), prod (k8s+HELM+ArgoCD+KEDA)
+   - No kubernetes profile (prod = k8s deployment)
+   - Profile-based feature enablement (health checks, metrics, logging format)
+2. **Mixin-Based Composition:**
+   - ProfileMixin, SignalHandlerMixin, CLIExecutableMixin, HealthCheckMixin, MetricsMixin
+   - Reusable across all application types
+   - Single responsibility, test independently
+3. **Metrics Strategy:** Prometheus-first with auto-OTEL conversion
+   - Default: Prometheus naming (`http_requests_total`, `task_execution_duration_seconds`)
+   - Auto-convert to OTEL semantic conventions when `METRICS_BACKEND=opentelemetry`
+   - Zero code changes to switch backends, KEDA-compatible
+4. **CLI-First Pattern:** All apps executed as CLI commands in containers
+   - Every app type gets Typer CLI (serve, start, run, health-check, version, config)
+   - Container CMD: `python -m myapp serve --profile prod`
+5. **Opinionated Defaults:** Production-ready out of the box
+   - `Application.api(profile="prod")` → health checks, metrics, graceful shutdown
+   - `Application.daemon(profile="prod")` → health HTTP server, task metrics, fixes orphaning bug
+
+**Object Inheritance Hierarchy:**
+```
+APIApplication(CLIExecutableMixin, SignalHandlerMixin, ProfileMixin, HealthCheckMixin, MetricsMixin)
+DaemonApplication(CLIExecutableMixin, SignalHandlerMixin, ProfileMixin, MetricsMixin)
+MCPApplication(CLIExecutableMixin, SignalHandlerMixin, ProfileMixin, MetricsMixin)
+OneshotApplication(CLIExecutableMixin, SignalHandlerMixin, ProfileMixin)
+CLIApplication(SignalHandlerMixin, ProfileMixin)
+```
+
+**Migration Assessment (DFE Apps):**
+- **dfe-cli-core** (CLI): 3-4 hours - Click→Typer migration, type hints, config
+- **dfe-ui-backend** (API): 2-3 hours - Replace custom setup with hs-lib framework
+- **dfe-hunt-runner** (Daemon): 4-6 hours - **Fixes critical orphaning bug**, subprocess tracking
+- **Total effort:** 10-13 hours (1-2 days)
+
+**Implementation Plan (4 Phases, ~3 weeks):**
+- **Phase 1 (Week 1):** Profile system, base mixins, metrics integration with Prometheus→OTEL conversion
+- **Phase 2 (Week 2):** Update all 5 application types (API, Daemon, MCP, Oneshot, CLI)
+- **Phase 3 (Week 3):** HealthCheckMixin with dependency checks, k8s probe timings
+- **Phase 4 (Week 4):** Documentation, examples, HELM chart templates
+
+**Next Actions:**
+1. Review TODO.md implementation plan
+2. Create feature branch: `feat/container-native-patterns`
+3. Start Phase 1: Profile system + base mixins
+4. Iterate with tests after each phase
+
+## Session 2025-11-07 Continued (Part 4)
+
+### Gitleaks Secret Scanning (HyperCI) - Complete ✅
+- Added Gitleaks integration to HyperCI pre-commit hooks
+  - Scans staged files for secrets (API keys, passwords, tokens) before commit
+  - Blocks commits if secrets detected
+  - Gracefully skips if Gitleaks not installed (no errors)
+  - ENV: `CI_SKIP_SECRETS_SCAN=1` to disable scanning
+- **Implementation:**
+  - Pre-commit hook: Section 3 (secrets scanning)
+  - Bootstrap (90-git-hooks.py): Checks Gitleaks, suggests installation, installs .gitleaks.toml
+  - Template: `.gitleaks.toml` with HyperSec/JFrog rules, test allowlists
+- **Behavior:**
+  - Not installed: Warning shown on each commit (install instructions provided)
+  - Installed: Scans every commit
+  - Secrets found: Blocks commit with clear error + instructions
+  - Bypass: `git commit --no-verify` (not recommended)
+- **Design:**
+  - No .d scripts (inline bash in pre-commit hook)
+  - Default config from hyperci (ci/modules/common/templates/.gitleaks.toml)
+  - Project overrides in project root (.gitleaks.toml)
+  - Future projects get Gitleaks automatically via `./ci/bootstrap --install`
+
+### Metrics Backend Abstraction - Complete ✅
+- Added backend-agnostic metrics API
+  - Unified interface for Prometheus and OpenTelemetry backends
+  - Config-based backend switching: `metrics.backend: prometheus` or `opentelemetry`
+  - Zero breaking changes (Prometheus remains default)
+  - Automatic fallback to Prometheus if backend unavailable
+- **Architecture:**
+  - `MetricsManager` - Unified API for all backends
+  - `MetricsBackend` - Abstract base class
+  - `PrometheusBackend` - Wraps existing PrometheusMetrics
+  - `OpenTelemetryBackend` - New OTel implementation
+- **OpenTelemetry support:**
+  - OTLP mode: Push metrics to collector (default)
+  - Prometheus mode: Expose metrics for scraping
+  - Optional dependency: `pip install hs-lib[opentelemetry]`
+  - Dependencies: opentelemetry-api, opentelemetry-sdk, opentelemetry-exporter-otlp, opentelemetry-exporter-prometheus
+- **Lifecycle management:**
+  - Prometheus: Background thread for process/container metrics collection
+  - OpenTelemetry: Periodic exporter pushes metrics automatically
+  - Both handle start/stop/update lifecycle
+- **Testing:**
+  - 18 comprehensive tests (17 passing, 1 skipped without OTel)
+  - Tests cover: backend switching, fallback behavior, unified API, lifecycle
+- **Usage:**
+  ```python
+  from hs_lib.metrics import create_metrics
+
+  # Default (Prometheus)
+  metrics = create_metrics("myapp")
+
+  # OpenTelemetry
+  metrics = create_metrics("myapp", backend="opentelemetry")
+
+  # Same API regardless of backend
+  metrics.counter("requests", "Total requests").inc()
+  metrics.gauge("queue_size", "Queue depth").set(42)
+  metrics.histogram("latency", "Latency").observe(0.123)
+  ```
+
+## Session 2025-11-07 Continued (Part 3)
+
+### Two-Tier Sensitive Data Anonymization - Complete ✅
+- Integrated Presidio with logger filters (two-tier approach)
+  - **Tier 1 (default):** Regex-based `SensitiveDataFilter` (fast, zero deps)
+  - **Tier 2 (opt-in):** `PresidioSensitiveDataFilter` (ML-based, better accuracy)
+  - Configuration: `logging.masking_level: "simple"` (default) or `"advanced"`
+  - Automatic fallback: If Presidio not installed, falls back to regex with warning
+- Custom recognizers for cybersecurity patterns (50+ patterns)
+  - Research from detect-secrets (Yelp), secrets-patterns-db (mazen160), secret-regex-list (h33tlit)
+  - Patterns: AWS (AKIA...), Stripe (sk_live_...), GitHub (ghp_..., github_pat_...), OpenAI (sk-..., sk-proj-...),
+    Slack (xoxp-...), JWT, SendGrid, Mailchimp, Twilio, Bearer tokens, database URLs, private keys
+  - 3 custom recognizers: PasswordRecognizer, ApiKeyRecognizer, SecretKeyRecognizer
+- Comprehensive tests with real-world edge cases
+  - 42 anonymizer tests: Config files (.env, YAML, JSON), DFE data exports, streaming, false positives
+  - Test data from DLPTest.com, Nightfall datasets (realistic SSNs, credit cards, complex patterns)
+  - All 42 tests passing (100%)
+- Updated dependencies
+  - Added `presidio` extra: `pip install hs-lib[presidio]`
+  - Standardized on psycopg3: `psycopg[binary]>=3.1.0` (note: hs-lib doesn't use it directly, just lists for users)
+- Architecture clarification
+  - **Logger filters:** Runtime log masking (for dfe-cli-core, dfe-ui-backend)
+  - **Anonymizer module:** Structured data, config files, streaming (separate concern)
+  - **Gitleaks:** Pre-commit Git scanning (separate tool, for hyperci not hs-lib)
+
+### Test Status (Updated)
+- Hyperlib unit: 165/165 (100%)
+  - Anonymizer: 42/42 (config files, streaming, edge cases)
+  - Logger filters: 22/22 (regex + Presidio integration)
+  - Database: 11/11 (ClickHouse + regression)
+  - Others: 90/90 (config, runtime, logger, etc.)
+
+## Session 2025-11-07 Continued (Part 2)
+
+### ClickHouse Database Support - Complete ✅
+- Added ClickHouse to `build_database_url()` in hs-lib.database
+  - Default port: 9000 (native protocol)
+  - Scheme: `clickhouse://`
+  - Follows same pattern as PostgreSQL, MySQL, Redis
+- Comprehensive tests: 11 tests (7 ClickHouse + 4 regression)
+- All tests passing, backward compatible
+
+### Sensitive Data Masking - Tier 1 Complete ✅
+- Implemented automatic sensitive data filter for logs
+  - 30+ sensitive field patterns (passwords, tokens, API keys, secrets)
+  - Multiple format support: JSON, form data, database URLs, key=value
+  - Bearer token detection, database URL password masking
+  - Custom field support (class-level and instance-level)
+- Integrated with hs-lib logger (automatic, zero-config)
+  - Default: ENABLED (masks by default)
+  - Configurable: `HYPERLIB_LOGGING__MASK_SENSITIVE_DATA=false`
+  - Performance: ~5-10μs per log message (negligible overhead)
+- Comprehensive tests: 22/22 passing
+- Zero external dependencies (stdlib `re` only)
+
+### Opinionated Anonymizer with Presidio - Complete ✅
+- Implemented comprehensive anonymizer package (`hs-lib.anonymizer`)
+  - **Presets:** minimal (secrets), standard (default), compliance (HIPAA/GDPR/PCI-DSS)
+  - **Strategies:** REPLACE, REDACT, MASK, HASH, ENCRYPT
+  - **Presidio integration:** ML-based PII detection (50+ entity types)
+  - **Graceful fallback:** Helpful errors if Presidio not installed
+- **StreamingAnonymizer** for efficient large-data processing:
+  - LRU caching for consistent anonymization
+  - Optimized for: ClickHouse queries, Polars DataFrames, Kafka streams, large files
+  - DataFrame support: Polars (lazy + eager), Pandas
+  - Memory-efficient iterators (millions of rows, GB+ files)
+- **Convenience functions:**
+  - `anonymize_text()`, `anonymize_dict()`, `scan_for_pii()`
+  - `anonymize_config_file()`, `scan_file_for_secrets()` (pre-commit hooks)
+- **Installation:** `pip install hs-lib[presidio]` (optional dependency)
+- **Use cases:**
+  - Large database result sets (millions of rows)
+  - Data processing (Polars lazy evaluation)
+  - Message queues (Kafka, RabbitMQ)
+  - Large files (GB+ logs, JSONL)
+  - Config file PII detection
+
+### HyperCI Secret Scanning Strategy - Design Complete ✅
+- **Researched & selected tool: Gitleaks** (best for CI/CD pre-commit in 2025)
+  - Fast (Golang), simple config, low false positives
+  - Beats TruffleHog (too slow), detect-secrets (complex), Presidio (wrong domain)
+  - Industry standard for pre-commit secret scanning
+- **Multi-layer defense strategy:**
+  1. Pre-commit hook (local, immediate feedback)
+  2. Pre-receive hook (server, cannot bypass)
+  3. CI/CD pipeline (PR checks, auditable)
+  4. Periodic full scans (historical leaks)
+- **Clear separation:**
+  - **Gitleaks:** Pre-commit secret scanning (hyperci)
+  - **Presidio:** Runtime PII anonymization (hs-lib)
+  - Different tools, different domains
+- **Design document:** `.tmp/hyperci-secret-scanning-design.md`
+  - Complete implementation guide
+  - Code examples, configuration, testing
+  - Estimated implementation: 3-4 hours
+
+### Next Phase (Future Sessions)
+- Integrate Presidio with logger filters (two-tier approach)
+  - Tier 1 (default): Regex-based (fast, zero deps) ✅ Already done
+  - Tier 2 (opt-in): Presidio (`hs-lib[presidio]`, better accuracy)
+  - Graceful fallback if Presidio not installed
+- Add comprehensive tests for anonymizer package
+- Optional: Implement Gitleaks integration in hyperci
+
+### Python Standards Documentation - Complete (Earlier Session)
+- Added comprehensive "No Mocks or Mock Code Policy" to PYTHON-STANDARDS.md
+  - Policy: Production code must be complete, no placeholders/TODOs
+  - Examples: Bad (mock) vs Good (real) implementations
+  - AI assistant warning signs and enforcement checklist
+  - Migration path for existing mock code
+- Added "Hyperlib Infrastructure Standards" to PYTHON-STANDARDS.md
+  - Concise "What to Use When" reference table
+  - Module standards for logging, config, runtime, database, metrics, CLI
+  - Quick start examples (Application framework vs individual components)
+  - Replaced verbose documentation with "use this for that" approach
+- Separated hyperci-specific guidance from general project standards
+  - Moved ci_lib logging instructions to STATE.md (hyperci development only)
+  - PYTHON-STANDARDS.md now covers all projects using hs-lib
+  - Clear distinction: ci_lib (internal) vs hs-lib (standard)
+
+## Session 2025-11-03 Completed
+
+### VERSION Sync & Environment Variable Standardization - Complete
+- Fixed VERSION file sync (plain `2.6.2` format, atomic with git tag)
+- Standardized ALL env vars to CI_ prefix (8 orphans removed)
+- Removed 647 lines of complexity (version sync + redundant publish)
+- Added nuitka-only release mode (--nuitka-only flag)
+- Released v2.6.1 and v2.6.2 successfully
+
+### Code & Documentation Cleanup - Complete
+- Separated build/publish responsibilities (removed 99 duplicate lines)
+- Updated all documentation to match code
+- Fixed README.md API examples
+- Moved write-version.py to CI infrastructure
+- Removed .python-version (uv uses pyproject.toml)
+- Cleaned up 3 obsolete file references
+
+## Session 2025-10-31 Completed
+
+### ONE .venv Migration - Complete
+- Unified .venv at project root (runtime + CI tools)
+- Published v2.4.4 to JFrog (standard + Nuitka x64 + ARM64)
+
+### Nuitka Builds - Complete
+- Package mode: .whl with .so files (NO .py source)
+- App mode: Binary + tarball distribution
+- Multi-arch: x64 + ARM64
+
+### uv-Managed Python - Complete
+- No system Python dependency
+- uv downloads Python automatically
+- Works on any OS
+
+### Test Status
+- HyperCI unit: 56/56 (100%)
+- HyperCI integration: 64/64 (100%), 4 skipped
+- Hyperlib unit: 143/143 (100%)
+  - Database tests: 11/11 (ClickHouse + regression)
+  - Logger filter tests: 22/22 (sensitive data masking)
+
+## Quick Start
+
+```bash
+# Install uv (one-time)
+curl -LsSf https://astral.sh/uv/install.sh | sh
+
+# Setup
+./ci/bootstrap --install
+
+# Test
+./ci/run check
+
+# Build
+./ci/run build
+
+# Nuitka
+./ci/run build --nuitka
+```
+
+## Strategic Goal: Replace ci_lib with Hyperlib
+
+**Long-term architecture goal** (when hs-lib is stable):
+
+Replace ci_lib.py functions with hs-lib equivalents to reduce duplication:
+- Configuration: ci_lib.get_config_value() → hs-lib.config.get_config()
+- Logging: ci_lib logger → hs-lib.logger
+- Utilities: Port shared functions to hs-lib
+
+**Current Blocker:**
+- Circular dependency risk (hs-lib needs hyperci for CI, hyperci needs hs-lib for utils)
+- hs-lib must be stable first
+
+**Strategy:**
+1. Stabilize hs-lib (production-ready, well-tested)
+2. Port ci_lib functions to hs-lib gradually
+3. Update hyperci to import from hs_lib
+4. Remove duplicate code from ci_lib.py
+5. ci_lib becomes thin wrapper around hs-lib
+
+**When Ready:**
+- hs-lib config.py has full 7-layer cascade (DONE - Session 2025-11-04)
+- hs-lib.config.get_config() supports additional files (DONE - Session 2025-11-04)
+- hs-lib logger.py is production-ready (DONE)
+- hyperci pip installs hs-lib from JFrog (published package)
+- hyperci imports from hs_lib: `from hs_lib.config import get_config`
+- ci_lib becomes thin wrapper (80% reduction possible)
+
+## HyperCI Development Guidelines
+
+### Logging in CI Scripts (hyperci development only)
+
+**When developing CI scripts for hyperci, use ci_lib logger:**
+```python
+from ci_lib import logger
+
+logger.info("Starting build...")
+logger.warning("Tests skipped")
+logger.error("Build failed")
+```
+
+**Features:**
+- Consistent formatting across all CI scripts
+- Color output for terminal readability
+- Appropriate severity levels (info, warning, error)
+
+**Note:** This is ONLY for hyperci CI script development. Normal projects should use hs-lib.logger instead.
+
+## Next Tasks
+- Clean up ci_lib.py naming (get_ prefix inconsistency)
+- Test coverage for configuration cascade
+- Documentation alignment
+
+
+---
+
+<!-- HYPERCI_STATE_MD: HYPERCI_STATE_MD: ci/modules/common/templates/STATE.md -->
+# HyperCI - Common CI/CD Documentation
+
+**Auto-appended to project STATE.md during AI setup**
+
+## Critical Policies for AI Assistants
+
+**ALWAYS READ ON SESSION START:**
+1. This STATE.md file (you're reading it now)
+2. `TODO.md` (current tasks and priorities)
+3. `ci-local/CODE-ASSISTANT.md` - AI assistant guidance (REQUIRED)
+4. **ALL files in `ci/docs/standards/`** (critical standards and policies)
+   - `GIT-WORKFLOW.md` - Git conventions (REQUIRED)
+   - `CHARS-POLICY.md` - Character restrictions
+   - Any other standards files present
+
+**Do not skip reading the standards files. They contain critical project-specific requirements.**
+
+### 1. Commit Message Type Selection (UNDERSTATE, NOT OVERSTATE)
+
+**AI assistants frequently overstate importance. Always err on understatement.**
+
+**Default to `fix:` when uncertain:**
+- ✅ `fix:` is almost always correct for bug fixes, improvements, refactors
+- ❌ Don't use `feat:` unless it's truly a **NEW VERY SIGNIFICANT and BROAD** feature
+- ❌ Don't use `BREAKING CHANGE:` unless it breaks backward compatibility
+
+**Valid commit types:**
+- `feat:` - **NEW VERY SIGNIFICANT and BROAD user-facing feature** (minor version bump) - RARELY USE
+- `fix:` - **Bug fix, improvement, refactor, cleanup** (patch bump) - DEFAULT CHOICE
+- `perf:` - Performance optimization only (patch bump)
+- `chore:` - Maintenance, deps, config (no bump)
+- `docs:` - Documentation only (no bump)
+- `test:` - Tests only (no bump)
+- `ci:` - CI configuration (no bump)
+
+**Format:** `<type>: <description>` or `<type>(<scope>): <description>`
+
+**Examples of correct usage:**
+```
+fix: update CI structure documentation          # NOT feat: (just docs)
+fix: add commit message validation              # NOT feat: (internal tool)
+fix: improve test coverage                      # NOT feat: (tests)
+chore: update ci submodule                      # NOT feat: or fix:
+feat: add OAuth authentication for users        # OK - NEW user feature
+```
+
+**Why this matters:**
+- Semantic versioning depends on correct types
+- Over-using `feat:` causes unnecessary minor version bumps
+- Projects accumulate false "features" in changelogs
+- `fix:` is safer and more accurate for most changes
+
+**Validation:** commit-msg hook enforces format (auto-installed by bootstrap)
+
+### 2. Directory Structure
+
+**Read-only ci/ (git submodule):**
+- `ci/` - HyperCI scripts (NEVER modify directly)
+- `ci/modules/` - Modular CI scripts organized by language
+- `ci/docs/` - Documentation
+
+**Writable ci-local/ (project-specific):**
+- `ci-local/.venv/` - CI tools only (pytest, ruff, etc.)
+- `ci-local/.env` - Credentials (gitignored)
+- `ci-local/pyproject.toml` - CI tool dependencies
+
+**Project workspace:**
+- `.venv/` - Project dependencies (development)
+- `.tmp/` - Temporary files (ALWAYS use this, not /tmp)
+
+### 3. Virtual Environments
+
+**Two separate venvs - NEVER mix:**
+- `ci-local/.venv` - CI tools (for CI scripts ONLY)
+- `.venv` - Project dependencies (for development)
+
+**CI scripts must use ci-local/.venv:**
+```python
+if "ci-local/.venv" not in sys.prefix:
+    sys.exit("ERROR: Must run in ci-local/.venv")
+```
+
+### 4. Bootstrap & Workflow
+
+**Bootstrap (first-time setup):**
+```bash
+./ci/bootstrap --install
+```
+
+Creates both venvs, installs dependencies, installs git hooks.
+
+**Run CI checks:**
+```bash
+./ci/run check       # All checks (tests, lint, type-check)
+./ci/run test        # Tests only
+./ci/run build       # Build package
+```
+
+**Git hooks (auto-installed by bootstrap):**
+- `commit-msg` - Validates branch name, message format, removes AI attribution
+- Blocks commits if invalid, warns about formatting issues
+
+### 5. CI Script Locations
+
+**New modular structure:**
+```
+ci/modules/
+├── common/
+│   ├── bootstrap.d/     # Bootstrap scripts (run during setup)
+│   ├── run.d/           # Runtime checks (branch name, etc.)
+│   ├── gitci.d/         # Git operations (hooks, etc.)
+│   └── templates/       # File templates (.gitignore, etc.)
+└── python/
+    ├── bootstrap.d/     # Python bootstrap scripts
+    └── run.d/           # Python CI checks (test, build, etc.)
+```
+
+**Execution:** All CI scripts run via bash wrappers using `.d` pattern
+- `ci/bootstrap` orchestrates `bootstrap.d/*.py` scripts
+- `ci/run` orchestrates `run.d/*.py` scripts
+- `ci/gitci` orchestrates `gitci.d/*.py` scripts
+
+### 6. TODO Management
+
+**Use TODO.md ONLY:**
+- Add todos to `TODO.md` (project root)
+- NEVER use `# TODO:` in code comments
+- NEVER put TODOs in commit messages
+
+### 7. Temporary Files
+
+**Always use `./.tmp/`:**
+- Use `./.tmp/` (project root, gitignored)
+- NOT `/tmp`, `~/tmp`, or `/var/tmp`
+
+### 8. Bash Command Execution
+
+**See `ci-local/CODE-ASSISTANT.md` for complete bash usage guidance to minimize permission prompts.**
+
+Quick summary:
+- Avoid: `&&`, `||`, `;`, `|` (triggers permission prompts)
+- Use: Separate Bash calls, `.tmp/` intermediate files, output redirection (`>`)
+
+## Configuration Cascade
+
+**Environment variables > .env > ci.yaml > defaults.yaml**
+
+**Common env vars:**
+- `CI_SKIP_HOOKS=true` - Skip git hook installation
+- `CI=true` - Running in CI environment
+- `BOOTSTRAP_INSTALL=1` - Enable bootstrap installation
+
+## Quick Reference
+
+**Update ci/ submodule:**
+```bash
+cd ci && git pull origin main && cd ..
+git add ci && git commit -m "chore: update ci submodule"
+```
+
+**Contribute to HyperCI:**
+1. Work in `ci/` directory (changes tracked in hyperci repo)
+2. Commit to `hypersec-io/hyperci` repository
+3. Update project's ci/ submodule reference
+
+**Troubleshooting:**
+- Bootstrap fails: Check `ci-local/.env` has credentials
+- Wrong venv: CI scripts enforce ci-local/.venv (will error)
+- Submodule issues: `git submodule update --init --force`
+
+---
+
+**See also:**
+- `ci-local/CODE-ASSISTANT.md` - AI assistant guidance (common + language-specific)
+- `ci/docs/README.md` - Complete documentation
+- `ci/docs/standards/GIT-WORKFLOW.md` - Git conventions
+
+
+---
+
+<!-- HYPERCI_STATE_MD: HYPERCI_STATE_MD: ci/modules/python/templates/STATE.md -->
+# HyperCI - Python CI/CD Documentation
+
+**Auto-appended to project STATE.md during AI setup**
+
+## Python CI Workflow (Quick Reference)
+
+### Available Commands
+
+**Testing:**
+```bash
+./ci/run check           # All checks (test + lint + type-check)
+./ci/run test            # Tests only (pytest with coverage)
+./ci/run dependency-update  # Update Python dependencies (uv lock)
+```
+
+**Building:**
+```bash
+./ci/run build           # Standard wheel + sdist (via uv build)
+./ci/run build --nuitka  # Nuitka compiled binary
+```
+
+**Releasing:**
+```bash
+./ci/run release --dry-run   # Preview next version
+./ci/run release             # Create release + push tag (default)
+./ci/run release --no-push   # Create release locally (don't push)
+```
+
+**Publishing:**
+```bash
+./ci/run publish         # Build + publish to JFrog (manual, discouraged)
+./ci/run verify-publish  # Verify package exists in JFrog
+```
+
+### Python-Specific Environment Variables
+
+**Build Control:**
+- `CI_NUITKA=1` - Enable Nuitka build (set by --nuitka flag)
+- `CI_NUITKA_ONLY=1` - Publish only Nuitka wheels, skip standard (set by --nuitka-only)
+
+**Nuitka Protection Levels:**
+- `NUITKA_PROTECTION=none` - Basic compilation
+- `NUITKA_PROTECTION=minimal` - Standalone mode only
+- `NUITKA_PROTECTION=data-hiding` - Encrypt strings/names (Commercial)
+- `NUITKA_PROTECTION=traceback` - Encrypt stdout/stderr (Commercial)
+- `NUITKA_PROTECTION=recommended` - Full protection (default for Commercial)
+
+**Testing:**
+- `CI_COVERAGE_SOURCE` - Override coverage source directory
+- `CI_VERIFY_PUBLISH=1` - Enable post-publish verification
+
+**Release:**
+- Use `./ci/run release` (push is default)
+- Use `--no-push` flag to keep local (sets CI_NO_PUSH=1)
+- Use `--force` flag to bypass checks (sets CI_FORCE=1)
+
+### Python Module Scripts
+
+**Bootstrap Scripts** (`ci/modules/python/bootstrap.d/`):
+- `30-python-project.py` - Validate Python project structure
+- `31-python-structure.py` - Create src/ layout if needed
+- `32-jfrog.py` - Configure JFrog credentials
+- `33-nuitka.py` - Check Nuitka requirements (if enabled)
+
+**Runtime Scripts** (`ci/modules/python/run.d/`):
+- `30-python-test.py` - Run pytest with coverage + ruff + mypy
+- `31-python-dependency-update.py` - Update uv.lock dependencies
+- `49-check-version-sync.py` - Check VERSION sync before release
+- `50-build.py` - Build standard wheel/sdist
+- `51-publish.py` - Publish to JFrog Artifactory
+- `52-verify-publish.py` - Verify package exists in JFrog
+- `55-build-nuitka.py` - Build Nuitka compiled binary
+- `59-python-version-sync.py` - Sync VERSION across all files
+
+### Dependencies
+
+**Project deps:** `pyproject.toml` + `uv.lock` (project root)
+**CI tool deps:** `ci-local/pyproject.toml` + `ci-local/uv.lock`
+
+**Install:**
+```bash
+uv sync --locked                    # Install project deps
+cd ci-local && uv sync --locked     # Install CI tools
+```
+
+**Update:**
+```bash
+./ci/run dependency-update          # Update project deps (uv lock)
+cd ci-local && uv lock --upgrade    # Update CI tools
+```
+
+### Version Management
+
+**VERSION file is auto-synced** by pre-commit hook (prevents corruption):
+- Prevents `{version}` template corruption during semantic-release
+- Dual protection: pre-commit hook + CI script (89-version-pre-sync.py)
+- Synced across: VERSION, pyproject.toml, src/<package>/__init__.py
+
+**Check sync:**
+```bash
+./ci/run check-version-sync
+```
+
+### GitHub Actions Integration
+
+**Automatic builds** on version tag push (`v*`):
+- Standard Python wheel published to JFrog
+- Nuitka multi-arch builds (if `nuitka.enabled: true` in ci.yaml)
+- Cost-optimized runners (BuildJet, Cirrus)
+
+**Workflow:** `.github/workflows/jfrog-publish.yml`
+
+---
+
+**See also:** `ci/docs/PYTHON.md`, `ci/docs/NUITKA.md`, `ci/docs/TESTING.md`
