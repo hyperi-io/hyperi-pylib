@@ -64,13 +64,13 @@
 
 ### Repository Rename - Complete ✅
 
-**hs-ci (formerly hyperci):**
+**hs-ci (formerly hs-ci):**
 - ✅ Repository URL in .releaserc.json
 - ✅ All documentation updated
-- ✅ Generic templates (hyperlib → PROJECT_NAME)
+- ✅ Generic templates (PROJECT_NAME)
 - ✅ Workflow now passing (was failing due to URL mismatch)
 
-**hs-lib (formerly hyperlib):**
+**hs-lib (formerly hs-lib):**
 - ✅ README badges updated (removed version badge, Python 3.12+)
 - ✅ All documentation renamed
 - ✅ Examples updated
@@ -102,7 +102,7 @@
 **code-assistant/ standards:**
 - **COMMON.md** - Workflow, process, session management, tools
 - **AI-GUIDELINES.md** - Code quality, communication style, spelling guide
-- **HYPERCI.md** - HS-CI specific workflow
+- **HS-CI.md** - HS-CI specific workflow
 - **PYTHON.md** - Python specific guidance
 
 **ci-local/code-assistant/:**
