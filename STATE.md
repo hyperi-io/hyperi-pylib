@@ -13,79 +13,100 @@
 2. Read STATE.md, TODO.md, and standards documentation
 3. Confirm ready before proceeding with work
 
-**Save progress anytime:** Run `/save` to checkpoint progress, clean up STATE.md and TODO.md (can run multiple times per session)
+**Save progress anytime:** Run `/save` to checkpoint progress, clean up STATE.md and TODO.md
 
 ---
 
 ## Current Status (2025-11-15)
 
-**Active work:**
-- Package rename: hyperlib → hs-lib (PARTIALLY COMPLETE)
-  - ✅ Source renamed: `src/hs_lib/`
-  - ✅ Package name: `hs-lib` in pyproject.toml
-  - ✅ Documentation updated
-  - ⏳ Full import migration pending (see TODO.md)
-
-**Recent completions:**
-- ✅ CI and AI finalization (Python 3.12, dual-pattern permissions, hs-ci rename)
-- ✅ Container-native patterns (all 4 phases complete)
-- ✅ Strong WIP warning for Application framework
-
 **Versions:**
 - hs-lib: v2.9.1
-- hs-ci: v1.6.15
+- hs-ci: v1.6.17 (latest)
+
+**Active work:**
+- Package rename partially complete (see TODO.md)
+- CI and AI finalization: COMPLETE ✅
+
+**Test status:** All passing
 
 ---
 
 ## Session 2025-11-15 - CI and AI Finalization
 
-### Comprehensive Permission System - Complete ✅
+### Claude Code 2.0 Permission System - Complete ✅
 
 **Dual-pattern Bash permissions:**
-- Both `Bash(command *)` AND `Bash(command:*)` for all tools
-- Colon `:*` operator means "continuation from preceding string" (reliable)
-- Space `*` provides fallback coverage
+- Researched Claude Code 2.0 syntax (colon `:*` operator)
+- Colon operator means "continuation from preceding string"
+- Implemented both `Bash(command *)` AND `Bash(command:*)` patterns
+- Comprehensive coverage: git, uv, pytest, docker, kubectl, all dev tools
 - SlashCommand permissions for `/start` and `/save`
 
-**Key improvements:**
-- Git commands (especially `git -C` for submodule work)
-- All development tools (uv, pytest, ruff, black, docker, kubectl, etc.)
-- CI commands (./ci/bootstrap, ./ci/run, ./ci/ai)
+**Key fix:** `git -C` permission (major pain point for submodule work)
+
+**Files updated:**
+- [ci/modules/common/templates/settings.json](ci/modules/common/templates/settings.json) - Template with all permissions
+- [.claude/settings.json](.claude/settings.json) - Local with dual patterns (gitignored)
 
 ### Python 3.12 Migration - Complete ✅
 
-**Updated:**
+**Updated across both repositories:**
 - ✅ hs-lib requires Python 3.12
 - ✅ hs-ci templates require Python 3.12
 - ✅ All tool configs (ruff, black, pyright, mypy)
 - ✅ Fixed duplicate pytest markers in hs-lib
 
+**Critical lesson:** Removed "Breaking change:" from commit to avoid v2.0.0 major bump
+- Deleted v2.0.0 release
+- Rewrote git history to remove breaking change marker
+- Re-released as v1.6.12 (patch, correct)
+- Python version updates are NOT breaking (gradual adoption)
+
 ### Repository Rename - Complete ✅
 
 **hs-ci (formerly hyperci):**
 - ✅ Repository URL in .releaserc.json
-- ✅ All documentation (hyperci → hs-ci)
+- ✅ All documentation updated
 - ✅ Generic templates (hyperlib → PROJECT_NAME)
-- ✅ v1.6.15 released (NO breaking changes!)
+- ✅ Workflow now passing (was failing due to URL mismatch)
 
 **hs-lib (formerly hyperlib):**
-- ✅ Documentation renamed
-- ✅ Badges updated (removed version badge)
-- ✅ Repository URLs corrected
+- ✅ README badges updated (removed version badge, Python 3.12+)
+- ✅ All documentation renamed
+- ✅ Examples updated
+- ✅ Strong WIP warning for Application framework
 
 ### Settings Cleanup - Complete ✅
 
-- ✅ Removed settings.local.json template (obsolete)
+- ✅ Removed settings.local.json from deployment (obsolete)
 - ✅ ENV vars now in ~/.bashrc (via 20-bashrc-env.py)
-- ✅ .pip/pip.conf removed from git tracking (contains credentials)
-- ✅ .pip/ properly gitignored
+- ✅ Removed .pip/pip.conf from git tracking (credentials)
+- ✅ Verified .pip/ properly gitignored
 
-### Critical Lesson Learned
+### Documentation Rationalization - Complete ✅
 
-**NEVER add "Breaking change:" to commit messages unless it actually breaks backward compatibility!**
-- Avoided v2.0.0 major bump by removing the marker
-- Python version updates are NOT breaking changes (gradual adoption)
-- Semantic-release strictly follows Conventional Commits spec
+**Massive cleanup:**
+- hs-lib STATE.md: 3191 → 118 lines (96% reduction!)
+- hs-lib TODO.md: 1164 → 83 lines (93% reduction!)
+- hs-ci STATE.md: 559 → 119 lines (78% reduction!)
+- **Total: Removed 4273 lines of stale content**
+
+**Standards consolidation:**
+- Merged Derek's communication preferences into AI-GUIDELINES.md
+- Consolidated Australian/American English spelling guide
+- Removed duplicate Communication Style from COMMON.md
+- Clear separation: COMMON = workflow, AI-GUIDELINES = code quality
+
+### File Structure Clarity
+
+**code-assistant/ standards:**
+- **COMMON.md** - Workflow, process, session management, tools
+- **AI-GUIDELINES.md** - Code quality, communication style, spelling guide
+- **HYPERCI.md** - HS-CI specific workflow
+- **PYTHON.md** - Python specific guidance
+
+**ci-local/code-assistant/:**
+- **DEREK-PREFERENCES.md** - Derek's personal preferences (loaded by `/start`)
 
 ---
 
@@ -94,25 +115,23 @@
 ### hs-ci Release System (Two Separate Systems)
 
 **1. hs-ci ITSELF:**
-- Location: `/projects/hs-lib/ci` (git submodule)
 - Automation: semantic-release CLI + .releaserc.json (Node.js)
-- Avoids circular dependency (infrastructure shouldn't depend on itself)
+- Avoids circular dependency
 
-**2. hs-ci AS A SERVICE (for parent projects):**
-- Location: Parent project uses `/ci` as submodule
+**2. hs-ci AS A SERVICE:**
 - Automation: Python-based `./ci/run release`
-- Full orchestration with Python semantic-release, VERSION sync, badge updates
+- Full orchestration for parent projects
 
 ---
 
 ## Quick Reference
 
-**Current Python requirement:** 3.12+
+**Python requirement:** 3.12+
 
-**hs-ci version:** v1.6.15
+**Test command:** `./ci/run check`
 
-**hs-lib version:** v2.9.1
-
-**Test status:** All passing
+**Update ci:** `cd ci && git pull origin main && cd .. && git add ci && git commit -m "chore: update hs-ci submodule"`
 
 ---
+
+**Last Updated:** 2025-11-15
