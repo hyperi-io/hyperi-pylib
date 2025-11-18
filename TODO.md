@@ -21,19 +21,17 @@
 
 ## Backlog
 
-### Implement linters vs tests separation in 30-python-test.py - **2h**
+### Implement linters.checklist in 30-python-test.py - **1h**
 
-**Status:** Config structure ready, implementation needed
+**Status:** Config defaults ready, selective execution not implemented yet
 
 **Task:**
-- Refactor 30-python-test.py to honor linters.required and tests.required
-- Implement linters.fail_fast (stop on first linter failure)
-- Implement tests.fail_fast (continue all tests vs stop on first)
-- Split run_linters() and run_tests() functions
-- Add to defaults.yaml with sensible defaults
+- Honor linters.checklist config (run only specified linters if set)
+- Implement linters.fail_fast (stop on first failure)
+- Implement tests.fail_fast (stop on first test failure)
 
-**Current:** All checks run unconditionally (linters + tests mixed)
-**Goal:** Separate control over linters vs tests
+**Current:** All linters run unconditionally (ruff, black, pyright, bandit, etc.)
+**Goal:** Allow selective linter execution via checklist
 
 ### JFrog Private PyPI Enforcement - **4h**
 
