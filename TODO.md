@@ -2,17 +2,6 @@
 
 ## Active
 
-### Test Binary Build (Nuitka) - **2h**
-
-**Status:** Need to test Nuitka compilation for applications (not library)
-
-**Task:**
-- Create test application project using hs-lib
-- Configure Nuitka build (build_type: app)
-- Test binary compilation (not wheel)
-- Verify binary works standalone
-- Document Nuitka workflow for applications
-
 ### Update Downstream Projects (DFE apps) - **1-2h**
 
 **Status:** hs-lib v2.9.0 released, ready for downstream updates
@@ -31,6 +20,61 @@
 ---
 
 ## Backlog
+
+### JFrog Private PyPI Enforcement - **4h**
+
+**Status:** High priority - security improvement
+
+**Task:**
+- Implement JFrog private PyPI enforcement with cascade detection
+- If JFrog credentials configured and working, FORCE private PyPI only
+- If not configured, use public PyPI
+- WARN when switching between private and public
+- Update all pip/uv install commands to use cascade
+
+### Bootstrap AI --uninstall Command - **1h**
+
+**Status:** Future enhancement
+
+**Task:**
+- Add --uninstall flag to ./ci/bootstrap
+- Remove AI setup files (, etc.)
+- Clean up AI-related configurations
+
+### Handle No Initial Commit Scenario - **2h**
+
+**Status:** Edge case handling
+
+**Task:**
+- Handle repositories with no commits yet
+- Graceful fallbacks in git log commands
+- Clear error messages when git history needed but missing
+
+---
+
+## Completed (2025-11-18)
+
+### Test Binary Build (Nuitka) - **2h** ✅
+
+**Completed:** 2025-11-18
+
+**Major achievements:**
+- Created test-cli-build project for testing
+- Implemented --local-build flag for local Nuitka testing
+- Fixed nuitka-commercial installation (critical indentation bug)
+- Auto-detect entry points (main.py, __main__.py, app.py, cli.py)
+- Enforce nuitka-commercial only (no OSS fallback)
+- Remove public PyPI fallback (JFrog private only)
+- Add build and twine to pyproject.toml template
+- Remove all hardcoded "hyperlib" package names
+- Add libatomic-static checks (bootstrap + GitHub Actions)
+- Rename verify-publish to run after Nuitka builds
+
+**Result:** Nuitka app builds work end-to-end with build_type: app
+
+---
+
+## Backlog (continued)
 
 ### Container-Native Patterns - Phase 4 Improvements
 
