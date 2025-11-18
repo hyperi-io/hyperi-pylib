@@ -44,14 +44,35 @@
 - WARN when switching between private and public
 - Update all pip/uv install commands to use cascade
 
-### Bootstrap AI --uninstall Command - **1h**
+### Re-test CI in test-cli-build - **0.5h**
 
-**Status:** Future enhancement
+**Status:** Verify all fixes work with updated CI
 
 **Task:**
-- Add --uninstall flag to ./ci/bootstrap
-- Remove AI setup files (.claude/, etc.)
-- Clean up AI-related configurations
+- Update test-cli-build ci submodule to latest
+- Run full test suite (./ci/run check)
+- Verify split files (30-lint, 35-test) work correctly
+
+### Test release for test-cli-build on GitHub Actions - **1h**
+
+**Status:** Verify Nuitka builds work on BuildJet runners
+
+**Task:**
+- Run ./ci/run release in test-cli-build
+- Push release tag to trigger GitHub Actions
+- Verify BuildJet builds Nuitka binaries successfully
+- Verify multi-platform builds (linux-x64, linux-arm64)
+- Check JFrog artifact publication
+
+### Create test-package-build project - **2h**
+
+**Status:** Test Nuitka package builds (not app)
+
+**Task:**
+- Create test-package-build project
+- Configure build_type: package (not app)
+- Test Nuitka package compilation (compiled wheel with .so)
+- Verify package mode works vs app mode
 
 ### Handle No Initial Commit Scenario - **2h**
 
