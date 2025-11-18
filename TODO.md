@@ -74,6 +74,26 @@
 - Test Nuitka package compilation (compiled wheel with .so)
 - Verify package mode works vs app mode
 
+### Remove hardcoded Python versions from CI - **1h**
+
+**Status:** Use config cascade for all Python version references
+
+**Task:**
+- Find all hardcoded Python versions (3.8-, 3.12, etc.)
+- Replace with dynamic detection from pyproject.toml requires-python
+- Example: vermin --target=3.8- should use detected version
+- Ensure all tools use project's Python version requirement
+
+### Clean up deprecated CI directories - **0.5h**
+
+**Status:** Audit and remove unused directories
+
+**Task:**
+- Check if ci/modules/python/gitci/ is still used (remove if not)
+- Check if ci/modules/python/ai/ is still used (templates now?)
+- Audit ci/modules/ for any other deprecated directories
+- Remove unused code and consolidate
+
 ### Handle No Initial Commit Scenario - **2h**
 
 **Status:** Edge case handling
