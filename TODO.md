@@ -21,6 +21,20 @@
 
 ## Backlog
 
+### Implement linters vs tests separation in 30-python-test.py - **2h**
+
+**Status:** Config structure ready, implementation needed
+
+**Task:**
+- Refactor 30-python-test.py to honor linters.required and tests.required
+- Implement linters.fail_fast (stop on first linter failure)
+- Implement tests.fail_fast (continue all tests vs stop on first)
+- Split run_linters() and run_tests() functions
+- Add to defaults.yaml with sensible defaults
+
+**Current:** All checks run unconditionally (linters + tests mixed)
+**Goal:** Separate control over linters vs tests
+
 ### JFrog Private PyPI Enforcement - **4h**
 
 **Status:** High priority - security improvement
