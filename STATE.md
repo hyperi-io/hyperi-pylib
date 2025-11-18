@@ -21,17 +21,147 @@
 
 **Versions:**
 - hs-lib: v2.9.0 (released)
-- hs-ci: v1.10.1+ (Nuitka app build support)
+- hs-ci: v1.10.16+ (major CI infrastructure improvements)
 
 **Active work:**
-- Nuitka app build: COMPLETE ✅ (tested and working)
-- Ready for downstream project updates (see TODO.md)
+- CI infrastructure improvements: ONGOING (logging, JFrog, merges)
+- pyproject.toml merge issue: DEBUGGING (dependencies not merging)
+- Nuitka release testing: BLOCKED (merge issue)
 
 **Test status:** 339 passed, 16 skipped, 0 failed
 
 ---
 
-## Session 2025-11-18 - Nuitka App Build Implementation
+## Session 2025-11-18-C - CI Infrastructure Improvements
+
+### Major Accomplishments ✅
+
+**1. Linters.checklist + fail_fast (1h actual)**
+- Selective linter execution via `linters.checklist` config
+- Empty checklist = all linters (backward compatible)
+- File: [30-python-lint.py](ci/modules/python/run.d/30-python-lint.py)
+
+**2. Complete RFC3339 Logging (2h actual)**
+- Bash wrappers: log_info/log_error with timestamps
+- Python SimpleLogger: RFC3339 format
+- All print() replaced with logger calls
+- Consistent format: `YYYY-MM-DDTHH:MM:SS.sss+TZ | LEVEL | message`
+- Files: bootstrap, run, ci_lib.py, bootstrap.py
+
+**3. Python Version Config Cascade (1h actual)**
+- ENV > .env > ci.yaml (python.version) > pyproject.toml > 3.12 fallback
+- GitHub Actions: dynamic extraction from pyproject.toml
+- bootstrap: reads from ci.yaml before pyproject.toml
+
+**4. JFrog Configuration Simplified (2h actual)**
+- Removed jfrog_enforce config option entirely
+- If JFrog creds present: JFrog PRIMARY + public PyPI fallback
+- If JFrog creds absent: public PyPI only (no warnings)
+- Discovered: JFrog virtual repo can't retrieve remote artifacts (artifactoryRequestsCanRetrieveRemoteArtifacts: false)
+
+**5. Script Ordering Fixes (0.5h actual)**
+- Moved 12-install-ci-deps.py → 38-install-ci-deps.py
+- CI deps now installed AFTER project sync (prevents removal)
+
+**6. Deprecated Directory Cleanup (0.5h actual)**
+- Removed: python/ai/claude/settings.json
+- Removed: ci-pyproject.toml (two-venv leftover)
+- Removed: stale gitci references in hooks
+
+**7. Two-venv Reference Cleanup (1h+ ongoing)**
+- Updated: ci-local/.venv → .venv in hooks, jfrog, nuitka scripts
+- Updated: defaults.yaml comments
+- Remaining: 12+ files in docs/ still reference two-venv
+
+**8. Additional Fixes**
+- Origin remote check in semantic-release (helpful error)
+- build_type cascade (removed nuitka.build_type legacy fallback)
+- Badge script: fixed ci_lib path injection
+- Conditional imports removed: PyGithub, requests added to template
+- Merge mode: now uses config cascade (not just ENV)
+
+### Test Infrastructure
+
+**test-cli-build repository:** https://github.com/hypersec-io/test-cli-build (private)
+- Created for comprehensive CI testing
+- Configured for Nuitka app builds
+- Has proper .env with JFrog credentials
+- Nuitka enabled in ci.yaml
+
+### Known Issues / Blockers
+
+**CRITICAL: pyproject.toml Template Merge Bug** 🔴
+
+**Symptom:** Bootstrap doesn't merge dev dependencies from template into existing projects
+
+**Details:**
+- Template (ci/modules/python/templates/pyproject.toml) has in dev array:
+  - `"build"` - Package building
+  - `"twine"` - Metadata validation
+  - `"PyGithub"` - GitHub API
+  - `"requests"` - HTTP client
+- Test project (test-cli-build) pyproject.toml dev array does NOT get these items
+- Only has original 10 items (pytest, black, ruff, etc.)
+
+**Merge Code Status:**
+- deep_merge_no_overwrite() WORKS in isolation (tested manually)
+- Lines 1045-1049: correctly appends unique items to arrays
+- But during actual bootstrap, merge doesn't add items
+
+**Evidence:**
+- Bootstrap logs: "Deep merged (no-overwrite) pyproject.toml" (runs TWICE - common + python)
+- git diff shows NO changes to dev array after bootstrap
+- uv.lock has build/twine but they don't install (not in pyproject extras)
+
+**Theories:**
+1. Multiple merges (common + python) might overwrite each other
+2. Something writes/resets pyproject.toml AFTER merge (set-license? uv?)
+3. Merge reading wrong source/target file
+4. Array items being seen as duplicates somehow
+
+**Impact:** Blocks Nuitka release testing - can't build packages without `build` module
+
+**Test Projects for Debugging:**
+- /projects/test-cli-build - app build testing (Nuitka binary)
+- /projects/test-package-build - package build testing (TODO: create)
+
+**JFrog Virtual Repo Configuration** ⚠️
+- artifactoryRequestsCanRetrieveRemoteArtifacts: false
+- Prevents caching public PyPI packages
+- Requires JFrog admin fix
+- Workaround: Always allow public PyPI fallback (current approach)
+
+### CI Version Progress
+
+- Started: v1.10.1
+- Ended: v1.10.16+
+- Total: 15+ releases during session
+- Major refactors: logging, JFrog, script ordering, merge system
+
+### Next Steps
+
+1. **FIX pyproject.toml merge** (CRITICAL)
+   - Debug why array append doesn't work in practice
+   - Test with minimal reproduction case
+   - Ensure build/twine/PyGithub/requests merge correctly
+
+2. **Complete Nuitka Release Testing**
+   - App build: test-cli-build → GitHub Actions → JFrog
+   - Package build: create test-package-build project
+   - Verify artifacts with jf and gh CLIs
+
+3. **Finish two-venv cleanup**
+   - 12+ docs files still reference ci-local/.venv
+   - Update or remove old documentation
+
+4. **Path injection standardization**
+   - 37 scripts use ci_lib import
+   - User wants simpler pattern (not full walk)
+   - Create consistent approach across all scripts
+
+---
+
+## Session 2025-11-18-A - Nuitka App Build Implementation
 
 ### Nuitka App Build - Complete ✅
 
