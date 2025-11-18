@@ -2,42 +2,64 @@
 
 ## Active
 
-(No active tasks)
+### FIX pyproject.toml merge bug - **2h** 🔴 CRITICAL
+
+**Status:** Blocking Nuitka release testing
+
+**Problem:**
+- Template dev dependencies (build, twine, PyGithub, requests) not merging
+- deep_merge_no_overwrite() works in isolation but not during bootstrap
+- Bootstrap shows "Deep merged pyproject.toml" but git diff shows no changes
+
+**Debug steps:**
+- Add detailed logging to merge_file() and deep_merge_no_overwrite()
+- Check if multiple merges (common + python) overwrite each other
+- Verify merge reads/writes correct files
+- Test array comparison logic (maybe version specs causing duplicates?)
+
+**Test:** Bootstrap test-cli-build should add 4 new deps to dev array
 
 ---
 
 ## Backlog
 
-### Test release for test-cli-build on GitHub Actions - **1h**
+### Complete two-venv reference cleanup - **1h**
 
-**Status:** Verify Nuitka builds work on BuildJet runners
+**Status:** Partially done, docs still need cleanup
 
 **Task:**
+- Fix remaining 12+ files in docs/ with ci-local/.venv references
+- Update documentation to reflect unified .venv
+- Files: docs/standards/, CONTRIBUTING.md, templates/
+
+### Standardize ci_lib path injection - **2h**
+
+**Status:** User wants simpler pattern (not full walk)
+
+**Task:**
+- 37 scripts currently use walk-up pattern for ci_lib
+- Create simpler, consistent pattern
+- Apply to all scripts uniformly
+
+### Test Nuitka app build release - **1h** (BLOCKED: merge bug)
+
+**Status:** Waiting for pyproject merge fix
+
+**Task:**
+- Fix merge bug first (see Active)
 - Run ./ci/run release in test-cli-build
-- Push release tag to trigger GitHub Actions
-- Verify BuildJet builds Nuitka binaries successfully
-- Verify multi-platform builds (linux-x64, linux-arm64)
-- Check JFrog artifact publication
+- Verify GitHub Actions + BuildJet builds
+- Check JFrog artifact publication with jf/gh CLIs
 
-### Create test-package-build project - **2h**
+### Create test-package-build project - **2h** (BLOCKED: merge bug)
 
-**Status:** Test Nuitka package builds (not app)
+**Status:** Needs merge fix first
 
 **Task:**
-- Create test-package-build project
+- Create under hypersec-io org (private repo)
 - Configure build_type: package (not app)
-- Test Nuitka package compilation (compiled wheel with .so)
-- Verify package mode works vs app mode
-
-### Remove hardcoded Python versions from CI - **1h**
-
-**Status:** Use config cascade for all Python version references
-
-**Task:**
-- Find all hardcoded Python versions (3.8-, 3.12, etc.)
-- Replace with dynamic detection from pyproject.toml requires-python
-- Example: vermin --target=3.8- should use detected version
-- Ensure all tools use project's Python version requirement
+- Test Nuitka package mode
+- Verify compiled wheels (.so files)
 
 ### Document CI directory structure and naming conventions - **0.5h**
 
@@ -72,26 +94,30 @@
 
 ## Completed (2025-11-18)
 
-### Linters.checklist + JFrog Enforcement + Logging - **5.5h** ✅
+### CI Infrastructure Improvements - **8h** ✅
 
-**Completed:** 2025-11-18 (Session 2)
+**Completed:** 2025-11-18 (Session 2025-11-18-C)
 
-**Implemented:**
-- Selective linter execution via linters.checklist config
-- Empty checklist = all linters run (backward compatible)
-- JFrog private PyPI enforcement (default: secure, JFrog-only)
-- security.jfrog_enforce config (default: true)
-- Warnings when private PyPI not configured
-- Warnings when public PyPI fallback enabled
-- Fixed log levels (INFO not ERROR) for missing merge files
-- RFC3339 timestamps for bash wrapper logging (bootstrap, run)
+**Features:**
+- Linters.checklist: selective execution, backward compatible
+- RFC3339 logging: bash wrappers + Python (all consistent)
+- Python version cascade: ENV > .env > ci.yaml > pyproject > 3.12
+- JFrog simplified: PRIMARY + fallback (no enforcement)
+- Script ordering: CI deps after sync (prevents removal)
+- Config cascade: merge mode, all settings use cascade now
+
+**Cleanup:**
+- Deprecated directories removed (ai/, ci-pyproject.toml)
+- Two-venv references: code files updated (docs pending)
+- build_type cascade: removed nuitka.build_type duplication
+- Origin remote check: helpful error in semantic-release
 
 **Testing:**
-- Verified in test-cli-build
-- Split files (30-lint, 35-test) working correctly
-- Logging now consistent across all wrappers
+- test-cli-build repo created (hypersec-io, private)
+- Bootstrap works end-to-end
+- Linting + tests passing
 
-**CI Version:** hs-ci v1.10.4
+**CI Versions:** v1.10.1 → v1.10.16+ (15 releases)
 
 ### Test Binary Build (Nuitka) - **2h** ✅
 
@@ -148,4 +174,4 @@
 
 ---
 
-**Last Updated:** 2025-11-15
+**Last Updated:** 2025-11-18
