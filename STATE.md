@@ -17,18 +17,100 @@
 
 ---
 
-## Current Status (2025-11-18)
+## Current Status (2025-11-19)
 
 **Versions:**
 - hs-lib: v2.9.0 (released)
-- hs-ci: v1.10.16+ (major CI infrastructure improvements)
+- hs-ci: v1.11.4 (pyproject merge fixed, dual PyPI working, app builds fixed)
 
 **Active work:**
-- CI infrastructure improvements: ONGOING (logging, JFrog, merges)
-- pyproject.toml merge issue: DEBUGGING (dependencies not merging)
-- Nuitka release testing: BLOCKED (merge issue)
+- GitHub Actions bootstrap: DEBUGGING (uv index authentication)
+- Nuitka release testing: PARTIAL (local builds work, GHA needs fixes)
 
-**Test status:** 339 passed, 16 skipped, 0 failed
+**Test status:** Local Nuitka build SUCCESS (14MB binary created)
+
+---
+
+## Session 2025-11-19 - pyproject.toml Merge Bug Fix + Dual PyPI Setup
+
+### Major Accomplishments ✅
+
+**1. CRITICAL: Fixed pyproject.toml Merge Bug (3h actual)**
+- **Root cause:** [35-set-license.py](ci/modules/python/bootstrap.d/35-set-license.py) was reading TOML as text, doing string replacement, writing back
+- This destroyed the merged TOML structure from earlier merge operations
+- **Fix:** Rewrote to use tomllib (read) + tomli_w (write) for proper TOML parsing
+- **Verified:** Template deps (build, twine, PyGithub, requests) now merge correctly
+- **Bonus fix:** Removed [build-system] from common template (Python-specific, was causing duplicate setuptools entries)
+
+**2. Dual PyPI Setup for uv (4h actual)**
+- Added `[[tool.uv.index]]` configuration to pyproject.toml template (JFrog + PyPI)
+- Added `--index-strategy unsafe-best-match` to uv build, uv sync, uv lock
+- Added UV_INDEX_JFROG_USERNAME/PASSWORD to .env via [32-jfrog.py](ci/modules/python/bootstrap.d/32-jfrog.py)
+- Added setuptools and wheel to dev dependencies template
+- **Result:** Can mix private packages (hs-lib from JFrog) + public packages (setuptools from PyPI)
+- **Known issue:** JFrog virtual repo has `artifactoryRequestsCanRetrieveRemoteArtifacts: false` (old cached versions)
+
+**3. App vs Package Build Logic (2h actual)**
+- [50-build.py](ci/modules/python/run.d/50-build.py) now skips wheel builds for `build_type: app`
+- [55-build-nuitka.py](ci/modules/python/run.d/55-build-nuitka.py) returns 0 (skip) instead of 1 (error) for local non-CI runs
+- Removed `python -m build` from semantic-release build_command (was building wheels for apps)
+- **Result:** Apps build Nuitka binaries ONLY, packages build wheels
+
+**4. Local Nuitka Build SUCCESS (1h actual)**
+- test-cli-build with `./ci/run build --nuitka --local-build`
+- Created: dist-bin/test-cli-linux-x64.bin (14MB binary, Nuitka Commercial encrypted)
+- Created: dist-bin/test-cli-1.1.1-linux-x64.tar.gz (13.57 MB)
+- Binary executable and working
+
+**5. GitHub Actions Submodule Access (1h actual)**
+- Created HS_CI_PAT repository secret for accessing private hs-ci submodule
+- Updated workflow to use `${{ secrets.HS_CI_PAT || github.token }}` in all checkout steps
+- Submodule checkout now works in GitHub Actions
+
+### Known Issues / Remaining Work
+
+**GitHub Actions Bootstrap Failures** 🟡
+- Bootstrap succeeds locally but fails in GitHub Actions
+- uv sync/lock/build hitting index authentication or strategy issues in CI environment
+- HS_CI_PAT working for checkout, but bootstrap still failing
+- Need to verify UV_INDEX_JFROG credentials propagate correctly in GHA
+- Standard build job for apps should be skipped entirely (not run and fail)
+
+**Local Release Script Issues** 🟡
+- 61-update-badges.py fails during local `./ci/run release`
+- Doesn't block GitHub Actions (only local)
+- Low priority (workaround: use --no-push then manually push tags)
+
+**Vermin Scan Error** 🟡
+- 30-python-lint.py shows "Failed to run vermin" error
+- Non-blocking (scan completes with warning)
+- Low priority
+
+### CI Version Progress
+
+- Started: v1.10.16
+- Ended: v1.11.4+
+- Total: 20+ releases during session
+- Major fixes: TOML merge, dual PyPI, app builds, uv index strategy
+
+### Next Steps
+
+1. **Debug GitHub Actions bootstrap** (PRIORITY)
+   - Check UV_INDEX_JFROG env vars in GHA logs
+   - Verify --index-strategy flags working in CI environment
+   - May need to source .env before bootstrap or export vars differently
+
+2. **Skip standard build for apps in GHA**
+   - Matrix should not include standard-any for build_type: app projects
+   - Only run Nuitka builds for apps
+
+3. **Verify Nuitka binary in JFrog**
+   - Once GHA succeeds, verify with `jf rt search`
+   - Check binary is published to hypersec-nuitka-binaries repo
+
+4. **GitHub App for submodule access**
+   - Replace HS_CI_PAT with GitHub App token (better for corporate CI)
+   - Avoid user-tied credentials
 
 ---
 
