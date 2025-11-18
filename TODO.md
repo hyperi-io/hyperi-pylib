@@ -2,56 +2,11 @@
 
 ## Active
 
-### Update Downstream Projects (DFE apps) - **1-2h**
-
-**Status:** hs-lib v2.9.0 released, ready for downstream updates
-
-**Changes needed in each project:**
-- Update pyproject.toml: `hyperlib` → `hs-lib`
-- Update imports: Keep `from hs_lib` (already correct)
-- Update environment variables: `HYPERLIB_*` → `HS_LIB_*`
-- Test and verify
-
-**Projects:**
-- dfe-ui-backend
-- dfe-hunt-runner
-- dfe-cli-core
+(No active tasks)
 
 ---
 
 ## Backlog
-
-### Implement linters.checklist in 30-python-test.py - **1h**
-
-**Status:** Config defaults ready, selective execution not implemented yet
-
-**Task:**
-- Honor linters.checklist config (run only specified linters if set)
-- Implement linters.fail_fast (stop on first failure)
-- Implement tests.fail_fast (stop on first test failure)
-
-**Current:** All linters run unconditionally (ruff, black, pyright, bandit, etc.)
-**Goal:** Allow selective linter execution via checklist
-
-### JFrog Private PyPI Enforcement - **4h**
-
-**Status:** High priority - security improvement
-
-**Task:**
-- Implement JFrog private PyPI enforcement with cascade detection
-- If JFrog credentials configured and working, FORCE private PyPI only
-- If not configured, use public PyPI
-- WARN when switching between private and public
-- Update all pip/uv install commands to use cascade
-
-### Re-test CI in test-cli-build - **0.5h**
-
-**Status:** Verify all fixes work with updated CI
-
-**Task:**
-- Update test-cli-build ci submodule to latest
-- Run full test suite (./ci/run check)
-- Verify split files (30-lint, 35-test) work correctly
 
 ### Test release for test-cli-build on GitHub Actions - **1h**
 
@@ -84,6 +39,16 @@
 - Example: vermin --target=3.8- should use detected version
 - Ensure all tools use project's Python version requirement
 
+### Document CI directory structure and naming conventions - **0.5h**
+
+**Status:** Clarify architecture and naming patterns
+
+**Task:**
+- Document why we have ci/modules/python/tools vs hs-lib package
+- Explain .d directory pattern (bootstrap.d, run.d)
+- Clarify naming: hs-lib (package), hs-ci (CI system), hyperlib (legacy?)
+- Add architecture notes to STATE.md or separate doc
+
 ### Clean up deprecated CI directories - **0.5h**
 
 **Status:** Audit and remove unused directories
@@ -107,9 +72,30 @@
 
 ## Completed (2025-11-18)
 
+### Linters.checklist + JFrog Enforcement + Logging - **5.5h** ✅
+
+**Completed:** 2025-11-18 (Session 2)
+
+**Implemented:**
+- Selective linter execution via linters.checklist config
+- Empty checklist = all linters run (backward compatible)
+- JFrog private PyPI enforcement (default: secure, JFrog-only)
+- security.jfrog_enforce config (default: true)
+- Warnings when private PyPI not configured
+- Warnings when public PyPI fallback enabled
+- Fixed log levels (INFO not ERROR) for missing merge files
+- RFC3339 timestamps for bash wrapper logging (bootstrap, run)
+
+**Testing:**
+- Verified in test-cli-build
+- Split files (30-lint, 35-test) working correctly
+- Logging now consistent across all wrappers
+
+**CI Version:** hs-ci v1.10.4
+
 ### Test Binary Build (Nuitka) - **2h** ✅
 
-**Completed:** 2025-11-18
+**Completed:** 2025-11-18 (Session 1)
 
 **Major achievements:**
 - Created test-cli-build project for testing
