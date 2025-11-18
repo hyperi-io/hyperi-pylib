@@ -17,17 +17,63 @@
 
 ---
 
-## Current Status (2025-11-15)
+## Current Status (2025-11-18)
 
 **Versions:**
 - hs-lib: v2.9.0 (released)
-- hs-ci: v1.6.17
+- hs-ci: v1.10.1+ (Nuitka app build support)
 
 **Active work:**
-- Package rename: COMPLETE ✅
+- Nuitka app build: COMPLETE ✅ (tested and working)
 - Ready for downstream project updates (see TODO.md)
 
 **Test status:** 339 passed, 16 skipped, 0 failed
+
+---
+
+## Session 2025-11-18 - Nuitka App Build Implementation
+
+### Nuitka App Build - Complete ✅
+
+**Working end-to-end** for CLI applications with `build_type: app`:
+- Binary: test-cli-linux-x64.bin (14MB, encrypted)
+- Local testing: `./ci/bootstrap install --local-build && ./ci/run build --nuitka --local-build`
+- GitHub Actions: Automatic on v* tag push (BuildJet runners)
+- Protection: Nuitka Commercial with full encryption
+
+**Test project:** /projects/test-cli-build (test CLI app using hs-lib)
+
+**Major fixes (30+ commits to hs-ci):**
+1. --local-build flag for local Nuitka testing (avoids slow GitHub Actions feedback)
+2. Fixed critical indentation bug (nuitka-commercial install was conditional)
+3. Script ordering: 36-nuitka runs AFTER uv sync (prevents removal)
+4. Auto-detect entry points: main.py, __main__.py, app.py, cli.py
+5. Auto-detect package names (no hardcoded "hyperlib")
+6. Enforce nuitka-commercial ONLY (OSS Nuitka fails hard)
+7. JFrog private PyPI ONLY (removed public PyPI fallback - security)
+8. Install pycryptodomex for traceback-encryption plugin
+9. libatomic-static checks (bootstrap + GitHub Actions)
+10. Pass source directory to Nuitka (not __init__.py)
+11. Add build and twine to pyproject.toml template
+
+**CI Architecture improvements:**
+- Split 30-python-test.py → 30-python-lint.py + 35-python-test.py
+- linters/tests config separation (independent control)
+- Rename 52-verify-publish → 60-verify-publish (runs after Nuitka)
+- JFrog PyPI enforcement with cascade detection
+- Simplified ci readonly detection (submodule check only)
+- Minimal hs-lib ci.yaml (7 lines, only non-defaults)
+
+**Configuration cascade:**
+- `python.build_type: app` → Nuitka inherits (no duplication)
+- `linters.required: true, fail_fast: true` (defaults)
+- `tests.required: true, fail_fast: true` (defaults)
+
+**Next steps:**
+- Test Nuitka package builds (build_type: package)
+- GitHub Actions/BuildJet release testing
+- Implement linters.checklist selective execution
+- Remove hardcoded Python versions (use cascade)
 
 ---
 
