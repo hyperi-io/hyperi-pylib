@@ -2,6 +2,17 @@
 
 ## Active
 
+### Test Binary Build (Nuitka) - **2h**
+
+**Status:** Need to test Nuitka compilation for applications (not library)
+
+**Task:**
+- Create test application project using hs-lib
+- Configure Nuitka build (build_type: app)
+- Test binary compilation (not wheel)
+- Verify binary works standalone
+- Document Nuitka workflow for applications
+
 ### Update Downstream Projects (DFE apps) - **1-2h**
 
 **Status:** hs-lib v2.9.0 released, ready for downstream updates
