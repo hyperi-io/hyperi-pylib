@@ -2,26 +2,72 @@
 
 ## Active
 
-### FIX pyproject.toml merge bug - **2h** 🔴 CRITICAL
+### Debug GitHub Actions bootstrap failures - **2h** 🟡
 
-**Status:** Blocking Nuitka release testing
+**Status:** HS_CI_PAT works for checkout, bootstrap failing
 
 **Problem:**
-- Template dev dependencies (build, twine, PyGithub, requests) not merging
-- deep_merge_no_overwrite() works in isolation but not during bootstrap
-- Bootstrap shows "Deep merged pyproject.toml" but git diff shows no changes
+- uv sync/lock/build fail in GitHub Actions environment
+- Works locally with same configuration
+- May be env var propagation or uv version differences
 
-**Debug steps:**
-- Add detailed logging to merge_file() and deep_merge_no_overwrite()
-- Check if multiple merges (common + python) overwrite each other
-- Verify merge reads/writes correct files
-- Test array comparison logic (maybe version specs causing duplicates?)
+**Next:**
+- Verify UV_INDEX_JFROG credentials actually set in GHA environment
+- Check if --index-strategy flags working in GHA
+- Consider sourcing .env before bootstrap or different export method
 
-**Test:** Bootstrap test-cli-build should add 4 new deps to dev array
+### Skip standard build matrix entry for apps - **0.5h**
+
+**Status:** Apps shouldn't have standard-any build job at all
+
+**Task:**
+- Update matrix generation in workflow to skip standard build when build_type: app
+- Only include Nuitka builds (x64, arm64) for apps
+- Standard build only for packages
+
+### Replace HS_CI_PAT with GitHub App token - **4h**
+
+**Status:** PAT is user-tied, need corporate solution
+
+**Task:**
+- Create GitHub App for CI with contents:read permission
+- Use actions/create-github-app-token@v1 in workflows
+- Update all workflows to use app token
+- Remove HS_CI_PAT secret
 
 ---
 
 ## Backlog
+
+### Allow null/none in ci.yaml to skip tests/linters - **1h**
+
+**Status:** Add flexibility to completely disable checks
+
+**Task:**
+- Support `tests: null` or `tests.required: false` to skip all tests
+- Support `linters: null` or `linters.required: false` to skip all linters
+- Check/fix overlapping code in CI scripts for this logic
+- Document in ci.yaml schema
+
+### Fix vermin scan error - **0.5h**
+
+**Status:** Non-blocking warning during linting
+
+**Error:** `2025-11-19T00:38:09.191+1100 | ERROR | __main__:run_vermin_scan:75 - Failed to run vermin: %s`
+
+**Task:**
+- Check why vermin scan fails
+- Fix or remove vermin if not needed
+- Currently just shows warning, doesn't block
+
+### Fix 61-update-badges.py local failure - **1h**
+
+**Status:** Fails during local `./ci/run release`
+
+**Task:**
+- Investigate why badge update fails locally
+- May need GitHub API credentials or just skip for local releases
+- Low priority (doesn't affect GitHub Actions)
 
 ### Complete two-venv reference cleanup - **1h**
 
@@ -41,25 +87,15 @@
 - Create simpler, consistent pattern
 - Apply to all scripts uniformly
 
-### Test Nuitka app build release - **1h** (BLOCKED: merge bug)
+### Create test-package-build project - **2h**
 
-**Status:** Waiting for pyproject merge fix
-
-**Task:**
-- Fix merge bug first (see Active)
-- Run ./ci/run release in test-cli-build
-- Verify GitHub Actions + BuildJet builds
-- Check JFrog artifact publication with jf/gh CLIs
-
-### Create test-package-build project - **2h** (BLOCKED: merge bug)
-
-**Status:** Needs merge fix first
+**Status:** Need package mode testing (not just app mode)
 
 **Task:**
 - Create under hypersec-io org (private repo)
 - Configure build_type: package (not app)
-- Test Nuitka package mode
-- Verify compiled wheels (.so files)
+- Test Nuitka package mode (.so compilation)
+- Verify compiled wheels work
 
 ### Document CI directory structure and naming conventions - **0.5h**
 
@@ -68,7 +104,7 @@
 **Task:**
 - Document why we have ci/modules/python/tools vs hs-lib package
 - Explain .d directory pattern (bootstrap.d, run.d)
-- Clarify naming: hs-lib (package), hs-ci (CI system), hyperlib (legacy?)
+- Clarify naming: hs-lib (package), hs-ci (CI system)
 - Add architecture notes to STATE.md or separate doc
 
 ### Clean up deprecated CI directories - **0.5h**
@@ -92,86 +128,29 @@
 
 ---
 
-## Completed (2025-11-18)
+## Completed (2025-11-19)
 
-### CI Infrastructure Improvements - **8h** ✅
+### pyproject.toml Merge Bug - **3h** ✅
 
-**Completed:** 2025-11-18 (Session 2025-11-18-C)
+**Fixed:** 35-set-license.py destroying TOML structure with text manipulation
+**Solution:** Use tomllib + tomli_w for proper parsing
+**Result:** Template dependencies merge correctly
 
-**Features:**
-- Linters.checklist: selective execution, backward compatible
-- RFC3339 logging: bash wrappers + Python (all consistent)
-- Python version cascade: ENV > .env > ci.yaml > pyproject > 3.12
-- JFrog simplified: PRIMARY + fallback (no enforcement)
-- Script ordering: CI deps after sync (prevents removal)
-- Config cascade: merge mode, all settings use cascade now
+### Dual PyPI Setup for uv - **4h** ✅
 
-**Cleanup:**
-- Deprecated directories removed (ai/, ci-pyproject.toml)
-- Two-venv references: code files updated (docs pending)
-- build_type cascade: removed nuitka.build_type duplication
-- Origin remote check: helpful error in semantic-release
+**Implemented:** [[tool.uv.index]] + unsafe-best-match strategy
+**Result:** Can use private (JFrog) + public (PyPI) packages together
 
-**Testing:**
-- test-cli-build repo created (hypersec-io, private)
-- Bootstrap works end-to-end
-- Linting + tests passing
+### App vs Package Build Logic - **2h** ✅
 
-**CI Versions:** v1.10.1 → v1.10.16+ (15 releases)
+**Fixed:** Apps no longer build wheels, only Nuitka binaries
+**Updated:** 50-build.py, 55-build-nuitka.py, semantic-release build_command
 
-### Test Binary Build (Nuitka) - **2h** ✅
+### Local Nuitka Build Testing - **1h** ✅
 
-**Completed:** 2025-11-18 (Session 1)
-
-**Major achievements:**
-- Created test-cli-build project for testing
-- Implemented --local-build flag for local Nuitka testing
-- Fixed nuitka-commercial installation (critical indentation bug)
-- Auto-detect entry points (main.py, __main__.py, app.py, cli.py)
-- Enforce nuitka-commercial only (no OSS fallback)
-- Remove public PyPI fallback (JFrog private only)
-- Add build and twine to pyproject.toml template
-- Remove all hardcoded "hyperlib" package names
-- Add libatomic-static checks (bootstrap + GitHub Actions)
-- Rename verify-publish to run after Nuitka builds
-
-**Result:** Nuitka app builds work end-to-end with build_type: app
+**Verified:** test-cli-build builds 14MB Nuitka binary locally
+**Works:** Binary executes and is properly encrypted
 
 ---
 
-## Backlog (continued)
-
-### Container-Native Patterns - Phase 4 Improvements
-
-**Status:** Phases 1-3 complete, Phase 4 docs exist but need refinement
-
-- Improve KUBERNETES.md examples
-- Add more HELM chart variations
-- Expand example projects with real-world scenarios
-
-**Note:** Application framework marked as WIP with strong warning (will be refactored/replaced)
-
----
-
-### HS-CI Improvements
-
-**Based on principles review**
-
-#### Short-term
-- Add `./ci/ai refresh` command - **2h**
-- Improve error message consistency - **4h**
-- Document two-venv pattern clearly - **1h**
-
-#### Medium-term
-- Complete single .venv migration - **8h**
-- Add `./ci/run fix` command - **2h**
-- Enhance pre-commit hooks - **4h**
-
-#### Long-term
-- Unified error reporter - **8h**
-- AI-assisted auto-fix - **16h**
-- Smart context switching detection - **4h**
-
----
-
-**Last Updated:** 2025-11-18
+**Last Updated:** 2025-11-19
