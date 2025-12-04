@@ -39,6 +39,92 @@
 
 ## Backlog
 
+### Add hs_lib.cache module (Cashews wrapper) - **4h**
+
+**Status:** Not started - identified as gap during dfe-control-plane metrics work
+
+**Solution:** Wrap [Cashews](https://github.com/Krukov/cashews) (527 stars, MIT, active)
+
+**Task:**
+- Create `hs_lib.cache` module wrapping Cashews with disk backend
+- Cache tuple: `(source, identifier, value, time)` - source-based TTLs
+- Per-source TTL config: `{"http": "24h", "tavily": "1h", "db": "30m"}`
+- `@cached("http", key="{url}")` decorator
+- Built-in metrics (hit/miss) via hs_lib.metrics
+
+**Dependencies:**
+```toml
+"cashews[diskcache]>=7.0"
+```
+
+**Rationale:**
+- Disk-backed (SQLite) reduces memory, survives restarts
+- Native async, FastAPI integration
+- Thin wrapper around battle-tested library
+
+**Design:** See dfe-control-plane/HS-LIB-UPDATE.md §5
+
+### Add hs_lib.http.HttpClient (Stamina + httpx) - **3h**
+
+**Status:** Not started - identified during dfe-control-plane B113 fixes
+
+**Solution:** Wrap [Stamina](https://github.com/hynek/stamina) (by Hynek, attrs/structlog author) + httpx
+
+**Task:**
+
+- Create `hs_lib.http.HttpClient` wrapping httpx + stamina
+- Auto timeout (default 30s) - solves B113 bandit issues
+- Auto retries with exponential backoff via stamina
+- Stamina auto-detects structlog + prometheus-client
+
+**Dependencies:**
+
+```toml
+"httpx>=0.27"
+"stamina>=25.1"
+```
+
+**Rationale:**
+
+- Stamina auto-integrates with hs_lib.logger (structlog) and hs_lib.metrics (prometheus)
+- Testing friendly: `stamina.set_testing(attempts=1)` in pytest
+- Same author as attrs/structlog - quality pedigree
+
+**Design:** See dfe-control-plane/HS-LIB-UPDATE.md §4
+
+### Add FastAPI metrics middleware to hs_lib.metrics - **2h**
+
+**Status:** Not started - identified during dfe-control-plane metrics work
+
+**Task:**
+- Create `hs_lib.metrics.fastapi.PrometheusMiddleware`
+- Auto-track: request count, duration, status by endpoint
+- Create `hs_lib.metrics.fastapi.create_metrics_router()` for `/metrics` endpoint
+- Zero-config: `app.add_middleware(PrometheusMiddleware)`
+
+**Rationale:**
+- All FastAPI apps need HTTP metrics
+- Currently each app implements manually
+- Consistency across HyperSec apps
+
+### Add DB query metrics helpers to hs_lib.metrics - **1h**
+
+**Status:** Not started - identified during dfe-control-plane metrics work
+
+**Task:**
+- Create context manager: `with metrics.db_query("postgres", "select"): ...`
+- Create decorator: `@metrics.track_db_query(db_type="clickhouse")`
+- Works with any DB client (not auto-instrumented)
+
+**Rationale:**
+- Multiple DB types (ClickHouse, Postgres, FalconDB)
+- Can't auto-instrument all clients
+- Explicit instrumentation is reliable
+
+---
+
+## Backlog (CI/Build)
+
 ### Allow null/none in ci.yaml to skip tests/linters - **1h**
 
 **Status:** Add flexibility to completely disable checks
@@ -153,4 +239,4 @@
 
 ---
 
-**Last Updated:** 2025-11-19
+**Last Updated:** 2025-12-05

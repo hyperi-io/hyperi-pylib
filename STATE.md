@@ -13,18 +13,35 @@
 
 ---
 
-## Current Status (2025-11-26)
+## Current Status (2025-12-05)
 
 **Versions:**
 
-- hs-lib: v2.10.5
-- hs-ci: v1.19.1 (GitHub Actions architecture)
+- hs-lib: v2.10.15
+- hs-ci: v1.37.0 (GitHub Actions architecture)
 
 **Build type:** Native wheel only (no Nuitka)
 
 ---
 
-## CI Architecture (hs-ci v1.19.x)
+## Active Work Scope
+
+**Source:** `/projects/dfe-control-plane/HS-LIB-UPDATE.md`
+
+This file is the **living scope document** for hs-lib improvements. It is maintained in the dfe-control-plane project during integration testing and will be updated as work progresses.
+
+**Current priorities (from HS-LIB-UPDATE.md):**
+
+1. `hs_lib.http` - HttpClient with Stamina retries (solves B113, adds observability)
+2. `hs_lib.metrics.fastapi` - Middleware + router for standard /metrics
+3. `hs_lib.metrics.db` - DB query metrics helpers
+4. `hs_lib.cache` - Deferred until needed
+
+**Always re-read HS-LIB-UPDATE.md at session start** - it may have changed.
+
+---
+
+## CI Architecture (hs-ci v1.37.x)
 
 **IMPORTANT:** hs-ci was completely rewritten. No more `./ci/run` scripts.
 
@@ -138,4 +155,4 @@ git commit -m "chore: update ci submodule to vX.Y.Z"
 
 ---
 
-**Last Updated:** 2025-11-26
+**Last Updated:** 2025-12-05

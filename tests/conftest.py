@@ -67,3 +67,7 @@ def temp_dir():
     """Provide a temporary directory that is cleaned up after the test."""
     with tempfile.TemporaryDirectory() as tmpdir:
         yield Path(tmpdir)
+
+
+# Note: httpx_mock fixture is provided by pytest-httpx automatically
+# No need to define it manually
