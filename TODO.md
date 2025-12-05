@@ -121,147 +121,18 @@
 - Can't auto-instrument all clients
 - Explicit instrumentation is reliable
 
-### Add hs_lib.kafka module (confluent-kafka wrapper) - **8h**
+### [BACKLOG] hs_lib.kafka: JSON key-value offset seek - **2d**
 
-**Status:** Not started - designed for dfe-discovery Kafka backend support
+**Status:** Backlog - documented in admin.py:552-582
 
-**Solution:** Wrap [confluent-kafka](https://github.com/confluentinc/confluent-kafka-python) with corporate defaults
+**Task:** Implement `seek_to_json_match()` - seek to first message where nested JSON field matches value
 
-**Scope:** Building blocks only - discovery-specific logic stays in dfe-control-plane
+**Considerations:**
 
-**Task:**
-
-1. **KafkaClient** - Admin operations
-   - `list_topics()` → `list[TopicInfo]`
-   - `describe_topic(topic)` → `TopicMetadata` (partitions, offsets, config)
-   - `get_offsets_for_times(topic, timestamps)` → `dict[int, int]`
-   - `get_consumer_lag(group, topic)` → `dict[int, int]`
-
-2. **KafkaProducer** - Producer with corporate defaults
-   - Corporate defaults: acks=all, idempotence, lz4 compression, retries
-   - `send(topic, value, key=None, headers=None)` → `Future`
-   - `flush(timeout=None)` → `int`
-   - Prometheus metrics integration
-   - Sync and async interfaces
-
-3. **KafkaConsumer** - Consumer with corporate defaults
-   - Corporate defaults: manual commit, earliest offset, safe timeouts
-   - `subscribe(topics)`, `poll(timeout)`, `seek(partition, offset)`
-   - `commit()`, `committed(partitions)`
-   - Iterator interface: `for msg in consumer: ...`
-   - Prometheus metrics integration
-
-4. **Sampling utilities** - Generic sampling (not discovery-specific)
-   - `time_bounded_consume(consumer, topic, start, end, limit)` → `list[Message]`
-   - `reservoir_sample(consumer, topic, k)` → `list[Message]`
-   - `partition_sample(client, topic, n_per_partition)` → `list[Message]`
-
-5. **Schema detection** - Infer and analyse JSON schemas from samples
-   - `SchemaAnalyser` class using [GenSON](https://github.com/wolverdude/GenSON) for schema inference
-   - `analyse_sample(messages)` → `SchemaAnalysisResult`
-   - Detect multiple schema patterns (not all messages have same structure)
-   - Calculate field cardinality (distinct values per field)
-   - Detect field types with variance (e.g., field is sometimes string, sometimes int)
-   - Schema drift detection (compare schemas across time windows)
-
-   ```python
-   @dataclass
-   class SchemaPattern:
-       schema: dict                    # JSON Schema (GenSON output)
-       message_count: int              # Messages matching this pattern
-       percentage: float               # % of total sample
-       example_message: dict           # One example
-
-   @dataclass
-   class FieldStats:
-       name: str
-       types_seen: list[str]           # ["String", "Int64", "null"]
-       cardinality: int                # Distinct values
-       null_count: int
-       sample_values: list[Any]        # Top 5 example values
-
-   @dataclass
-   class SchemaAnalysisResult:
-       total_messages: int
-       patterns: list[SchemaPattern]   # Distinct schema patterns found
-       field_stats: dict[str, FieldStats]  # Per-field statistics
-       merged_schema: dict             # GenSON merged schema
-       schema_consistency: float       # 0-1 (1 = all same schema)
-   ```
-
-6. **Async support** - ThreadPoolExecutor wrappers for FastAPI compatibility
-   - `AsyncKafkaClient` - async admin operations
-   - `AsyncKafkaConsumer` - async iteration, poll
-   - `AsyncKafkaProducer` - async send
-   - `areservoir_sample()`, `atime_bounded_consume()` - async sampling
-   - All async classes wrap sync confluent-kafka via ThreadPoolExecutor
-   - Optional: aiokafka consumer for high-throughput streaming (Phase 2)
-
-   ```python
-   # Sync (CLI, batch jobs, scripts)
-   from hs_lib.kafka import KafkaClient, KafkaConsumer, reservoir_sample
-
-   client = KafkaClient(bootstrap_servers)
-   topics = client.list_topics()  # Sync
-
-   # Async (FastAPI, async apps)
-   from hs_lib.kafka import AsyncKafkaClient, AsyncKafkaConsumer, areservoir_sample
-
-   async with AsyncKafkaClient(bootstrap_servers) as client:
-       topics = await client.list_topics()  # Async
-   ```
-
-7. **Types and config**
-   - `Message`, `TopicInfo`, `TopicMetadata`, `PartitionInfo`
-   - `PRODUCER_DEFAULTS`, `CONSUMER_DEFAULTS`, `ADMIN_DEFAULTS`
-   - Config cascade integration (bootstrap.servers from settings)
-   - **Config naming**: Use [librdkafka configuration names](https://github.com/confluentinc/librdkafka/blob/master/CONFIGURATION.md) directly
-     - e.g., `bootstrap.servers`, `security.protocol`, `sasl.mechanism`
-     - No aliasing or renaming - maintain compatibility with Kafka ecosystem
-   - **TLS options**: Support `enable.ssl.certificate.verification=false` for testing with self-signed certs
-     - Convenience helper: `KafkaClient(..., verify_ssl=False)` sets the librdkafka config
-
-**Corporate Defaults:**
-
-```python
-PRODUCER_DEFAULTS = {
-    "acks": "all",
-    "enable.idempotence": True,
-    "retries": 5,
-    "retry.backoff.ms": 100,
-    "delivery.timeout.ms": 120000,
-    "linger.ms": 5,
-    "compression.type": "lz4",
-}
-
-CONSUMER_DEFAULTS = {
-    "auto.offset.reset": "earliest",
-    "enable.auto.commit": False,
-    "session.timeout.ms": 45000,
-    "heartbeat.interval.ms": 3000,
-    "max.poll.interval.ms": 300000,
-}
-```
-
-**Dependencies:**
-
-```toml
-[project.optional-dependencies]
-kafka = [
-    "confluent-kafka>=2.3",
-    "genson>=1.3",  # JSON schema inference
-]
-```
-
-**Rationale:**
-- confluent-kafka is fastest (librdkafka C), full admin API, Confluent backing
-- Building blocks enable dfe-control-plane to build KafkaDiscoveryService
-- No discovery-specific logic here - that stays in dfe-control-plane
-- Matches hs_lib.http pattern (corporate defaults + observability)
-
-**Consumer:** dfe-control-plane KafkaDiscoveryService (see TODO-KAFKA-DISCOVERY.md)
-
-**Design:** Discussed in hs-lib session 2025-12-05
+- No index: Worst case is full topic scan
+- Parallel partition search for performance
+- Cancellation support via threading.Event
+- Timeout handling to prevent hangs
 
 ---
 
@@ -356,6 +227,18 @@ kafka = [
 
 ---
 
+## Completed (2025-12-05)
+
+### hs_lib.kafka module - **8h** ✅
+
+**Completed:** Full Kafka client library with corporate defaults
+**Branch:** `feat/DFE-553/add-kafka-library`
+**Tests:** 160 unit + 19 integration tests
+
+Features: KafkaClient, KafkaConsumer, KafkaProducer, async variants, KafkaAdmin (offset reset, topic config), SchemaAnalyser, sampling utilities, metrics collector, file-based config loading.
+
+---
+
 ## Completed (2025-11-19)
 
 ### pyproject.toml Merge Bug - **3h** ✅
@@ -381,4 +264,4 @@ kafka = [
 
 ---
 
-**Last Updated:** 2025-12-05
+**Last Updated:** 2025-12-05 (kafka module completed)
