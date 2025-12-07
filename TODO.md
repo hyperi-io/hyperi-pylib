@@ -121,6 +121,19 @@
 - Can't auto-instrument all clients
 - Explicit instrumentation is reliable
 
+### [BACKLOG] hs_lib.kafka: JSON key-value offset seek - **2d**
+
+**Status:** Backlog - documented in admin.py:552-582
+
+**Task:** Implement `seek_to_json_match()` - seek to first message where nested JSON field matches value
+
+**Considerations:**
+
+- No index: Worst case is full topic scan
+- Parallel partition search for performance
+- Cancellation support via threading.Event
+- Timeout handling to prevent hangs
+
 ---
 
 ## Backlog (CI/Build)
@@ -214,6 +227,18 @@
 
 ---
 
+## Completed (2025-12-05)
+
+### hs_lib.kafka module - **8h** ✅
+
+**Completed:** Full Kafka client library with corporate defaults
+**Branch:** `feat/DFE-553/add-kafka-library`
+**Tests:** 160 unit + 19 integration tests
+
+Features: KafkaClient, KafkaConsumer, KafkaProducer, async variants, KafkaAdmin (offset reset, topic config), SchemaAnalyser, sampling utilities, metrics collector, file-based config loading.
+
+---
+
 ## Completed (2025-11-19)
 
 ### pyproject.toml Merge Bug - **3h** ✅
@@ -239,4 +264,4 @@
 
 ---
 
-**Last Updated:** 2025-12-05
+**Last Updated:** 2025-12-05 (kafka module completed)
