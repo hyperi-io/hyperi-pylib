@@ -1,3 +1,12 @@
+# [2.12.0](https://github.com/hypersec-io/hs-lib/compare/v2.11.0...v2.12.0) (2025-12-07)
+
+
+### Features
+
+* **kafka:** add hs_lib.kafka module specification (DFE-553) ([b1cd4ce](https://github.com/hypersec-io/hs-lib/commit/b1cd4ce35b213e7d23fc2e1a50705aad12a9e984))
+* **kafka:** add Kafka client library with corporate defaults ([7b72f0e](https://github.com/hypersec-io/hs-lib/commit/7b72f0ec96acd8f62240d78091b577ecfce7b3e6))
+* **kafka:** add Kafka client library with corporate defaults ([2a9b38b](https://github.com/hypersec-io/hs-lib/commit/2a9b38b1b756920b90ec114629530035120877ba))
+
 # [1.6.0](https://github.com/hypersec-io/hs-lib/compare/v1.5.0...v1.6.0) (2025-12-04)
 
 
