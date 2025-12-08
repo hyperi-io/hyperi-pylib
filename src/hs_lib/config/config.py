@@ -489,18 +489,19 @@ else:
         # Installed package: use mount config
         config_dir = MOUNT_CONFIG.config_dir
 
-# Build settings file list (check what exists)
+# Build settings file list (check what exists, first match wins)
 settings_files = []
 if config_dir and config_dir.exists():
-    # Check for various config file names
+    # Check for various config file names - stop at first match
     for filename in ["config.yaml", "config.yml", "settings.yaml", "settings.yml"]:
         config_file = config_dir / filename
         if config_file.exists():
             settings_files.append(str(config_file))
             if os.getenv("HS_LIB_DEBUG"):
                 print(f"Config file found: {config_file}")
+            break  # Stop at first match
 
-    # Check for app-specific config
+    # Check for app-specific config - load all matches (default + config merged)
     app_config_dir = config_dir / APP_NAME
     if app_config_dir.exists():
         for filename in ["default.yaml", "default.yml", "config.yaml", "config.yml"]:
