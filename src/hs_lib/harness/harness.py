@@ -24,6 +24,8 @@ from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
 
+from ..logger import logger
+
 
 class TerminationReason(Enum):
     """Reasons for process termination"""
