@@ -501,10 +501,10 @@ if config_dir and config_dir.exists():
                 print(f"Config file found: {config_file}")
             break  # Stop at first match
 
-    # Check for app-specific config - load all matches (default + config merged)
+    # Check for app-specific defaults
     app_config_dir = config_dir / APP_NAME
     if app_config_dir.exists():
-        for filename in ["default.yaml", "default.yml", "config.yaml", "config.yml"]:
+        for filename in ["default.yaml", "default.yml"]:
             app_config_file = app_config_dir / filename
             if app_config_file.exists():
                 settings_files.append(str(app_config_file))
