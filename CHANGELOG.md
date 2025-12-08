@@ -1,3 +1,10 @@
+## [2.12.3](https://github.com/hypersec-io/hs-lib/compare/v2.12.2...v2.12.3) (2025-12-08)
+
+
+### Bug Fixes
+
+* **harness:** add missing logger import ([e200336](https://github.com/hypersec-io/hs-lib/commit/e200336ce686da9375e1b610cddea730c6e67b67))
+
 ## [2.12.2](https://github.com/hypersec-io/hs-lib/compare/v2.12.1...v2.12.2) (2025-12-08)
 
 
