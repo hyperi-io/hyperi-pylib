@@ -1,3 +1,10 @@
+## [2.12.1](https://github.com/hypersec-io/hs-lib/compare/v2.12.0...v2.12.1) (2025-12-08)
+
+
+### Bug Fixes
+
+* **config:** stop at first matching config file instead of loading all ([caf9783](https://github.com/hypersec-io/hs-lib/commit/caf978322190297f82fe7a886b3f8c7e9427c52f))
+
 # [2.12.0](https://github.com/hypersec-io/hs-lib/compare/v2.11.0...v2.12.0) (2025-12-07)
 
 
