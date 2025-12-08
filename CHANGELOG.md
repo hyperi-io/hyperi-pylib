@@ -1,3 +1,10 @@
+## [2.12.2](https://github.com/hypersec-io/hs-lib/compare/v2.12.1...v2.12.2) (2025-12-08)
+
+
+### Bug Fixes
+
+* **config:** only load default.yaml for app-specific config ([fdef692](https://github.com/hypersec-io/hs-lib/commit/fdef69259a20d428f373fdf8bc1cd9f3c492ea1c))
+
 ## [2.12.1](https://github.com/hypersec-io/hs-lib/compare/v2.12.0...v2.12.1) (2025-12-08)
 
 
