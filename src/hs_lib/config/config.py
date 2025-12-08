@@ -106,7 +106,68 @@ from typing import Literal
 from dynaconf import Dynaconf
 
 
-# Container environment detection
+def _is_container() -> tuple[bool, str]:
+    """
+    Detect if running inside a container.
+
+    Shared detection logic (mirrors runtime.RuntimeEnvironment._is_container).
+
+    Uses layered detection with high-confidence checks first:
+    1. K8s service account token (100% reliable for K8s)
+    2. Kubernetes environment variables
+    3. Docker-specific files
+    4. cgroups inspection (v1 and v2)
+    5. Mountinfo inspection
+    6. Container-specific env vars
+
+    Returns:
+        (is_container, detection_method)
+    """
+    # HIGH CONFIDENCE CHECKS
+
+    # 1. K8s service account token (100% reliable for K8s)
+    if Path("/var/run/secrets/kubernetes.io/serviceaccount").exists():
+        return True, "k8s_serviceaccount"
+
+    # 2. Kubernetes env vars
+    if os.getenv("KUBERNETES_SERVICE_HOST"):
+        return True, "kubernetes"
+
+    # 3. Docker-specific file
+    if Path("/.dockerenv").exists():
+        return True, "dockerenv"
+
+    # MEDIUM CONFIDENCE CHECKS
+
+    # 4. cgroups v1 and v2
+    for cgroup_file in ["/proc/1/cgroup", "/proc/self/cgroup"]:
+        try:
+            with open(cgroup_file) as f:
+                content = f.read()
+                if any(x in content for x in ["docker", "kubepods", "containerd", "crio"]):
+                    return True, f"cgroups_{cgroup_file.split('/')[-1]}"
+        except (FileNotFoundError, PermissionError):
+            pass
+
+    # 5. Mountinfo inspection
+    try:
+        with open("/proc/self/mountinfo") as f:
+            content = f.read()
+            if any(x in content for x in ["docker", "kubelet", "overlay", "containerd"]):
+                return True, "mountinfo"
+    except (FileNotFoundError, PermissionError):
+        pass
+
+    # 6. Container-specific env vars
+    container_vars = ["container", "DOCKER_CONTAINER", "ECS_CONTAINER_METADATA_URI"]
+    for var in container_vars:
+        if os.getenv(var):
+            return True, f"env_{var.lower()}"
+
+    # Default: local environment
+    return False, "none"
+
+
 def detect_environment() -> Literal["kubernetes", "docker", "container", "bare_metal"]:
     """
     Detect the current runtime environment.
@@ -114,33 +175,21 @@ def detect_environment() -> Literal["kubernetes", "docker", "container", "bare_m
     Returns:
         Environment type: "kubernetes", "docker", "container", or "bare_metal"
     """
-    # K8s detection - check for service account token
-    if os.path.exists("/var/run/secrets/kubernetes.io/serviceaccount/token"):
-        if os.getenv("HS_LIB_DEBUG"):
-            print("Environment detected: Kubernetes")
-        return "kubernetes"
+    is_container, method = _is_container()
 
-    # Docker detection - check for .dockerenv file
-    if os.path.exists("/.dockerenv"):
-        if os.getenv("HS_LIB_DEBUG"):
-            print("Environment detected: Docker")
-        return "docker"
-
-    # Container detection via cgroups
-    try:
-        with open("/proc/1/cgroup") as f:
-            cgroup_content = f.read()
-            if "docker" in cgroup_content or "containerd" in cgroup_content:
-                if os.getenv("HS_LIB_DEBUG"):
-                    print("Environment detected: Container (via cgroups)")
-                return "container"
-    except (FileNotFoundError, PermissionError):
-        pass
-
-    # Default to bare metal
     if os.getenv("HS_LIB_DEBUG"):
-        print("Environment detected: Bare metal")
-    return "bare_metal"
+        print(f"Environment detected: {method}")
+
+    if not is_container:
+        return "bare_metal"
+
+    # Map detection method to environment type
+    if method in ("k8s_serviceaccount", "kubernetes"):
+        return "kubernetes"
+    elif method == "dockerenv":
+        return "docker"
+    else:
+        return "container"
 
 
 @dataclass
