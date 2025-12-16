@@ -1,3 +1,10 @@
+## [2.12.5](https://github.com/hypersec-io/hs-lib/compare/v2.12.4...v2.12.5) (2025-12-16)
+
+
+### Bug Fixes
+
+* update ci submodule with verify-publish URL fix ([feb2b2b](https://github.com/hypersec-io/hs-lib/commit/feb2b2bd0e5da78d85da23f9c1ae46f32b73e42e))
+
 ## [2.12.4](https://github.com/hypersec-io/hs-lib/compare/v2.12.3...v2.12.4) (2025-12-16)
 
 
