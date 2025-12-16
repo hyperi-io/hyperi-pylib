@@ -263,3 +263,5 @@ cython_debug/
 
 # OS files
 # === End /projects/hs-lib/ci/modules/common/templates/.gitignore ===
+out/
+coverage/
