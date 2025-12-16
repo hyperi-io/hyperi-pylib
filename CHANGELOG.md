@@ -1,3 +1,10 @@
+## [2.12.4](https://github.com/hypersec-io/hs-lib/compare/v2.12.3...v2.12.4) (2025-12-16)
+
+
+### Bug Fixes
+
+* update ci/ai submodules with auto-update config ([80891e0](https://github.com/hypersec-io/hs-lib/commit/80891e069b89b17bce613e5d06c35629190f008c))
+
 ## [2.12.3](https://github.com/hypersec-io/hs-lib/compare/v2.12.2...v2.12.3) (2025-12-08)
 
 
