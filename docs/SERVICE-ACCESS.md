@@ -6,12 +6,12 @@ POC credentials for all services. **Internal network only** - not internet expos
 
 | Service | URL | Username | Password |
 |---------|-----|----------|----------|
-| Grafana | http://grafana.k8s.tyrell.com.au | `admin` | `TyrellPOC2024!` |
-| Prometheus | http://prometheus.k8s.tyrell.com.au | - | - |
-| Kafbat UI | http://kafka.k8s.tyrell.com.au | - | - |
-| MinIO Console | http://minio.k8s.tyrell.com.au | `admin` | `TyrellPOC2024!` |
-| MinIO S3 API | http://s3.k8s.tyrell.com.au | `admin` | `TyrellPOC2024!` |
-| ClickHouse HTTP | http://clickhouse.k8s.tyrell.com.au | `default` | `TyrellPOC2024!` |
+| Grafana | <http://grafana.k8s.tyrell.com.au> | `admin` | `TyrellPOC2024!` |
+| Prometheus | <http://prometheus.k8s.tyrell.com.au> | - | - |
+| Kafbat UI | <http://kafka.k8s.tyrell.com.au> | - | - |
+| MinIO Console | <http://minio.k8s.tyrell.com.au> | `admin` | `TyrellPOC2024!` |
+| MinIO S3 API | <http://s3.k8s.tyrell.com.au> | `admin` | `TyrellPOC2024!` |
+| ClickHouse HTTP | <http://clickhouse.k8s.tyrell.com.au> | `default` | `TyrellPOC2024!` |
 
 ## TCP Services (NodePort)
 
