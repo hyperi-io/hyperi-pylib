@@ -1,3 +1,61 @@
+# [2.25.0-dev.5](https://github.com/hyperi-io/hyperi-pylib/compare/v2.25.0-dev.4...v2.25.0-dev.5) (2026-03-22)
+
+
+### Bug Fixes
+
+* restore test rule ignores pending hyperi-ci two-tier release ([a45ded1](https://github.com/hyperi-io/hyperi-pylib/commit/a45ded1a59632fb9984a6ad5142019de4219b738))
+* shrink ruff ignore list, test rules handled by hyperi-ci ([2b269f1](https://github.com/hyperi-io/hyperi-pylib/commit/2b269f139b1ab469b577d33cfe5d08e124d49786))
+
+# [2.25.0-dev.4](https://github.com/hyperi-io/hyperi-pylib/compare/v2.25.0-dev.3...v2.25.0-dev.4) (2026-03-21)
+
+
+### Bug Fixes
+
+* inline Renovate config (preset resolution broken) ([afb187d](https://github.com/hyperi-io/hyperi-pylib/commit/afb187d6ca07c1007ad7aa887b9fbda893be3d96))
+
+# [2.25.0-dev.3](https://github.com/hyperi-io/hyperi-pylib/compare/v2.25.0-dev.2...v2.25.0-dev.3) (2026-03-21)
+
+
+### Bug Fixes
+
+* add ruff S,N,PT,RUF,PIE,T20 rules, replace bandit ([9b2810e](https://github.com/hyperi-io/hyperi-pylib/commit/9b2810e46009392ae76fda7c6c766a76c3162162))
+* resolve ruff S/format violations for full-repo CI check ([5bb8654](https://github.com/hyperi-io/hyperi-pylib/commit/5bb86544519112ca4ce814348ccdf71521d4dab9))
+
+# [2.25.0-dev.2](https://github.com/hyperi-io/hyperi-pylib/compare/v2.25.0-dev.1...v2.25.0-dev.2) (2026-03-21)
+
+
+### Bug Fixes
+
+* replace interrogate with ruff D rules, remove py CVE ([6b109e2](https://github.com/hyperi-io/hyperi-pylib/commit/6b109e24f2465db73f22e2b138ec46fa7629c3a3))
+
+# [2.25.0-dev.1](https://github.com/hyperi-io/hyperi-pylib/compare/v2.24.4-dev.1...v2.25.0-dev.1) (2026-03-21)
+
+
+### Bug Fixes
+
+* add label cardinality validation ([beca5f0](https://github.com/hyperi-io/hyperi-pylib/commit/beca5f07477151778a507aa589d6d4576694f3aa))
+* add VersionInfo.from_env() for auto-detection ([a3b13aa](https://github.com/hyperi-io/hyperi-pylib/commit/a3b13aa6a71fadaaa8aeb497d16d912b74135ac5))
+* auto-initialise metrics in DfeApp.run ([22da116](https://github.com/hyperi-io/hyperi-pylib/commit/22da1169383b5d6d2f19a47ca5ba37aa5fbcaf7f))
+* resolve ruff lint errors in new modules ([bfe0f7d](https://github.com/hyperi-io/hyperi-pylib/commit/bfe0f7d53403391a1b452d69da14e96398281399))
+* skip all parity fixture integrity checks when submodule missing ([8fd6eae](https://github.com/hyperi-io/hyperi-pylib/commit/8fd6eaec286460c27b5d6760d814781702a1f44b))
+* skip parity tests when hyperi-ai submodule not checked out ([464f815](https://github.com/hyperi-io/hyperi-pylib/commit/464f815b1aedf08d8e53bd67c388eca529384b50))
+
+
+### Features
+
+* add circuit breaker matching rustlib pattern ([8b6b2cc](https://github.com/hyperi-io/hyperi-pylib/commit/8b6b2cc768fbdfe0cd0d6e642eb8e74dbaf87514))
+* add config reload with on_reload callbacks ([4b65ec5](https://github.com/hyperi-io/hyperi-pylib/commit/4b65ec578e15d71f9d2e2c38c0c72e655ffaf1b2))
+* add DFE metric groups matching rustlib standard ([5110bc6](https://github.com/hyperi-io/hyperi-pylib/commit/5110bc607779b1f7fb6c272e14ab4562b4e5ef61))
+* add health endpoint router for FastAPI ([1c3c0c4](https://github.com/hyperi-io/hyperi-pylib/commit/1c3c0c4e0689509083acf7582ca7a0bf749c8ffb))
+* add scaling pressure calculator matching rustlib ([924c555](https://github.com/hyperi-io/hyperi-pylib/commit/924c55538603fd803db5b281a6da43c1b98a748c))
+
+## [2.24.4-dev.1](https://github.com/hyperi-io/hyperi-pylib/compare/v2.24.3...v2.24.4-dev.1) (2026-03-20)
+
+
+### Bug Fixes
+
+* update deps, resolve 4 CVEs, upgrade sphinx stack ([e1804e9](https://github.com/hyperi-io/hyperi-pylib/commit/e1804e933ed9eedc299d6f34dd337602fdd630cc))
+
 ## [2.24.3](https://github.com/hyperi-io/hyperi-pylib/compare/v2.24.2...v2.24.3) (2026-03-10)
 
 

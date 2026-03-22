@@ -64,8 +64,6 @@ if TYPE_CHECKING:
 class PostgresCacheError(Exception):
     """Base exception for PostgreSQL cache errors."""
 
-    pass
-
 
 class PostgresCache:
     """PostgreSQL-backed cache for multi-instance deployments.

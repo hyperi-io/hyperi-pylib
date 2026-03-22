@@ -7,7 +7,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "hyperi-pylib"
-version = "2.24.3"
+version = "2.25.0-dev.5"
 description = "Enterprise infrastructure for containerized Python applications - configuration, logging, timeouts, database, metrics, and application framework"
 readme = "README.md"
 authors = [
@@ -47,7 +47,7 @@ keywords = [
     "fastapi",
 ]
 dependencies = [
-    "dynaconf>=3.2.12",
+    "dynaconf>=3.2.13",
     "loguru>=0.7.3",
     "python-dotenv>=1.0.0",
     "pyyaml>=6.0.3",
@@ -131,13 +131,12 @@ dev = [
     "boto3>=1.35.0",
     "aiobotocore>=2.15.0",
     "ruff>=0.1.0",
-    "black>=24.0.0",
+    "black>=26.3.1",
     "isort>=5.12.0",
     "ty>=0.0.21",
     "mypy>=1.0.0",
     "bandit[toml]>=1.7.0",
     "pip-audit>=2.6.0",
-    "interrogate>=1.5.0",
     "vulture>=2.7.0",
     "vermin>=1.6.0",
     "twine>=5.0.0",
@@ -149,9 +148,9 @@ dev = [
     "faker>=33.0.0",
 ]
 docs = [
-    "sphinx>=7.0.0,<8.0.0",
+    "sphinx>=8.0.0,<10",
     "sphinx-rtd-theme>=3.0.0",
-    "myst-parser>=3.0.0",
+    "myst-parser>=5.0.0",
     "sphinx-autobuild>=2024.0.0",
 ]
 
@@ -245,6 +244,12 @@ select = [
     "UP",
     "ARG",
     "SIM",
+    "S",
+    "N",
+    "PT",
+    "RUF",
+    "PIE",
+    "T20",
 ]
 ignore = [
     "ARG001",
@@ -267,12 +272,70 @@ ignore = [
     "UP035",
     "SIM108",
     "W191",
+    # TEMP: test-related rules — remove after hyperi-ci two-tier quality released
+    "S101",   # assert (test pattern)
+    "S105",   # hardcoded passwords (test fixtures)
+    "S108",   # hardcoded temp file (test dirs)
+    "PT003",  # fixture scope
+    "PT006",  # parametrize names type
+    "PT011",  # raises too broad
+    "PT012",  # raises multiple statements
+    "PT017",  # assert in except
+    "PT018",  # composite assertion
+    "N803",   # invalid argument name (test fixtures)
+    "RUF003", # ambiguous unicode comment
+    "RUF015", # unnecessary iterable allocation
+    "RUF043", # pytest raises ambiguous
+    "PT001",  # fixture parentheses style
+    "PT021",  # fixture finalizer callback
+    "S106",   # hardcoded password func arg
+    # Production-specific security relaxations
+    "S104",   # hardcoded-bind-all-interfaces (0.0.0.0 is intentional for containers)
+    "S110",   # try-except-pass (intentional in error handling)
+    "S112",   # try-except-continue (intentional skip patterns)
+    "S311",   # suspicious-non-cryptographic-random (used for jitter, not crypto)
+    "S603",   # subprocess-without-shell-equals-true (CI scripts)
+    "S607",   # start-process-with-partial-path (CI scripts)
+    "S608",   # hardcoded-sql-expression (cache module SQL, not user input)
+    # Print statements — library uses print for CLI output, not logging
+    "T201",
+    # Ruff-specific relaxations
+    "RUF012", # mutable-class-default (Pydantic/dataclass patterns)
+    "RUF013", # implicit-optional (TEMP: needs unsafe-fixes)
+    "RUF022", # unsorted-dunder-all (TEMP: needs unsafe-fixes)
+    "RUF059", # unused-unpacked-variable
+    "RUF001", # ambiguous-unicode-character-string
+    "RUF002", # ambiguous-unicode-character-docstring
+    "RUF006", # asyncio-dangling-task (intentional fire-and-forget)
+    # Naming relaxations
+    "N806",   # non-lowercase-variable-in-function
+    "N818",   # error-suffix-on-exception-name (existing exception names)
+    # Misc
+    "PIE810", # multiple-starts-ends-with (stylistic)
+    "SIM102", # collapsible-if (readability preference)
+    "RUF005", # collection-literal-concatenation (readability preference)
+    # Docstring style rules — keep D1xx (missing docstrings), relax formatting
+    "D100",   # Missing module docstring (too noisy for __init__.py etc)
+    "D104",   # Missing docstring in public package
+    "D105",   # Missing docstring in magic method
+    "D107",   # Missing docstring in __init__
+    "D200",   # One-line docstring should fit on one line
+    "D203",   # 1 blank line before class docstring (conflicts with D211)
+    "D205",   # 1 blank line between summary and description
+    "D212",   # Multi-line docstring summary on first line (conflicts with D213)
+    "D400",   # First line should end with a period
+    "D401",   # First line should be in imperative mood
+    "D415",   # First line should end with period/question/exclamation
 ]
 fixable = [
     "ALL",
 ]
 unfixable = []
 dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
+
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
 
 [tool.ruff.format]
 quote-style = "double"
@@ -415,5 +478,6 @@ default = true
 dev = [
     "azure-identity>=1.25.1",
     "azure-keyvault-secrets>=4.9.0",
+    "fastapi>=0.115.0",
     "google-cloud-secret-manager>=2.26.0",
 ]

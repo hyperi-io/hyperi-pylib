@@ -29,6 +29,17 @@ Configuration (settings.yaml):
 """
 
 # Primary API (backend-agnostic)
+from .cardinality import CardinalityTracker
+
+# DFE metric groups (composable structs matching rustlib)
+from .dfe_groups import (
+    AppMetrics,
+    BackpressureMetrics,
+    BufferMetrics,
+    CircuitBreakerMetrics,
+    ConsumerMetrics,
+    SinkMetrics,
+)
 from .manager import MetricsManager, create_metrics
 
 # Backward compatibility: Re-export Prometheus-specific classes
@@ -43,6 +54,14 @@ __all__ = [
     # Primary API
     "create_metrics",
     "MetricsManager",
+    "CardinalityTracker",
+    # DFE metric groups
+    "AppMetrics",
+    "BackpressureMetrics",
+    "BufferMetrics",
+    "CircuitBreakerMetrics",
+    "ConsumerMetrics",
+    "SinkMetrics",
     # Backward compatibility
     "PrometheusMetrics",
     "ProcessMetrics",
