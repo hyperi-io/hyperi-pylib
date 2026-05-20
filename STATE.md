@@ -6,6 +6,25 @@
 
 ---
 
+## HARD RULES (READ FIRST)
+
+### No "later branch fix" commits
+
+**Never add a commit on a feature branch that fixes / cleans up / corrects an
+earlier commit on the same branch (or in any parent branch you forked from).**
+
+If commits 1, 2, 3 land on a feature branch and commit 1 turns out to be
+sloppy, you DO NOT add commit 4 that says "fix the noise from commit 1". You
+go back, rewrite commits 1-3 atomically, and force-push the cleaned-up
+branch. Each commit on a branch MUST stand alone as a clean, atomic change.
+
+This stays true at least until the branch is opened as a formal upstream PR —
+and even then, prefer rebase-clean over apologetic follow-up commits.
+
+Pinned at top per Derek 2026-05-20.
+
+---
+
 ## ⚠ Release discipline — READ FIRST
 
 **A release is NOT complete until the new version is on PyPI.**
