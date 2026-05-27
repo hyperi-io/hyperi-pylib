@@ -6,19 +6,19 @@ POC credentials for all services. **Internal network only** - not internet expos
 
 | Service | URL | Username | Password |
 |---------|-----|----------|----------|
-| Grafana | <http://grafana.k8s.tyrell.com.au> | `admin` | `TyrellPOC2024!` |
+| Grafana | <http://grafana.k8s.tyrell.com.au> | `admin` | `<REDACTED-SEE-VAULT>` |
 | Prometheus | <http://prometheus.k8s.tyrell.com.au> | - | - |
 | Kafbat UI | <http://kafka.k8s.tyrell.com.au> | - | - |
-| MinIO Console | <http://minio.k8s.tyrell.com.au> | `admin` | `TyrellPOC2024!` |
-| MinIO S3 API | <http://s3.k8s.tyrell.com.au> | `admin` | `TyrellPOC2024!` |
-| ClickHouse HTTP | <http://clickhouse.k8s.tyrell.com.au> | `default` | `TyrellPOC2024!` |
+| MinIO Console | <http://minio.k8s.tyrell.com.au> | `admin` | `<REDACTED-SEE-VAULT>` |
+| MinIO S3 API | <http://s3.k8s.tyrell.com.au> | `admin` | `<REDACTED-SEE-VAULT>` |
+| ClickHouse HTTP | <http://clickhouse.k8s.tyrell.com.au> | `default` | `<REDACTED-SEE-VAULT>` |
 
 ## TCP Services (NodePort)
 
 | Service | Host | Port | Username | Password |
 |---------|------|------|----------|----------|
-| PostgreSQL | k8s.tyrell.com.au | 30432 | `postgres` | `TyrellPOC2024!` |
-| ClickHouse Native | k8s.tyrell.com.au | 30900 | `default` | `TyrellPOC2024!` |
+| PostgreSQL | k8s.tyrell.com.au | 30432 | `postgres` | `<REDACTED-SEE-VAULT>` |
+| ClickHouse Native | k8s.tyrell.com.au | 30900 | `default` | `<REDACTED-SEE-VAULT>` |
 | Kafka Bootstrap | k8s.tyrell.com.au | 9092 | - | - |
 
 ## Connection Examples
@@ -28,22 +28,22 @@ POC credentials for all services. **Internal network only** - not internet expos
 ```bash
 # psql
 psql -h k8s.tyrell.com.au -p 30432 -U postgres -d postgres
-# password: TyrellPOC2024!
+# password: <REDACTED-SEE-VAULT>
 
-# Connection string
-postgresql://postgres:TyrellPOC2024!@k8s.tyrell.com.au:30432/postgres
+# Connection string ($PGPASSWORD from vault)
+postgresql://postgres:$PGPASSWORD@k8s.tyrell.com.au:30432/postgres
 ```
 
 ### ClickHouse
 
 ```bash
-# HTTP API
+# HTTP API ($CH_PASSWORD from vault)
 curl "http://clickhouse.k8s.tyrell.com.au/?query=SELECT%201" \
-  --user "default:TyrellPOC2024!"
+  --user "default:$CH_PASSWORD"
 
 # Native client
 clickhouse-client -h k8s.tyrell.com.au --port 30900 \
-  -u default --password TyrellPOC2024!
+  -u default --password "$CH_PASSWORD"
 ```
 
 ### Kafka (AutoMQ)
@@ -64,10 +64,10 @@ kafka-console-consumer.sh --bootstrap-server k8s.tyrell.com.au:9092 --topic test
 ```bash
 # AWS CLI
 aws --endpoint-url http://s3.k8s.tyrell.com.au s3 ls \
-  --access-key admin --secret-key TyrellPOC2024!
+  --access-key admin --secret-key <REDACTED-SEE-VAULT>
 
 # mc client
-mc alias set tyrell http://s3.k8s.tyrell.com.au admin TyrellPOC2024!
+mc alias set tyrell http://s3.k8s.tyrell.com.au admin <REDACTED-SEE-VAULT>
 mc ls tyrell
 ```
 
